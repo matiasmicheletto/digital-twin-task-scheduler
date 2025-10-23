@@ -1,0 +1,26 @@
+{
+  "name": "digital-twin-task-scheduler",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "A simulator to test and optimize task allocation in the context of a blackboard pattern based digital twin.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^7.3.4",
+    "@mui/material": "^7.3.4",
+    "@mui/material-nextjs": "^7.3.3",
+    "@vitejs/plugin-react": "^5.0.4",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "vite": "^7.1.11"
+  }
+}
