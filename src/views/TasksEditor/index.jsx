@@ -143,6 +143,7 @@ const View = () => {
       T: 10,
       D: 10,
       a: 0,
+      M: 1
     };
     setTasks((n) => [...n, newNode]);
     setSelectedNodeId(id);
@@ -229,7 +230,7 @@ const View = () => {
         <AppBar position="static" color="default" elevation={1}>
             <Toolbar variant="dense">
             <Typography variant="h6" sx={{ flexGrow: 1 }}>
-                Tasks properties and precedences
+                Tasks tree editor
             </Typography>
             <Stack direction="row" spacing={1}>
                 <Tooltip title="Import / Export">
@@ -266,7 +267,7 @@ const View = () => {
         </AppBar>
 
         <Box sx={{ display: "flex", flex: 1 }}>
-            <Box sx={{ width: 320, borderRight: "1px solid #eee", p: 1, overflow: "auto" }}>
+            <Box sx={{ width: 350, borderRight: "1px solid #eee", p: 1, overflow: "auto" }}>
                 <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                     <Typography variant="subtitle1">Tasks</Typography>
                     <Tooltip title="Add task">
@@ -294,7 +295,7 @@ const View = () => {
                                 </Stack>
                             }
                             >
-                            <ListItemText primary={`${n.label} (C:${n.C} T:${n.T} D:${n.D} a:${n.a})`} secondary={`id: ${n.id}`} />
+                            <ListItemText primary={`${n.label} (C:${n.C} T:${n.T} D:${n.D} a:${n.a} M:${n.M})`} secondary={`id: ${n.id}`} />
                             </ListItem>
                             <Divider />
                         </React.Fragment>
@@ -339,7 +340,7 @@ const View = () => {
                         </IconButton>
                     </Stack>
                     </Stack>
-                    <Typography variant="caption">C: {n.C}, T: {n.T}, D: {n.D}, a: {n.a}</Typography>
+                    <Typography variant="caption">C: {n.C}, T: {n.T}, D: {n.D}, a: {n.a}, M: {n.M}</Typography>
                 </Paper>
                 </Box>
             ))}
@@ -380,6 +381,13 @@ const View = () => {
                     type="number"
                     value={editingNode.a}
                     onChange={(e) => setEditingNode({ ...editingNode, a: Number(e.target.value) })}
+                    inputProps={{ min: 0 }}
+                />
+                <TextField
+                    label="Memory requirement (M)"
+                    type="number"
+                    value={editingNode.M || 0}
+                    onChange={(e) => setEditingNode({ ...editingNode, M: Number(e.target.value) })}
                     inputProps={{ min: 0 }}
                 />
                 </Stack>

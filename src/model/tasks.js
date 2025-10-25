@@ -29,6 +29,18 @@ export default class Tasks {
     }
 
     connectTasks(fromTaskId, toTaskId) {
+        if(fromTaskId === toTaskId) {
+            throw new Error("Cannot connect a task to itself");
+        }
+
+        if(this.precedences.some(edge => edge.from === fromTaskId && edge.to === toTaskId)) {
+            throw new Error("Tasks are already connected");
+        }
+
+        if(this.precedences.some(edge => edge.from === toTaskId && edge.to === fromTaskId)) {
+            throw new Error("Cannot create circular dependency");
+        }
+
         this.precedences.push({ from: fromTaskId, to: toTaskId });
     }
 };
