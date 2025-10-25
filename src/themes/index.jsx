@@ -44,7 +44,7 @@ const theme = createTheme({
         fontFamily: "Montserrat, Open Sans, sans-serif",
     },
     palette: {
-        mode: "light",
+        mode: "dark",
         primary: {
             main: "#393939",
             contrastText: "#FFFFFF"
@@ -93,7 +93,36 @@ const theme = createTheme({
                     }
                 }
             }
-        }
+        },
+        MuiOutlinedInput: {
+            styleOverrides: {
+                root: {
+                "& .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#555", // normal border color
+                },
+                "&:hover .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#FFF", // on hover
+                },
+                "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#FFF", // on focus (active)
+                    borderWidth: 2,
+                },
+                },
+                input: {
+                color: "#FFFFFF", // text color
+                },
+            },
+        },
+        MuiInputLabel: {
+            styleOverrides: {
+                root: {
+                    color: "#CCCCCC", // default label color
+                    "&.Mui-focused": {
+                        color: "#FFF", // label color when focused
+                    },
+                },
+            },
+        },
     }
 });
 

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Box,
   Paper,
@@ -34,62 +34,109 @@ import FileDownloadIcon from "@mui/icons-material/FileDownload";
 let nextNodeId = 1;
 let nextEdgeId = 1;
 
-function EdgesLayer({ nodes, edges }) {
-  const nodeById = (id) => nodes.find((n) => n.id === id);
-  const edgeColor = "#555";
+function lineRectIntersection(px, py, qx, qy, rect) {
+  // line from P(px,py) to Q(qx,qy).
+  // rect: { left, top, right, bottom } in same coords
+  // returns intersection point on rect boundary nearest to Q, or Q if Q is outside
+  const { left, top, right, bottom } = rect;
+  const dx = qx - px;
+  const dy = qy - py;
+  const candidates = [];
+
+  // helper to push t in [0,1] with computed point
+  const pushT = (t, x, y) => {
+    if (t >= 0 && t <= 1) candidates.push({ t, x, y });
+  };
+
+  // intersect with left vertical x = left
+  if (dx !== 0) {
+    const tLeft = (left - px) / dx;
+    const yLeft = py + tLeft * dy;
+    if (yLeft >= top - 1e-6 && yLeft <= bottom + 1e-6) pushT(tLeft, left, yLeft);
+  }
+  // right vertical
+  if (dx !== 0) {
+    const tRight = (right - px) / dx;
+    const yRight = py + tRight * dy;
+    if (yRight >= top - 1e-6 && yRight <= bottom + 1e-6) pushT(tRight, right, yRight);
+  }
+  // top horizontal y = top
+  if (dy !== 0) {
+    const tTop = (top - py) / dy;
+    const xTop = px + tTop * dx;
+    if (xTop >= left - 1e-6 && xTop <= right + 1e-6) pushT(tTop, xTop, top);
+  }
+  // bottom horizontal
+  if (dy !== 0) {
+    const tBottom = (bottom - py) / dy;
+    const xBottom = px + tBottom * dx;
+    if (xBottom >= left - 1e-6 && xBottom <= right + 1e-6) pushT(tBottom, xBottom, bottom);
+  }
+
+  if (candidates.length === 0) {
+    // fallback: return center
+    return { x: qx, y: qy };
+  }
+  // choose intersection with largest t (closest to Q)
+  candidates.sort((a, b) => b.t - a.t);
+  return { x: candidates[0].x, y: candidates[0].y };
+}
+
+function EdgesLayer({ boardRef, nodeRects, edges }) {
+  const edgeColor = "#444";
+  if (!boardRef.current) return null;
 
   return (
     <svg
       style={{
         position: "absolute",
         inset: 0,
+        width: "100%",
+        height: "100%",
         pointerEvents: "none",
         zIndex: 0,
       }}
     >
       {edges.map((e) => {
-        const f = nodeById(e.from);
-        const t = nodeById(e.to);
+        const f = nodeRects[e.from];
+        const t = nodeRects[e.to];
         if (!f || !t) return null;
 
-        const x1 = f.x + 60;
-        const y1 = f.y + 24;
-        const x2 = t.x + 60;
-        const y2 = t.y + 24;
-        const dx = x2 - x1;
-        const dy = y2 - y1;
-        const len = Math.sqrt(dx * dx + dy * dy);
+        const x1 = f.cx;
+        const y1 = f.cy;
+        const x2 = t.cx;
+        const y2 = t.cy;
+
+        // find intersection with target rect boundary
+        const tgtRect = { left: t.left, top: t.top, right: t.right, bottom: t.bottom };
+        const endPt = lineRectIntersection(x1, y1, x2, y2, tgtRect);
+
+        // compute arrowhead
+        const dx = endPt.x - x1;
+        const dy = endPt.y - y1;
+        const len = Math.sqrt(dx * dx + dy * dy) || 1;
         const ux = dx / len;
         const uy = dy / len;
-        const ah = 8;
 
-        const arrowX = x2 - ux * 18;
-        const arrowY = y2 - uy * 18;
-        const leftX = arrowX - uy * ah;
-        const leftY = arrowY + ux * ah;
-        const rightX = arrowX + uy * ah;
-        const rightY = arrowY - ux * ah;
+        const arrowLen = 10; // length of arrow tip
+        const arrowBaseX = endPt.x - ux * arrowLen;
+        const arrowBaseY = endPt.y - uy * arrowLen;
+        const ah = 6; // half width of arrow
+        const leftX = arrowBaseX - uy * ah;
+        const leftY = arrowBaseY + ux * ah;
+        const rightX = arrowBaseX + uy * ah;
+        const rightY = arrowBaseY - ux * ah;
 
         return (
           <g key={e.id}>
-            <line
-              x1={x1}
-              y1={y1}
-              x2={arrowX}
-              y2={arrowY}
-              stroke={edgeColor}
-              strokeWidth={2}
-            />
-            <polygon
-              points={`${arrowX},${arrowY} ${leftX},${leftY} ${rightX},${rightY}`}
-              fill={edgeColor}
-            />
+            <line x1={x1} y1={y1} x2={arrowBaseX} y2={arrowBaseY} stroke={edgeColor} strokeWidth={2} />
+            <polygon points={`${endPt.x},${endPt.y} ${leftX},${leftY} ${rightX},${rightY}`} fill={edgeColor} />
           </g>
         );
       })}
     </svg>
   );
-};
+}
 
 export default function GraphEditor() {
   const [nodes, setNodes] = useState([]);
@@ -105,6 +152,50 @@ export default function GraphEditor() {
 
   // --- Node Dragging ---
   const dragState = useRef({ draggingId: null, offsetX: 0, offsetY: 0 });
+  
+  const nodeRefs = useRef({}); // id -> DOM element
+  const [nodeRects, setNodeRects] = useState({}); // id -> DOMRect
+
+  // call to update rects (call after layout changes)
+  function updateNodeRects() {
+    if (!boardRef.current) return;
+    const boardRect = boardRef.current.getBoundingClientRect();
+    const rects = {};
+    for (const id of Object.keys(nodeRefs.current)) {
+      const el = nodeRefs.current[id];
+      if (!el) continue;
+      const r = el.getBoundingClientRect();
+      // convert to board-local coordinates
+      rects[id] = {
+        left: r.left - boardRect.left,
+        top: r.top - boardRect.top,
+        width: r.width,
+        height: r.height,
+        right: r.left - boardRect.left + r.width,
+        bottom: r.top - boardRect.top + r.height,
+        cx: r.left - boardRect.left + r.width / 2,
+        cy: r.top - boardRect.top + r.height / 2,
+      };
+    }
+    setNodeRects(rects);
+  }
+
+  // ensure rects update on relevant changes:
+  useEffect(() => {
+    updateNodeRects();
+    // also on window resize (nodes may reflow)
+    const ro = new ResizeObserver(updateNodeRects);
+    // observe board and node elements
+    if (boardRef.current) ro.observe(boardRef.current);
+    return () => ro.disconnect();
+  }, []);
+
+  // whenever nodes or their positions change, update rects
+  useEffect(() => {
+    // small timeout to let DOM update after state change
+    const id = window.setTimeout(updateNodeRects, 0);
+    return () => clearTimeout(id);
+  }, [nodes]);
 
   function startDrag(e, node) {
     e.stopPropagation();
@@ -341,11 +432,13 @@ export default function GraphEditor() {
         </Box>
 
         <Box sx={{ position: "relative", flex: 1 }} ref={boardRef} onClick={() => { setSelectedNodeId(null); if (connectSourceId && connectSourceId !== "start") setConnectSourceId(null); }}>
-          <EdgesLayer nodes={nodes} edges={edges} />
+          
+          <EdgesLayer boardRef={boardRef} nodeRects={nodeRects} edges={edges} />
 
           {nodes.map((n) => (
             <Box
               key={n.id}
+              ref={(el) => { nodeRefs.current[n.id] = el; }}
               onPointerDown={(ev) => startDrag(ev, n)}
               onClick={(ev) => onNodeClick(n, ev)}
               sx={{

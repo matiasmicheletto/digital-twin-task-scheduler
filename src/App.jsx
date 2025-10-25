@@ -5,15 +5,16 @@ import theme, { globalStyles } from "./themes";
 import views from "./views";
 import ErrorBoundary from './components/ErrorBoundary';
 import Navigation from "./components/Navigation";
-import { ModelProvider } from './context/Model';
+import { TasksProvider } from './context/Tasks';
 import UIUtilsProvider from './context/UIFeedback';
 
-const App = () =>(
+
+const App = () => (
     <ThemeProvider theme={theme}>
         <CssBaseline />
         <GlobalStyles styles={globalStyles}/>
         <UIUtilsProvider>
-            <ModelProvider>
+            <TasksProvider>
                 <BrowserRouter>
                     <ErrorBoundary>
                         <Navigation/>
@@ -28,9 +29,9 @@ const App = () =>(
                         </Routes>
                     </ErrorBoundary>
                 </BrowserRouter>
-            </ModelProvider>
+            </TasksProvider>
         </UIUtilsProvider>
     </ThemeProvider>
 );
 
-export default App
+export default App;
