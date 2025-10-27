@@ -30,7 +30,7 @@ import FileUploadIcon from "@mui/icons-material/FileUpload";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import MainView from "../../components/MainView";
 import EdgesLayer from "../../components/EdgesLayer";
-import useTasks from "../../hooks/useTasks";
+import useSchedule from "../../hooks/useSchedule";
 import { importJSON, exportJSON } from "../../model/utils";
 
 let nextNodeId = 1;
@@ -47,7 +47,7 @@ const taskBoxStyle = n => ({
 });
 
 const View = () => {
-    //const { taskData, addTask, connectTasks } = useTasks();
+    //const { taskData, addTask, connectTasks } = useSchedule();
 
     const [tasks, setTasks] = useState([]);
     const [precedences, setPrecedences] = useState([]);
@@ -230,7 +230,7 @@ const View = () => {
         <AppBar position="static" color="default" elevation={1}>
             <Toolbar variant="dense">
             <Typography variant="h6" sx={{ flexGrow: 1 }}>
-                Tasks tree editor
+                Tasks schedule editor
             </Typography>
             <Stack direction="row" spacing={1}>
                 <Tooltip title="Import / Export">

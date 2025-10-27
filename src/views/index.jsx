@@ -1,4 +1,4 @@
-import TasksEditor from "./TasksEditor";
+import ScheduleEditor from "./ScheduleEditor";
 import NetworkEditor from "./NetworkEditor";
 import About from "./About";
 //import Help from "./Help";
@@ -6,9 +6,9 @@ import Error from "./Error";
 
 const views = [
     {
-        path: "/task-editor",
-        name: "Task Editor",
-        component: <TasksEditor />
+        path: "/schedule-editor",
+        name: "Schedule Editor",
+        component: <ScheduleEditor />
     },
     {
         path: "/network-editor",

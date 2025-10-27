@@ -5,7 +5,7 @@ import theme, { globalStyles } from "./themes";
 import views from "./views";
 import ErrorBoundary from './components/ErrorBoundary';
 import Navigation from "./components/Navigation";
-import { TasksProvider } from './context/Tasks';
+import { ScheduleProvider } from './context/Schedule';
 import UIUtilsProvider from './context/UIFeedback';
 
 
@@ -14,7 +14,7 @@ const App = () => (
         <CssBaseline />
         <GlobalStyles styles={globalStyles}/>
         <UIUtilsProvider>
-            <TasksProvider>
+            <ScheduleProvider>
                 <BrowserRouter>
                     <ErrorBoundary>
                         <Navigation/>
@@ -29,7 +29,7 @@ const App = () => (
                         </Routes>
                     </ErrorBoundary>
                 </BrowserRouter>
-            </TasksProvider>
+            </ScheduleProvider>
         </UIUtilsProvider>
     </ThemeProvider>
 );
