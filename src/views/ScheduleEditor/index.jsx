@@ -141,11 +141,14 @@ const View = () => {
 
   const handleNodeRightClick = (e, taskId) => {
     e.preventDefault();
+    if(!taskId) return; // Ignore if not on a node
     if (connectingFrom === null) {
       setConnectingFrom(taskId);
-    } else if (connectingFrom !== taskId) {
-      connectTasks(connectingFrom, taskId);
-      setConnectingFrom(null);
+    } else {
+      if (connectingFrom !== taskId) {
+        connectTasks(connectingFrom, taskId);
+        setConnectingFrom(null);
+      }
     }
   };
 
@@ -178,6 +181,15 @@ const View = () => {
       setPanStart({ x: e.clientX, y: e.clientY });
       setSelectedNode(null);
     }
+    setConnectingFrom(null);
+  };
+
+  const handleSvgContextMenu = e => {
+    e.preventDefault();
+    // Only cancel connection if right-clicking on empty canvas (not on a node)
+    if (e.target.tagName === 'svg' || e.target.tagName === 'g') {
+      setConnectingFrom(null);
+    }
   };
 
   const handleZoomIn = () => setZoom(prev => Math.min(prev * 1.2, 3));
@@ -195,9 +207,14 @@ const View = () => {
       setConnectingFrom(n.id);
   };
 
-  const handleDeleteNode = () => {
+  const handleDeleteTask = () => {
     if (selectedNode) {
       removeTask(selectedNode);
+      setNodePositions(prev => {
+        const newPositions = { ...prev };
+        delete newPositions[selectedNode];
+        return newPositions;
+      });
       setSelectedNode(null);
     }
   };
@@ -213,37 +230,25 @@ const View = () => {
 
   const handleImport = file => {
     importJSON(file).then(data => {
-      
-      fromGraph(data)
-      
       const svgRect = svgRef.current?.getBoundingClientRect();
       const viewportDimensions = svgRect ? { 
         width: svgRect.width, 
         height: svgRect.height 
       } : null;
       
-      const extractedPositions = {};
-      // Extract and convert relative positions to absolute if viewport dimensions provided
-      if (data.tasks && viewportDimensions) {
-        data.tasks.forEach(t => {
-          if (t.x !== undefined && t.y !== undefined) {
-            extractedPositions[t.id] = {
-              x: t.x * viewportDimensions.width,
-              y: t.y * viewportDimensions.height
-            };
-          }
+      const newPositions = {...nodePositions}; // Previous positions
+      if (data.nodePositions && viewportDimensions) {
+        Object.keys(data.nodePositions).forEach(taskId => {
+          const pos = data.nodePositions[taskId];
+          newPositions[taskId] = {
+            x: pos.x,
+            y: pos.y
+          };    
         });
       }
-      
-      // Update nodePositions with imported positions, or use defaults for new tasks
-      if (extractedPositions && Object.keys(extractedPositions).length > 0) {
-        const newPositions = {...nodePositions};
-        Object.keys(extractedPositions).forEach(taskId => {
-          newPositions[taskId] = extractedPositions[taskId];
-        });
 
+      fromGraph(data);
       setNodePositions(newPositions);
-      }
     });
   };
 
@@ -257,7 +262,7 @@ const View = () => {
 
   return (
     <MainView>
-        <Paper elevation={3} sx={{ height: 600, display: "flex", flexDirection: "column" }}>
+        <Paper elevation={3} sx={{ minHeight: 400, display: "flex", flexDirection: "column" }}>
             <AppBar position="static" color="default" elevation={1}>
                 <Toolbar variant="dense">
                     <Typography variant="h6" sx={{ flexGrow: 1 }}>
@@ -280,7 +285,7 @@ const View = () => {
                             </IconButton>
                         </Tooltip>
                         <Tooltip title="Delete Selected Task">
-                            <IconButton onClick={handleDeleteNode} disabled={!selectedNode}>
+                            <IconButton onClick={handleDeleteTask} disabled={!selectedNode}>
                                 <Delete/>
                             </IconButton>
                         </Tooltip>
@@ -328,6 +333,9 @@ const View = () => {
                           <React.Fragment key={n.id}>
                               <ListItem
                                 selected={selectedNode === n.id}
+                                sx={{ 
+                                  cursor: "pointer", 
+                                  backgroundColor: selectedNode === n.id ? "#000" : (connectingFrom === n.id ? "#666" : "inherit") }}
                                 secondaryAction={
                                     <Stack direction="row" spacing={1}>
                                       <IconButton edge="end" onClick={handleStartConnecting} size="small">
@@ -367,8 +375,10 @@ const View = () => {
                       onMouseUp={handleMouseUp}
                       onMouseDown={handleSvgMouseDown}
                       onMouseLeave={handleMouseUp}
+                      onContextMenu={handleSvgContextMenu}
                       style={{ cursor: isPanning ? "grabbing" : "grab", ...svgStyle }}>
-                      <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
+                      <g 
+                        transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
                           {precedences.map((prec, idx) => {
                             const from = nodePositions[prec.from];
                             const to = nodePositions[prec.to];
@@ -415,30 +425,27 @@ const View = () => {
                             
                             return (
                                 <g
-                                key={task.id}
-                                onMouseDown={(e) => handleNodeMouseDown(e, task.id)}
-                                onContextMenu={(e) => handleNodeRightClick(e, task.id)}
-                                style={{ cursor: "pointer" }}
-                                >
-                                <circle
-                                    cx={pos.x}
-                                    cy={pos.y}
-                                    r={40}
-                                    fill={isConnecting ? "#ff9800" : isSelected ? "#2196f3" : "#4caf50"}
-                                    stroke={isSelected ? "#1976d2" : "#388e3c"}
-                                    strokeWidth={3}
-                                />
-                                <text
-                                    x={pos.x}
-                                    y={pos.y}
-                                    textAnchor="middle"
-                                    fill="white"
-                                    fontSize="14"
-                                    fontWeight="bold"
-                                    pointerEvents="none"
-                                >
-                                    {task.label}
-                                </text>
+                                  key={task.id}
+                                  onMouseDown={(e) => handleNodeMouseDown(e, task.id)}
+                                  onContextMenu={(e) => handleNodeRightClick(e, task.id)}
+                                  style={{ cursor: "pointer" }}>
+                                  <circle
+                                      cx={pos.x}
+                                      cy={pos.y}
+                                      r={40}
+                                      fill={isConnecting ? "#ff9800" : isSelected ? "#2196f3" : "#4caf50"}
+                                      stroke={isSelected ? "#1976d2" : "#388e3c"}
+                                      strokeWidth={3}/>
+                                  <text
+                                      x={pos.x}
+                                      y={pos.y}
+                                      textAnchor="middle"
+                                      fill="white"
+                                      fontSize="14"
+                                      fontWeight="bold"
+                                      pointerEvents="none">
+                                      {task.label}
+                                  </text>
                                 </g>
                             );
                             })
