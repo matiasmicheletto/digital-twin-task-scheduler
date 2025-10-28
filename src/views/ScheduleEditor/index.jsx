@@ -1,7 +1,11 @@
-import { useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { 
     AppBar,
     Toolbar,
+    List,
+    ListItem,
+    ListItemText,
+    Divider,
     Box, 
     Button, 
     TextField,
@@ -26,30 +30,66 @@ import {
     ZoomOut, 
     RestartAlt,
     Upload,
-    Download
+    Download,
+    Link,
+    Edit
 } from "@mui/icons-material";
 import { Task } from "../../model/schedule";
+import { importJSON, exportJSON } from "../../model/utils";
 
+
+const svgStyle = {
+    position: "absolute",
+    inset: 0,
+    width: "100%",
+    height: "100%",
+    zIndex: 0
+};
+
+const actionsTooltipStyle = { 
+  position: "absolute", 
+  bottom: "16px", 
+  right: "16px", 
+  padding: "16px", 
+  borderRadius: "8px", 
+  fontSize: "12px", 
+  boxShadow: "0 2px 8px rgba(0,0,0,0.7)",
+}
 
 const View = () => {
-  const { addTask, removeTask, connectTasks, getTasks, toGraph } = useScheduleContext();
+  const { 
+    addTask, 
+    getTask, 
+    removeTask, 
+    connectTasks, 
+    disconnectTasks,
+    toGraph,
+    fromGraph 
+  } = useScheduleContext();
+
+  // Map
+  const svgRef = useRef(null);
   const [nodePositions, setNodePositions] = useState({});
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+  
+  // Interaction (ids)
   const [draggingNode, setDraggingNode] = useState(null);
   const [connectingFrom, setConnectingFrom] = useState(null);
   const [selectedNode, setSelectedNode] = useState(null);
+  
+  // Editing dialog
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
-  const [isPanning, setIsPanning] = useState(false);
-  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
-  const svgRef = useRef(null);
+  
+  const [anchorEl, setAnchorEl] = useState(null);
   const [nextTaskId, setNextTaskId] = useState(1);
 
-  const tasks = getTasks();
-  const { precedences } = toGraph();
+  const { tasks, precedences } = toGraph(); // For display purposes, no positions needed
 
-  const handleAddTask = () => {
+  const handleAddTask = () => { // Initial values
     setEditingTask({
       id: `T${nextTaskId}`,
       label: `Task ${nextTaskId}`,
@@ -147,6 +187,14 @@ const View = () => {
     setPan({ x: 0, y: 0 });
   };
 
+  const handleStartConnecting = e => {
+    e.stopPropagation(); 
+    if(connectingFrom) 
+      setConnectingFrom(null); 
+    else 
+      setConnectingFrom(n.id);
+  };
+
   const handleDeleteNode = () => {
     if (selectedNode) {
       removeTask(selectedNode);
@@ -154,168 +202,257 @@ const View = () => {
     }
   };
 
+  const handleExport = () => {
+    const svgRect = svgRef.current?.getBoundingClientRect();
+    const viewportDimensions = svgRect ? { 
+      width: svgRect.width, 
+      height: svgRect.height 
+    } : null;
+    exportJSON({...toGraph(), nodePositions, viewportDimensions});
+  };
+
+  const handleImport = file => {
+    importJSON(file).then(data => {
+      
+      fromGraph(data)
+      
+      const svgRect = svgRef.current?.getBoundingClientRect();
+      const viewportDimensions = svgRect ? { 
+        width: svgRect.width, 
+        height: svgRect.height 
+      } : null;
+      
+      const extractedPositions = {};
+      // Extract and convert relative positions to absolute if viewport dimensions provided
+      if (data.tasks && viewportDimensions) {
+        data.tasks.forEach(t => {
+          if (t.x !== undefined && t.y !== undefined) {
+            extractedPositions[t.id] = {
+              x: t.x * viewportDimensions.width,
+              y: t.y * viewportDimensions.height
+            };
+          }
+        });
+      }
+      
+      // Update nodePositions with imported positions, or use defaults for new tasks
+      if (extractedPositions && Object.keys(extractedPositions).length > 0) {
+        const newPositions = {...nodePositions};
+        Object.keys(extractedPositions).forEach(taskId => {
+          newPositions[taskId] = extractedPositions[taskId];
+        });
+
+      setNodePositions(newPositions);
+      }
+    });
+  };
+
+  const openMenu = e => {
+    setAnchorEl(e.currentTarget);
+  };
+
+  const closeMenu = () => {
+    setAnchorEl(null);
+  };
+
   return (
     <MainView>
         <Paper elevation={3} sx={{ height: 600, display: "flex", flexDirection: "column" }}>
-            <Box style={{ backgroundColor: "#1976d2", color: "white", display: "flex", alignItems: "center", gap: "16px" }}>
-                <Button onClick={handleAddTask} style={{ background: "none", border: "none", color: "white", cursor: "pointer", padding: "8px" }} title="Add Task">
-                <AddCircle size={20} />
-                </Button>
-                <Button onClick={handleDeleteNode} disabled={!selectedNode} style={{ background: "none", border: "none", color: "white", cursor: selectedNode ? "pointer" : "not-allowed", padding: "8px", opacity: selectedNode ? 1 : 0.5 }} title="Delete Selected">
-                <Delete size={20} />
-                </Button>
-                <Button onClick={handleZoomIn} style={{ background: "none", border: "none", color: "white", cursor: "pointer", padding: "8px" }} title="Zoom In">
-                <ZoomIn size={20} />
-                </Button>
-                <Button onClick={handleZoomOut} style={{ background: "none", border: "none", color: "white", cursor: "pointer", padding: "8px" }} title="Zoom Out">
-                <ZoomOut size={20} />
-                </Button>
-                <Button onClick={handleResetView} style={{ background: "none", border: "none", color: "white", cursor: "pointer", padding: "8px" }} title="Reset View">
-                <RestartAlt size={20} />
-                </Button>
-            </Box>
-
             <AppBar position="static" color="default" elevation={1}>
                 <Toolbar variant="dense">
                     <Typography variant="h6" sx={{ flexGrow: 1 }}>
                         Tasks schedule editor
                     </Typography>
                     <Stack direction="row" spacing={1}>
+                        <Tooltip title="Zoom In">
+                            <IconButton onClick={handleZoomIn}>
+                              <ZoomIn/>
+                            </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Zoom Out">
+                            <IconButton onClick={handleZoomOut}>
+                                <ZoomOut/>
+                            </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Reset View">
+                            <IconButton onClick={handleResetView}>
+                              <RestartAlt/>
+                            </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Delete Selected Task">
+                            <IconButton onClick={handleDeleteNode} disabled={!selectedNode}>
+                                <Delete/>
+                            </IconButton>
+                        </Tooltip>
+
                         <Tooltip title="Import / Export">
-                            <IconButton onClick={()=>{}}>
+                            <IconButton onClick={openMenu}>
                                 <Upload />
                             </IconButton>
                         </Tooltip>
-                        {/*<Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={()=>{}}>*/}
-                        <MenuItem
-                            onClick={() => {
-                                closeMenu();
-                                handleExport();
-                                }}>
-                            <Download fontSize="small" sx={{ mr: 1 }} /> Export JSON
-                        </MenuItem>
-                        <MenuItem>
-                            <label style={{ cursor: "pointer", width: "100%" }}>
-                            <input
-                                type="file"
-                                accept="application/json"
-                                style={{ display: "none" }}
-                                onChange={(ev) => {
-                                const f = ev.target.files?.[0];
-                                if (f) handleImport(f);
-                                closeMenu();
-                                }}
-                            />
-                            <Upload fontSize="small" sx={{ mr: 1 }} /> Import JSON
-                            </label>
-                        </MenuItem>
-                        {/*</Menu>*/}
+                        <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={closeMenu}>
+                          <MenuItem onClick={() => {closeMenu(); handleExport();}}>
+                              <Download fontSize="small" sx={{ mr: 1 }} /> Export JSON
+                          </MenuItem>
+                          <MenuItem>
+                              <label style={{ cursor: "pointer", width: "100%" }}>
+                              <input
+                                  type="file"
+                                  accept="application/json"
+                                  style={{ display: "none" }}
+                                  onChange={(ev) => {
+                                    const f = ev.target.files?.[0];
+                                    if (f) handleImport(f);
+                                    closeMenu();
+                                  }}/>
+                              <Upload fontSize="small" sx={{ mr: 1 }} /> Import JSON
+                              </label>
+                          </MenuItem>
+                        </Menu>
                     </Stack>
                 </Toolbar>
             </AppBar>
 
-            <Box style={{ flexGrow: 1, overflow: "hidden", position: "relative", backgroundColor: "#f5f5f5" }}>
-                <svg
-                    ref={svgRef}
-                    width="100%"
-                    height="100%"
-                    onMouseMove={handleMouseMove}
-                    onMouseUp={handleMouseUp}
-                    onMouseDown={handleSvgMouseDown}
-                    onMouseLeave={handleMouseUp}
-                    style={{ cursor: isPanning ? "grabbing" : "grab" }}>
-                    <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
-                        {precedences.map((prec, idx) => {
-                        const from = nodePositions[prec.from];
-                        const to = nodePositions[prec.to];
-                        if (!from || !to) return null;
-                        
-                        const dx = to.x - from.x;
-                        const dy = to.y - from.y;
-                        const len = Math.sqrt(dx * dx + dy * dy);
-                        const ux = dx / len;
-                        const uy = dy / len;
-                        
-                        const startX = from.x + ux * 40;
-                        const startY = from.y + uy * 40;
-                        const endX = to.x - ux * 40;
-                        const endY = to.y - uy * 40;
-                        
-                        const arrowLen = 10;
-                        const arrowAngle = Math.PI / 6;
-                        const angle = Math.atan2(dy, dx);
-                        
-                        return (
-                            <g key={idx}>
-                            <line
-                                x1={startX}
-                                y1={startY}
-                                x2={endX}
-                                y2={endY}
-                                stroke="#666"
-                                strokeWidth={2}
-                            />
-                            <polygon
-                                points={`${endX},${endY} ${endX - arrowLen * Math.cos(angle - arrowAngle)},${endY - arrowLen * Math.sin(angle - arrowAngle)} ${endX - arrowLen * Math.cos(angle + arrowAngle)},${endY - arrowLen * Math.sin(angle + arrowAngle)}`}
-                                fill="#666"
-                            />
-                            </g>
-                        );
-                        })}
+            <Box sx={{ display: "flex", flex: 1 }}>
+              <Box sx={{ width: 350, borderRight: "1px solid #eee", p: 1, overflow: "auto" }}>
+                  <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <Typography variant="subtitle1">Tasks</Typography>
+                      <Tooltip title="Add task">
+                          <IconButton color="primary" onClick={handleAddTask}>
+                              <AddCircle/>
+                          </IconButton>
+                      </Tooltip>
+                  </Box>
+                  <List dense>
+                      {tasks.map((n) => (
+                          <React.Fragment key={n.id}>
+                              <ListItem
+                                selected={selectedNode === n.id}
+                                secondaryAction={
+                                    <Stack direction="row" spacing={1}>
+                                      <IconButton edge="end" onClick={handleStartConnecting} size="small">
+                                          <Link fontSize="small" />
+                                      </IconButton>
+                                      <IconButton edge="end" onClick={() => {setEditingTask(n); setDialogOpen(true);}} size="small">
+                                          <Edit fontSize="small" />
+                                      </IconButton>
+                                      <IconButton edge="end" onClick={() => removeTask(n.id)} size="small">
+                                          <Delete fontSize="small" />
+                                      </IconButton>
+                                    </Stack>
+                                }>
+                                <ListItemText primary={`${n.label} (C:${n.C} T:${n.T} D:${n.D} a:${n.a} M:${n.M})`} secondary={`id: ${n.id}`} />
+                              </ListItem>
+                              <Divider />
+                          </React.Fragment>
+                      ))}
+                  </List>
 
-                        {tasks.map(task => {
-                        const pos = nodePositions[task.id] || { x: 400, y: 300 };
-                        const isSelected = selectedNode === task.id;
-                        const isConnecting = connectingFrom === task.id;
-                        
-                        return (
-                            <g
-                            key={task.id}
-                            onMouseDown={(e) => handleNodeMouseDown(e, task.id)}
-                            onContextMenu={(e) => handleNodeRightClick(e, task.id)}
-                            style={{ cursor: "pointer" }}
-                            >
-                            <circle
-                                cx={pos.x}
-                                cy={pos.y}
-                                r={40}
-                                fill={isConnecting ? "#ff9800" : isSelected ? "#2196f3" : "#4caf50"}
-                                stroke={isSelected ? "#1976d2" : "#388e3c"}
-                                strokeWidth={3}
-                            />
-                            <text
-                                x={pos.x}
-                                y={pos.y - 5}
-                                textAnchor="middle"
-                                fill="white"
-                                fontSize="14"
-                                fontWeight="bold"
-                                pointerEvents="none"
-                            >
-                                {task.label}
-                            </text>
-                            <text
-                                x={pos.x}
-                                y={pos.y + 10}
-                                textAnchor="middle"
-                                fill="white"
-                                fontSize="10"
-                                pointerEvents="none"
-                            >
-                                C:{task.C} T:{task.T}
-                            </text>
-                            </g>
-                        );
-                        })}
-                    </g>
-                </svg>
+                  <Typography variant="subtitle1" sx={{ mt: 2 }}>
+                      Precedences
+                  </Typography>
+                  <List dense>
+                      {precedences.map((e) => (
+                        <ListItem key={e.id} secondaryAction={<IconButton onClick={() => disconnectTasks(e.from, e.to)} size="small"><Delete fontSize="small"/></IconButton>}>
+                            <ListItemText primary={`${getTask(e.from)?.label ?? e.from} → ${getTask(e.to)?.label ?? e.to}`} secondary={`id: ${e.id}`} />
+                        </ListItem>
+                      ))}
+                  </List>
+              </Box>
 
-                <Box style={{ position: "absolute", bottom: "16px", right: "16px", padding: "16px", borderRadius: "8px", fontSize: "12px", boxShadow: "0 2px 8px rgba(0,0,0,0.1)", color:"black" }}>
-                <Box style={{ marginBottom: "4px" }}>Left-click + drag: Move nodes</Box>
-                <Box style={{ marginBottom: "4px" }}>Right-click: Connect tasks</Box>
-                <Box style={{ marginBottom: "4px" }}>Canvas drag: Pan view</Box>
-                <Box>Zoom: {(zoom * 100).toFixed(0)}%</Box>
-                </Box>
+              <Box style={{ flexGrow: 1, overflow: "hidden", position: "relative"}}>
+                  <svg
+                      ref={svgRef}
+                      onMouseMove={handleMouseMove}
+                      onMouseUp={handleMouseUp}
+                      onMouseDown={handleSvgMouseDown}
+                      onMouseLeave={handleMouseUp}
+                      style={{ cursor: isPanning ? "grabbing" : "grab", ...svgStyle }}>
+                      <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
+                          {precedences.map((prec, idx) => {
+                            const from = nodePositions[prec.from];
+                            const to = nodePositions[prec.to];
+                            if (!from || !to) return null;
+                            
+                            const dx = to.x - from.x;
+                            const dy = to.y - from.y;
+                            const len = Math.sqrt(dx * dx + dy * dy);
+                            const ux = dx / len;
+                            const uy = dy / len;
+                            
+                            const startX = from.x + ux * 40;
+                            const startY = from.y + uy * 40;
+                            const endX = to.x - ux * 40;
+                            const endY = to.y - uy * 40;
+                            
+                            const arrowLen = 10;
+                            const arrowAngle = Math.PI / 6;
+                            const angle = Math.atan2(dy, dx);
+                            
+                            return (
+                                <g key={idx}>
+                                <line
+                                    x1={startX}
+                                    y1={startY}
+                                    x2={endX}
+                                    y2={endY}
+                                    stroke="#666"
+                                    strokeWidth={2}
+                                />
+                                <polygon
+                                    points={`${endX},${endY} ${endX - arrowLen * Math.cos(angle - arrowAngle)},${endY - arrowLen * Math.sin(angle - arrowAngle)} ${endX - arrowLen * Math.cos(angle + arrowAngle)},${endY - arrowLen * Math.sin(angle + arrowAngle)}`}
+                                    fill="#666"
+                                />
+                                </g>
+                            );
+                            })
+                          }
+
+                          {tasks.map(task => {
+                            const pos = nodePositions[task.id] || { x: 400, y: 300 };
+                            const isSelected = selectedNode === task.id;
+                            const isConnecting = connectingFrom === task.id;
+                            
+                            return (
+                                <g
+                                key={task.id}
+                                onMouseDown={(e) => handleNodeMouseDown(e, task.id)}
+                                onContextMenu={(e) => handleNodeRightClick(e, task.id)}
+                                style={{ cursor: "pointer" }}
+                                >
+                                <circle
+                                    cx={pos.x}
+                                    cy={pos.y}
+                                    r={40}
+                                    fill={isConnecting ? "#ff9800" : isSelected ? "#2196f3" : "#4caf50"}
+                                    stroke={isSelected ? "#1976d2" : "#388e3c"}
+                                    strokeWidth={3}
+                                />
+                                <text
+                                    x={pos.x}
+                                    y={pos.y}
+                                    textAnchor="middle"
+                                    fill="white"
+                                    fontSize="14"
+                                    fontWeight="bold"
+                                    pointerEvents="none"
+                                >
+                                    {task.label}
+                                </text>
+                                </g>
+                            );
+                            })
+                          }
+                      </g>
+                  </svg>
+
+                  <Box style={actionsTooltipStyle}>
+                  <Box style={{ marginBottom: "4px" }}>Left-click + drag: Move nodes</Box>
+                  <Box style={{ marginBottom: "4px" }}>Right-click: Connect tasks</Box>
+                  <Box style={{ marginBottom: "4px" }}>Canvas drag: Pan view</Box>
+                  <Box>Zoom: {(zoom * 100).toFixed(0)}%</Box>
+                  </Box>
+              </Box>
             </Box>
 
             <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="xs" fullWidth>

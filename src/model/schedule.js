@@ -10,6 +10,10 @@ export class Task {
         this.successors = []; // List of successor task IDs
     }
 
+    static getAttributeNames() {
+        return ['id', 'label', 'C', 'T', 'D', 'a', 'M', 'successors'];
+    }
+
     addSuccessor(taskId) {
         if(taskId === this.id) {
             throw new Error("A task cannot be a successor to itself");
@@ -87,38 +91,65 @@ export default class Schedule {
         }
     }
 
+    disconnectTasks(fromTaskId, toTaskId) {
+        const fromTask = this.tasks.get(fromTaskId);
+        if(fromTask) {
+            fromTask.removeSuccessor(toTaskId);
+        }
+    }
+
+    getTask(taskId) {
+        return this.tasks.get(taskId);
+    }
+
     getTasks() {
         return Array.from(this.tasks.values());
     }
 
-    toGraph() { // Returns tasks and their precedences
+    toGraph() { // Returns tasks and their precedences as arrays
         const tasksArray = Array.from(this.tasks.values());
         const precedences = [];
         for(let task of tasksArray) {
             for(let succId of task.successors) {
-                precedences.push({ from: task.id, to: succId });
+                precedences.push({ id: `${task.id}_${succId}`, from: task.id, to: succId });
             }
         }
+        
+        // Include relative positions if nodePositions and viewport dimensions are provided
+        /*
+        if (nodePositions && viewportDimensions) {
+            tasksArray.forEach(task => {
+                const pos = nodePositions[task.id];
+                if (pos && viewportDimensions.width > 0 && viewportDimensions.height > 0) {
+                    task.x = pos.x / viewportDimensions.width;  // Relative X (0-1)
+                    task.y = pos.y / viewportDimensions.height; // Relative Y (0-1)
+                }
+            });
+        }
+        */
+        
         return { tasks: tasksArray, precedences };
     }
 
-    static fromGraph(graph) {
-        const schedule = new Schedule();
-        for(let taskData of graph.tasks) {
-            const task = new Task(
-                taskData.id,
-                taskData.label,
-                taskData.C,
-                taskData.T,
-                taskData.D,
-                taskData.a,
-                taskData.M
-            );
-            schedule.addTask(task);
+    fromGraph({tasks, precedences}) { // Rebuild schedule from tasks and precedences arrays
+        this.tasks.clear();
+        const attributeNames = Task.getAttributeNames();
+        for(let t of tasks) {
+            Object.keys(t).some(key => { // Validate attributes
+                if(!attributeNames.includes(key) && key !== 'x' && key !== 'y') {
+                    throw new Error(`Unknown attribute in task: ${key}`);
+                }
+            });
+            const task = new Task(t.id, t.label, t.C, t.T, t.D, t.a, t.M);
+            this.addTask(task);
         }
-        for(const {from, to} of graph.precedences) {
-            schedule.connectTasks(from, to);
+        
+        for(let e of precedences) {
+            if(this.tasks.has(e.from) && this.tasks.has(e.to)) {
+                this.connectTasks(e.from, e.to);    
+            } else {
+                throw new Error(`Invalid precedence from ${e.from} to ${e.to}`);
+            }
         }
-        return schedule;
     }
 };

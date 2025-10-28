@@ -17,11 +17,8 @@ export const importJSON = file => {
         const reader = new FileReader();
         reader.onload = (ev) => {
             try {
-                const parsed = JSON.parse(ev.target.result);
-                if (!Array.isArray(parsed.tasks) || !Array.isArray(parsed.precedences)) throw Error("Invalid format");
-                const tasks = parsed.tasks.map(n => ({...n}));
-                const precedences = parsed.precedences.map(e => ({...e}));
-                resolve({ tasks, precedences });
+                const data = JSON.parse(ev.target.result);
+                resolve(data);
             } catch (err) {
                 alert("Failed to import: " + err.message);
                 reject(err);

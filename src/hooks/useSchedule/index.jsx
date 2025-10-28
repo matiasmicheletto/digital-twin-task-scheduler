@@ -30,6 +30,15 @@ const useSchedule = () => {
         }
     }, []);
 
+    const disconnectTasks = useCallback((fromTaskId, toTaskId) => {
+        scheduleRef.current.disconnectTasks(fromTaskId, toTaskId);
+        forceUpdate();
+    }, []);
+
+    const getTask = useCallback(taskId => {
+        return scheduleRef.current.getTask(taskId);
+    }, []);
+
     const getTasks = useCallback(() => {
         return scheduleRef.current.getTasks();
     }, []);
@@ -38,8 +47,8 @@ const useSchedule = () => {
         return scheduleRef.current.toGraph();
     }, []);
 
-    const fromGraph = useCallback((graph) => {
-        scheduleRef.current = Schedule.fromGraph(graph);
+    const fromGraph = useCallback(graph => {
+        scheduleRef.current.fromGraph(graph);
         forceUpdate();
     }, []);
 
@@ -48,6 +57,8 @@ const useSchedule = () => {
         addTask,
         removeTask,
         connectTasks,
+        disconnectTasks,
+        getTask,
         getTasks,
         toGraph,
         fromGraph
