@@ -1,5 +1,5 @@
 import { useRef, useReducer, useCallback } from "react";
-import Schedule from "../../model/schedule";
+import Schedule from "../../model";
 
 const schedule = new Schedule();
 
@@ -10,6 +10,10 @@ const useSchedule = () => {
     const addTask = useCallback((task) => {
         scheduleRef.current.addTask(task);
         forceUpdate();
+    }, []);
+
+    const toTaskObject = useCallback((obj) => {
+        return Schedule.toTaskObject(obj);
     }, []);
 
     const removeTask = useCallback((taskId) => {
@@ -55,6 +59,7 @@ const useSchedule = () => {
     return {
         schedule: scheduleRef.current,
         addTask,
+        toTaskObject,
         removeTask,
         connectTasks,
         disconnectTasks,

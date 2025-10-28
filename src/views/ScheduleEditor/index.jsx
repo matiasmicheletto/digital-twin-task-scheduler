@@ -22,7 +22,7 @@ import {
     MenuItem
 } from "@mui/material";
 import MainView from "../../components/MainView";
-import { useScheduleContext } from "../../context/Schedule";
+import { useScheduleContext } from "../../context/Model";
 import { 
     AddCircle, 
     Delete, 
@@ -34,7 +34,6 @@ import {
     Link,
     Edit
 } from "@mui/icons-material";
-import { Task } from "../../model/schedule";
 import { importJSON, exportJSON } from "../../model/utils";
 
 
@@ -59,6 +58,7 @@ const actionsTooltipStyle = {
 const View = () => {
   const { 
     addTask, 
+    toTaskObject,
     getTask, 
     removeTask, 
     connectTasks, 
@@ -104,16 +104,7 @@ const View = () => {
 
   const handleSaveTask = () => {
     if (editingTask) {
-      const task = new Task(
-        editingTask.id,
-        editingTask.label,
-        parseFloat(editingTask.C),
-        parseFloat(editingTask.T),
-        parseFloat(editingTask.D),
-        parseFloat(editingTask.a),
-        parseFloat(editingTask.M)
-      );
-      addTask(task);
+      addTask(toTaskObject(editingTask));
       
       if (!nodePositions[editingTask.id]) {
         setNodePositions(prev => ({
@@ -292,26 +283,27 @@ const View = () => {
 
                         <Tooltip title="Import / Export">
                             <IconButton onClick={openMenu}>
-                                <Upload />
+                                <Download />
                             </IconButton>
                         </Tooltip>
                         <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={closeMenu}>
-                          <MenuItem onClick={() => {closeMenu(); handleExport();}}>
-                              <Download fontSize="small" sx={{ mr: 1 }} /> Export JSON
-                          </MenuItem>
                           <MenuItem>
                               <label style={{ cursor: "pointer", width: "100%" }}>
                               <input
                                   type="file"
                                   accept="application/json"
                                   style={{ display: "none" }}
-                                  onChange={(ev) => {
+                                  onChange={ev => {
                                     const f = ev.target.files?.[0];
-                                    if (f) handleImport(f);
+                                    if (f) 
+                                      handleImport(f);
                                     closeMenu();
                                   }}/>
                               <Upload fontSize="small" sx={{ mr: 1 }} /> Import JSON
                               </label>
+                          </MenuItem>
+                          <MenuItem onClick={() => {closeMenu(); handleExport();}}>
+                              <Download fontSize="small" sx={{ mr: 1 }} /> Export JSON
                           </MenuItem>
                         </Menu>
                     </Stack>

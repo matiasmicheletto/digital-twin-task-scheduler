@@ -50,6 +50,10 @@ export default class Schedule {
         this.tasks.set(task.id, task);
     }
 
+    static toTaskObject(obj) {
+        return new Task(obj.id, obj.label, obj.C, obj.T, obj.D, obj.a, obj.M);
+    }
+
     removeTask(taskId) {
         if(this.tasks.has(taskId)) {
             this.tasks.delete(taskId);
