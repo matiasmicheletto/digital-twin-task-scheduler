@@ -79,6 +79,7 @@ const View = () => {
   const [draggingNode, setDraggingNode] = useState(null);
   const [connectingFrom, setConnectingFrom] = useState(null);
   const [selectedNode, setSelectedNode] = useState(null);
+  const [hoveredNode, setHoveredNode] = useState(null);
   
   // Editing dialog
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -130,9 +131,10 @@ const View = () => {
     }
   };
 
-  const handleNodeRightClick = (e, taskId) => {
+  const handleNodeContextMenu = (e, taskId) => {
+    console.log(connectingFrom);
     e.preventDefault();
-    if(!taskId) return; // Ignore if not on a node
+    e.stopPropagation();
     if (connectingFrom === null) {
       setConnectingFrom(taskId);
     } else {
@@ -143,7 +145,7 @@ const View = () => {
     }
   };
 
-  const handleMouseMove = (e) => {
+  const handleMouseMove = e => {
     if (draggingNode) {
       const rect = svgRef.current.getBoundingClientRect();
       const x = (e.clientX - rect.left - pan.x) / zoom;
@@ -166,13 +168,14 @@ const View = () => {
     setIsPanning(false);
   };
 
-  const handleSvgMouseDown = (e) => {
+  const handleSvgMouseDown = e => {
     if (e.button === 0 && !draggingNode) {
       setIsPanning(true);
       setPanStart({ x: e.clientX, y: e.clientY });
       setSelectedNode(null);
     }
-    setConnectingFrom(null);
+    if(e.target.tagName === 'svg' || e.target.tagName === 'g')
+      setConnectingFrom(null);
   };
 
   const handleSvgContextMenu = e => {
@@ -190,7 +193,7 @@ const View = () => {
     setPan({ x: 0, y: 0 });
   };
 
-  const handleStartConnecting = e => {
+  const handleStartConnecting = (e, n) => {
     e.stopPropagation(); 
     if(connectingFrom) 
       setConnectingFrom(null); 
@@ -321,7 +324,7 @@ const View = () => {
                       </Tooltip>
                   </Box>
                   <List dense>
-                      {tasks.map((n) => (
+                      {tasks.map(n => (
                           <React.Fragment key={n.id}>
                               <ListItem
                                 selected={selectedNode === n.id}
@@ -330,7 +333,7 @@ const View = () => {
                                   backgroundColor: selectedNode === n.id ? "#000" : (connectingFrom === n.id ? "#666" : "inherit") }}
                                 secondaryAction={
                                     <Stack direction="row" spacing={1}>
-                                      <IconButton edge="end" onClick={handleStartConnecting} size="small">
+                                      <IconButton edge="end" onClick={e => handleStartConnecting(e, n)} size="small">
                                           <Link fontSize="small" />
                                       </IconButton>
                                       <IconButton edge="end" onClick={() => {setEditingTask(n); setDialogOpen(true);}} size="small">
@@ -352,7 +355,7 @@ const View = () => {
                       Precedences
                   </Typography>
                   <List dense>
-                      {precedences.map((e) => (
+                      {precedences.map(e => (
                         <ListItem key={e.id} secondaryAction={<IconButton onClick={() => disconnectTasks(e.from, e.to)} size="small"><Delete fontSize="small"/></IconButton>}>
                             <ListItemText primary={`${getTask(e.from)?.label ?? e.from} → ${getTask(e.to)?.label ?? e.to}`} secondary={`id: ${e.id}`} />
                         </ListItem>
@@ -393,18 +396,16 @@ const View = () => {
                             
                             return (
                                 <g key={idx}>
-                                <line
-                                    x1={startX}
-                                    y1={startY}
-                                    x2={endX}
-                                    y2={endY}
-                                    stroke="#666"
-                                    strokeWidth={2}
-                                />
-                                <polygon
-                                    points={`${endX},${endY} ${endX - arrowLen * Math.cos(angle - arrowAngle)},${endY - arrowLen * Math.sin(angle - arrowAngle)} ${endX - arrowLen * Math.cos(angle + arrowAngle)},${endY - arrowLen * Math.sin(angle + arrowAngle)}`}
-                                    fill="#666"
-                                />
+                                  <line
+                                      x1={startX}
+                                      y1={startY}
+                                      x2={endX}
+                                      y2={endY}
+                                      stroke="#666"
+                                      strokeWidth={2}/>
+                                  <polygon
+                                      points={`${endX},${endY} ${endX - arrowLen * Math.cos(angle - arrowAngle)},${endY - arrowLen * Math.sin(angle - arrowAngle)} ${endX - arrowLen * Math.cos(angle + arrowAngle)},${endY - arrowLen * Math.sin(angle + arrowAngle)}`}
+                                      fill="#666"/>
                                 </g>
                             );
                             })
@@ -416,32 +417,102 @@ const View = () => {
                             const isConnecting = connectingFrom === task.id;
                             
                             return (
+                              <g key={task.id}>
                                 <g
-                                  key={task.id}
-                                  onMouseDown={(e) => handleNodeMouseDown(e, task.id)}
-                                  onContextMenu={(e) => handleNodeRightClick(e, task.id)}
+                                  onMouseDown={e => handleNodeMouseDown(e, task.id)}
+                                  onContextMenu={e => handleNodeContextMenu(e, task.id)}
+                                  onMouseEnter={() => setHoveredNode(task.id)}
+                                  onMouseLeave={() => setHoveredNode(null)}
                                   style={{ cursor: "pointer" }}>
                                   <circle
                                       cx={pos.x}
                                       cy={pos.y}
-                                      r={40}
-                                      fill={isConnecting ? "#ff9800" : isSelected ? "#2196f3" : "#4caf50"}
-                                      stroke={isSelected ? "#1976d2" : "#388e3c"}
+                                      r={30}
+                                      fill={isConnecting ? "#5f2e2eff" : isSelected ? "#949494ff" : "#161616ff"}
+                                      stroke={isConnecting ? "#ff0000" : isSelected ? "#ffffffff" : "#727272ff"}
+                                      strokeDasharray={isConnecting ? "4 2" : "none"}
                                       strokeWidth={3}/>
                                   <text
                                       x={pos.x}
-                                      y={pos.y}
+                                      y={pos.y+5}
                                       textAnchor="middle"
-                                      fill="white"
+                                      fill={isSelected ? "#161616ff" : "#ebebebff"}
                                       fontSize="14"
                                       fontWeight="bold"
                                       pointerEvents="none">
                                       {task.label}
                                   </text>
                                 </g>
+                                {hoveredNode === task.id && !draggingNode &&
+                                  <g>
+                                    <rect
+                                      x={pos.x-15}
+                                      y={pos.y}
+                                      width={80}
+                                      height={140}
+                                      fill="white"
+                                      stroke="black"
+                                      strokeWidth={2}/>
+                                    <text
+                                        x={pos.x}
+                                        y={pos.y + 20}
+                                        textAnchor="start"
+                                        fill="black"
+                                        fontSize="12"
+                                        pointerEvents="none">
+                                        {`id: ${task.id}`}
+                                    </text>
+                                    <text
+                                        x={pos.x}
+                                        y={pos.y + 40}
+                                        textAnchor="start"
+                                        fill="black"
+                                        fontSize="12"
+                                        pointerEvents="none">
+                                        {`C: ${task.C}`}
+                                    </text>
+                                    <text
+                                        x={pos.x}
+                                        y={pos.y + 60}
+                                        textAnchor="start"
+                                        fill="black"
+                                        fontSize="12"
+                                        pointerEvents="none">
+                                        {`T: ${task.T}`}
+                                    </text>
+                                    <text
+                                        x={pos.x}
+                                        y={pos.y + 80}
+                                        textAnchor="start"
+                                        fill="black"
+                                        fontSize="12"
+                                        pointerEvents="none">
+                                        {`D: ${task.D}`}
+                                    </text>
+                                    <text
+                                        x={pos.x}
+                                        y={pos.y + 100}
+                                        textAnchor="start"
+                                        fill="black"
+                                        fontSize="12"
+                                        pointerEvents="none">
+                                        {`a: ${task.a}`}
+                                    </text>
+                                    <text
+                                        x={pos.x}
+                                        y={pos.y + 120}
+                                        textAnchor="start"
+                                        fill="black"
+                                        fontSize="12"
+                                        pointerEvents="none">
+                                        {`M: ${task.M}`}
+                                    </text>
+                                  </g>
+                                }
+                              </g>
                             );
-                            })
-                          }
+                          })
+                        }
                       </g>
                   </svg>
 
@@ -467,32 +538,32 @@ const View = () => {
                             label="Label"
                             type="text"
                             value={editingTask?.label || ""}
-                            onChange={(e) => setEditingTask({ ...editingTask, label: e.target.value })}/>
+                            onChange={e => setEditingTask({ ...editingTask, label: e.target.value })}/>
                         <TextField
                             label="Execution Time"
                             type="number"
                             value={editingTask?.C || 0}
-                            onChange={(e) => setEditingTask({ ...editingTask, C: e.target.value })}/>
+                            onChange={e => setEditingTask({ ...editingTask, C: e.target.value })}/>
                         <TextField
                             label="Period"
                             type="number"
                             value={editingTask?.T || 0}
-                            onChange={(e) => setEditingTask({ ...editingTask, T: e.target.value })}/>
+                            onChange={e => setEditingTask({ ...editingTask, T: e.target.value })}/>
                         <TextField
                             label="Deadline"
                             type="number"
                             value={editingTask?.D || 0}
-                            onChange={(e) => setEditingTask({ ...editingTask, D: e.target.value })}/>
+                            onChange={e => setEditingTask({ ...editingTask, D: e.target.value })}/>
                         <TextField
                             label="Activation Time"
                             type="number"
                             value={editingTask?.a || 0}
-                            onChange={(e) => setEditingTask({ ...editingTask, a: e.target.value })}/>
+                            onChange={e => setEditingTask({ ...editingTask, a: e.target.value })}/>
                         <TextField
                             label="Memory"
                             type="number"
                             value={editingTask?.M || 0}
-                            onChange={(e) => setEditingTask({ ...editingTask, M: e.target.value })}/>
+                            onChange={e => setEditingTask({ ...editingTask, M: e.target.value })}/>
                     </Stack>
                 </DialogContent>
                 <DialogActions>
