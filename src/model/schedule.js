@@ -106,10 +106,6 @@ export default class Schedule {
         return this.tasks.get(taskId);
     }
 
-    getTasks() {
-        return Array.from(this.tasks.values());
-    }
-
     toGraph() { // Returns tasks and their precedences as arrays
         const tasksArray = Array.from(this.tasks.values());
         const precedences = [];
@@ -118,19 +114,6 @@ export default class Schedule {
                 precedences.push({ id: `${task.id}_${succId}`, from: task.id, to: succId });
             }
         }
-        
-        // Include relative positions if nodePositions and viewport dimensions are provided
-        /*
-        if (nodePositions && viewportDimensions) {
-            tasksArray.forEach(task => {
-                const pos = nodePositions[task.id];
-                if (pos && viewportDimensions.width > 0 && viewportDimensions.height > 0) {
-                    task.x = pos.x / viewportDimensions.width;  // Relative X (0-1)
-                    task.y = pos.y / viewportDimensions.height; // Relative Y (0-1)
-                }
-            });
-        }
-        */
         
         return { tasks: tasksArray, precedences };
     }
@@ -157,3 +140,5 @@ export default class Schedule {
         }
     }
 };
+
+

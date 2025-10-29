@@ -1,0 +1,24 @@
+.sidePanel::-webkit-scrollbar {
+  width: 10px;              /* width of vertical scrollbar */
+}
+
+.sidePanel::-webkit-scrollbar-track {
+  background: #2a2a2a;      /* dark background track */
+  border-radius: 5px;
+}
+
+.sidePanel::-webkit-scrollbar-thumb {
+  background-color: #555;   /* dark thumb */
+  border-radius: 5px;
+  border: 2px solid #2a2a2a; /* padding around thumb */
+}
+
+.sidePanel::-webkit-scrollbar-thumb:hover {
+  background-color: #888;   /* lighter on hover */
+}
+
+/* Firefox */
+.sidePanel {
+  scrollbar-width: thin;
+  scrollbar-color: #555 #2a2a2a;
+}

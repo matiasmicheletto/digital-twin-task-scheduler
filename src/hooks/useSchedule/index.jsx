@@ -1,5 +1,5 @@
 import { useRef, useReducer, useCallback } from "react";
-import Schedule from "../../model";
+import Schedule from "../../model/schedule.js";
 
 const schedule = new Schedule();
 
@@ -7,16 +7,16 @@ const useSchedule = () => {
     const scheduleRef = useRef(schedule);
     const [, forceUpdate] = useReducer(x => x + 1, 0);
 
-    const addTask = useCallback((task) => {
+    const addTask = useCallback(task => {
         scheduleRef.current.addTask(task);
         forceUpdate();
     }, []);
 
-    const toTaskObject = useCallback((obj) => {
+    const toTaskObject = useCallback(obj => {
         return Schedule.toTaskObject(obj);
     }, []);
 
-    const removeTask = useCallback((taskId) => {
+    const removeTask = useCallback(taskId => {
         scheduleRef.current.removeTask(taskId);
         forceUpdate();
     }, []);
@@ -39,10 +39,6 @@ const useSchedule = () => {
         return scheduleRef.current.getTask(taskId);
     }, []);
 
-    const getTasks = useCallback(() => {
-        return scheduleRef.current.getTasks();
-    }, []);
-
     const toGraph = useCallback(() => {
         return scheduleRef.current.toGraph();
     }, []);
@@ -60,7 +56,6 @@ const useSchedule = () => {
         connectTasks,
         disconnectTasks,
         getTask,
-        getTasks,
         toGraph,
         fromGraph
     };
