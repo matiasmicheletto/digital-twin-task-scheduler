@@ -5,7 +5,8 @@ import views from "../../views";
 
 const toolbarStyle = {
     backgroundColor: "#333333 !important",
-    opacity: "0.8"
+    opacity: "0.8",
+    height: "64px"
 };
 
 const Navigation = () => {

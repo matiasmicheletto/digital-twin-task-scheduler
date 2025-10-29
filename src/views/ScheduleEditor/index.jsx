@@ -41,12 +41,23 @@ import {
   loadFromLocalStorage 
 } from "../../model/utils";
 
+const containerStyle = { 
+  position: "absolute",
+  top: "64px", // Below the navigation bar
+  left: 0,
+  width: "calc(100% - 20px)",
+  flexDirection: "column",
+  height: "calc(100vh - 84px)", // Full height minus small margins
+  margin: "10px", // Small margin around the entire component
+  overflow: "hidden" // Prevent Paper from scrolling
+};
+
 const sidePanelStyle = { 
   width: 350, 
   borderRight: "1px solid #eee", 
-  p: 1, 
+  p: 1,
+  height: "calc(100vh - 132px)", // Full height minus toolbars
   overflow: "auto",
-  maxHeight: "calc(100vh - 120px)", // Maximum height with room for toolbar
   display: "flex",
   flexDirection: "column"
 };
@@ -61,8 +72,9 @@ const svgStyle = { // Full size SVG canvas
 
 const actionsTooltipStyle = { // Help box in canvas
   position: "fixed", 
-  bottom: "16px", 
-  right: "16px", 
+  bottom: 0, 
+  right: 0, 
+  margin: "20px",
   padding: "16px", 
   borderRadius: "8px", 
   fontSize: "12px", 
@@ -340,15 +352,7 @@ const View = () => {
 
   return (
     <MainView>
-        <Paper 
-          elevation={3} 
-          sx={{ 
-            display: "flex", 
-            flexDirection: "column",
-            height: "calc(100vh - 32px)", // Full height minus small margins
-            margin: "16px", // Small margin around the entire component
-            overflow: "hidden" // Prevent Paper from scrolling
-          }}>
+        <Paper elevation={3} sx={containerStyle}>
           <Box sx={{ flexGrow: 1, position: "relative", display: "flex", flexDirection: "column" }}>
             <AppBar position="static" color="default" elevation={1}>
                 <Toolbar variant="dense">
