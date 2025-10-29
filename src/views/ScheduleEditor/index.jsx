@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { 
     AppBar,
     Toolbar,
@@ -34,10 +34,24 @@ import {
     Link,
     Edit
 } from "@mui/icons-material";
-import { importJSON, exportJSON } from "../../model/utils";
+import { 
+  importJSON, 
+  exportJSON,
+  saveToLocalStorage,
+  loadFromLocalStorage 
+} from "../../model/utils";
 
+const sidePanelStyle = { 
+  width: 350, 
+  borderRight: "1px solid #eee", 
+  p: 1, 
+  overflow: "auto",
+  maxHeight: "calc(100vh - 120px)", // Maximum height with room for toolbar
+  display: "flex",
+  flexDirection: "column"
+};
 
-const svgStyle = {
+const svgStyle = { // Full size SVG canvas
     position: "absolute",
     inset: 0,
     width: "100%",
@@ -45,15 +59,16 @@ const svgStyle = {
     zIndex: 0
 };
 
-const actionsTooltipStyle = { 
-  position: "absolute", 
+const actionsTooltipStyle = { // Help box in canvas
+  position: "fixed", 
   bottom: "16px", 
   right: "16px", 
   padding: "16px", 
   borderRadius: "8px", 
   fontSize: "12px", 
   boxShadow: "0 2px 8px rgba(0,0,0,0.7)",
-}
+};
+
 
 const View = () => {
   const { 
@@ -67,30 +82,102 @@ const View = () => {
     fromGraph 
   } = useScheduleContext();
 
-  // Map
+  // Canvas
   const svgRef = useRef(null);
-  const [nodePositions, setNodePositions] = useState({});
+  const [nodePositions, setNodePositions] = useState({}); // { taskId: {x, y} }
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   
-  // Interaction (ids)
+  // Interactions (ids)
   const [draggingNode, setDraggingNode] = useState(null);
   const [connectingFrom, setConnectingFrom] = useState(null);
   const [selectedNode, setSelectedNode] = useState(null);
   const [hoveredNode, setHoveredNode] = useState(null);
   
-  // Editing dialog
+  // Task parameteres editing dialog
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   
   const [anchorEl, setAnchorEl] = useState(null);
-  const [nextTaskId, setNextTaskId] = useState(1);
+  const [nextTaskId, setNextTaskId] = useState(1); // For generating new task IDs
 
   const { tasks, precedences } = toGraph(); // For display purposes, no positions needed
 
-  const handleAddTask = () => { // Initial values
+  useEffect(() => { // Auto-save to localStorage
+    const autoSaveData = () => {
+      const svgRect = svgRef.current?.getBoundingClientRect();
+      const viewportDimensions = svgRect ? { 
+        width: svgRect.width, 
+        height: svgRect.height 
+      } : null;
+      
+      const scheduleData = {
+        ...toGraph(),
+        nodePositions,
+        viewportDimensions
+      };
+      
+      saveToLocalStorage('savedSchedules', scheduleData);
+    };
+
+    // Auto-save when tasks or positions change
+    if (tasks.length > 0 || Object.keys(nodePositions).length > 0) {
+      const timeoutId = setTimeout(autoSaveData, 1000); // Debounce saves
+      return () => clearTimeout(timeoutId);
+    }
+  }, [tasks, precedences, nodePositions, toGraph]);
+
+  useEffect(() => { // Load saved data on component mount
+    const savedData = loadFromLocalStorage('savedSchedules');
+    if (savedData && savedData.tasks && savedData.tasks.length > 0) {
+      try {
+        fromGraph(savedData);
+        
+        if (savedData.nodePositions) {
+          setNodePositions(savedData.nodePositions);
+        }
+        
+        // Update next task ID based on loaded tasks
+        const maxId = savedData.tasks.reduce((max, task) => {
+          const idNum = parseInt(task.id.replace('T', ''));
+          return isNaN(idNum) ? max : Math.max(max, idNum);
+        }, 0);
+        setNextTaskId(maxId + 1);
+        handleResetView(savedData.nodePositions);
+      } catch (error) {
+        console.error('Failed to load saved schedule:', error);
+      }
+    }
+  }, [fromGraph]);
+
+  const handleResetView = (positions = nodePositions) => { // Reset pan and zoom to fit all nodes
+    const svgRect = svgRef.current?.getBoundingClientRect();
+    if (svgRect) {
+      // Calculate bounding box of all nodes
+      const pos = Object.values(positions);
+      if (pos.length === 0) return;
+      const xs = pos.map(p => p.x);
+      const ys = pos.map(p => p.y);
+      const minX = Math.min(...xs);
+      const maxX = Math.max(...xs);
+      const minY = Math.min(...ys);
+      const maxY = Math.max(...ys);
+      const nodesWidth = maxX - minX + 80; // + node diameter
+      const nodesHeight = maxY - minY + 80; // + node diameter
+      const scaleX = svgRect.width / nodesWidth;
+      const scaleY = svgRect.height / nodesHeight;
+      const newZoom = Math.min(scaleX, scaleY, 1);
+      setZoom(newZoom);
+      setPan({
+        x: (svgRect.width - nodesWidth * newZoom) / 2 - minX * newZoom + 40 * newZoom,
+        y: (svgRect.height - nodesHeight * newZoom) / 2 - minY * newZoom + 40 * newZoom
+      });
+    }
+  };
+
+  const handleAddTask = () => { // Add a task with default initial parameters
     setEditingTask({
       id: `T${nextTaskId}`,
       label: `Task ${nextTaskId}`,
@@ -103,7 +190,7 @@ const View = () => {
     setDialogOpen(true);
   };
 
-  const handleSaveTask = () => {
+  const handleSaveTask = () => { // Save task after completing form
     if (editingTask) {
       addTask(toTaskObject(editingTask));
       
@@ -120,6 +207,7 @@ const View = () => {
       setNextTaskId(prev => prev + 1);
       setDialogOpen(false);
       setEditingTask(null);
+      handleResetView();
     }
   };
 
@@ -188,10 +276,6 @@ const View = () => {
 
   const handleZoomIn = () => setZoom(prev => Math.min(prev * 1.2, 3));
   const handleZoomOut = () => setZoom(prev => Math.max(prev / 1.2, 0.3));
-  const handleResetView = () => {
-    setZoom(1);
-    setPan({ x: 0, y: 0 });
-  };
 
   const handleStartConnecting = (e, n) => {
     e.stopPropagation(); 
@@ -256,7 +340,16 @@ const View = () => {
 
   return (
     <MainView>
-        <Paper elevation={3} sx={{ minHeight: 400, display: "flex", flexDirection: "column" }}>
+        <Paper 
+          elevation={3} 
+          sx={{ 
+            display: "flex", 
+            flexDirection: "column",
+            height: "calc(100vh - 32px)", // Full height minus small margins
+            margin: "16px", // Small margin around the entire component
+            overflow: "hidden" // Prevent Paper from scrolling
+          }}>
+          <Box sx={{ flexGrow: 1, position: "relative", display: "flex", flexDirection: "column" }}>
             <AppBar position="static" color="default" elevation={1}>
                 <Toolbar variant="dense">
                     <Typography variant="h6" sx={{ flexGrow: 1 }}>
@@ -274,7 +367,7 @@ const View = () => {
                             </IconButton>
                         </Tooltip>
                         <Tooltip title="Reset View">
-                            <IconButton onClick={handleResetView}>
+                            <IconButton onClick={() => handleResetView()}>
                               <RestartAlt/>
                             </IconButton>
                         </Tooltip>
@@ -313,9 +406,9 @@ const View = () => {
                 </Toolbar>
             </AppBar>
 
-            <Box sx={{ display: "flex", flex: 1 }}>
-              <Box sx={{ width: 350, borderRight: "1px solid #eee", p: 1, overflow: "auto" }}>
-                  <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <Box sx={{ display: "flex", flex: 1, height: "100%" }}>
+              <Box sx={sidePanelStyle}>
+                  <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
                       <Typography variant="subtitle1">Tasks</Typography>
                       <Tooltip title="Add task">
                           <IconButton color="primary" onClick={handleAddTask}>
@@ -323,44 +416,46 @@ const View = () => {
                           </IconButton>
                       </Tooltip>
                   </Box>
-                  <List dense>
-                      {tasks.map(n => (
-                          <React.Fragment key={n.id}>
-                              <ListItem
-                                selected={selectedNode === n.id}
-                                sx={{ 
-                                  cursor: "pointer", 
-                                  backgroundColor: selectedNode === n.id ? "#000" : (connectingFrom === n.id ? "#666" : "inherit") }}
-                                secondaryAction={
-                                    <Stack direction="row" spacing={1}>
-                                      <IconButton edge="end" onClick={e => handleStartConnecting(e, n)} size="small">
-                                          <Link fontSize="small" />
-                                      </IconButton>
-                                      <IconButton edge="end" onClick={() => {setEditingTask(n); setDialogOpen(true);}} size="small">
-                                          <Edit fontSize="small" />
-                                      </IconButton>
-                                      <IconButton edge="end" onClick={() => removeTask(n.id)} size="small">
-                                          <Delete fontSize="small" />
-                                      </IconButton>
-                                    </Stack>
-                                }>
-                                <ListItemText primary={`${n.label} (C:${n.C} T:${n.T} D:${n.D} a:${n.a} M:${n.M})`} secondary={`id: ${n.id}`} />
-                              </ListItem>
-                              <Divider />
-                          </React.Fragment>
-                      ))}
-                  </List>
+                  <Box sx={{ flexGrow: 1, overflow: "auto", minHeight: 0 }}>
+                    <List dense>
+                        {tasks.map(n => (
+                            <React.Fragment key={n.id}>
+                                <ListItem
+                                  selected={selectedNode === n.id}
+                                  sx={{ 
+                                    cursor: "pointer", 
+                                    backgroundColor: selectedNode === n.id ? "#000" : (connectingFrom === n.id ? "#666" : "inherit") }}
+                                  secondaryAction={
+                                      <Stack direction="row" spacing={1}>
+                                        <IconButton edge="end" onClick={e => handleStartConnecting(e, n)} size="small">
+                                            <Link fontSize="small" />
+                                        </IconButton>
+                                        <IconButton edge="end" onClick={() => {setEditingTask(n); setDialogOpen(true);}} size="small">
+                                            <Edit fontSize="small" />
+                                        </IconButton>
+                                        <IconButton edge="end" onClick={() => removeTask(n.id)} size="small">
+                                            <Delete fontSize="small" />
+                                        </IconButton>
+                                      </Stack>
+                                  }>
+                                  <ListItemText primary={`${n.label} (C:${n.C} T:${n.T} D:${n.D} a:${n.a} M:${n.M})`} secondary={`id: ${n.id}`} />
+                                </ListItem>
+                                <Divider />
+                            </React.Fragment>
+                        ))}
+                    </List>
 
-                  <Typography variant="subtitle1" sx={{ mt: 2 }}>
-                      Precedences
-                  </Typography>
-                  <List dense>
-                      {precedences.map(e => (
-                        <ListItem key={e.id} secondaryAction={<IconButton onClick={() => disconnectTasks(e.from, e.to)} size="small"><Delete fontSize="small"/></IconButton>}>
-                            <ListItemText primary={`${getTask(e.from)?.label ?? e.from} → ${getTask(e.to)?.label ?? e.to}`} secondary={`id: ${e.id}`} />
-                        </ListItem>
-                      ))}
-                  </List>
+                    <Typography variant="subtitle1" sx={{ mt: 2, px: 2 }}>
+                        Precedences
+                    </Typography>
+                    <List dense>
+                        {precedences.map(e => (
+                          <ListItem key={e.id} secondaryAction={<IconButton onClick={() => disconnectTasks(e.from, e.to)} size="small"><Delete fontSize="small"/></IconButton>}>
+                              <ListItemText primary={`${getTask(e.from)?.label ?? e.from} → ${getTask(e.to)?.label ?? e.to}`} secondary={`id: ${e.id}`} />
+                          </ListItem>
+                        ))}
+                    </List>
+                  </Box>
               </Box>
 
               <Box style={{ flexGrow: 1, overflow: "hidden", position: "relative"}}>
@@ -571,6 +666,7 @@ const View = () => {
                     <Button onClick={handleSaveTask} variant="contained">Save</Button>
                 </DialogActions>
             </Dialog>
+          </Box>
         </Paper>
     </MainView>
   );

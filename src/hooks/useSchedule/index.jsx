@@ -17,12 +17,8 @@ const useSchedule = () => {
     }, []);
 
     const removeTask = useCallback((taskId) => {
-        try{
-            scheduleRef.current.removeTask(taskId);
-            forceUpdate();
-        } catch (error) {
-            console.error(error);
-        }
+        scheduleRef.current.removeTask(taskId);
+        forceUpdate();
     }, []);
 
     const connectTasks = useCallback((fromTaskId, toTaskId) => {
@@ -30,7 +26,7 @@ const useSchedule = () => {
             scheduleRef.current.connectTasks(fromTaskId, toTaskId);
             forceUpdate();
         } catch (error) {
-            console.error(error);
+            throw error;
         }
     }, []);
 
