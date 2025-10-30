@@ -5,7 +5,10 @@ import {
     DialogActions,
     Button,
     TextField,
+    FormControl,
+    InputLabel,
     Select,
+    MenuItem,
     Stack
 } from "@mui/material";
 
@@ -21,7 +24,7 @@ const EditDialog = (props) => {
 
     return (
         <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="xs" fullWidth>
-            <DialogTitle>Add New Task</DialogTitle>
+            <DialogTitle>Add/Edit New Task</DialogTitle>
             <DialogContent>
                 <Stack spacing={2} sx={{ mt: 1 }}>
                     <TextField
@@ -29,19 +32,21 @@ const EditDialog = (props) => {
                         type="text"
                         value={editingTask?.id || ""}
                         disabled/>
-                        
                     <TextField
                         label="Label"
                         type="text"
                         value={editingTask?.label || ""}
                         onChange={e => setEditingTask({ ...editingTask, label: e.target.value })}/>
-                    <Select
-                        native
-                        value={editingTask?.mist ? "mist" : "regular"}
-                        onChange={e => setEditingTask({ ...editingTask, mist: e.target.value === "mist" })}>
-                        <option value="regular">Edge/Cloud Task</option>
-                        <option value="mist">Mist Task</option>
-                    </Select>
+                    <FormControl fullWidth>
+                        <InputLabel>Task Type</InputLabel>
+                        <Select
+                            label="Task Type"
+                            value={editingTask?.mist ? "mist" : "regular"}
+                            onChange={e => setEditingTask({ ...editingTask, mist: e.target.value === "mist" })}>
+                            <MenuItem value="regular">Edge/Cloud Task</MenuItem>
+                            <MenuItem value="mist">Mist Task</MenuItem>
+                        </Select>
+                    </FormControl>
                     <TextField
                         label="Execution Time"
                         type="number"

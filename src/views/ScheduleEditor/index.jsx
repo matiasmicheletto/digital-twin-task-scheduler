@@ -1,31 +1,23 @@
-import React, { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import { 
-    List,
-    ListItem,
-    ListItemText,
-    Divider,
     Box, 
-    Stack,
-    Paper,
-    Typography,
-    Tooltip,
-    IconButton
+    Paper
 } from "@mui/material";
-import { 
-    AddCircle, 
-    Delete, 
-    Link,
-    Edit
-} from "@mui/icons-material";
 import MainView from "../../components/MainView";
 import EditDialog from "./editDialog";
 import AppBar from "./appBar";
+import SidePanel from "./sidePanel";
 import useToast from "../../hooks/useToast";
 import {
   TaskCircle,
   Arrow,
   TaskTooltip
-} from "./geometries";
+} from "../../components/Svg";
+import {
+  containerStyle,
+  svgStyle,
+  actionsTooltipStyle
+} from "../../themes/common";
 import { useScheduleContext } from "../../context/Model";
 import TaskGenerator, {PRESETS} from "../../model/taskGenerator";
 import GraphLayout from "../../model/graphLayout";
@@ -35,57 +27,15 @@ import {
   saveToLocalStorage,
   loadFromLocalStorage 
 } from "../../model/utils";
-import classes from './style.module.css';
-
-
-const containerStyle = { 
-  position: "absolute",
-  top: "64px", // Below the navigation bar
-  left: 0,
-  width: "calc(100% - 20px)",
-  flexDirection: "column",
-  height: "calc(100vh - 84px)", // Full height minus small margins
-  margin: "10px", // Small margin around the entire component
-  overflow: "hidden" // Prevent Paper from scrolling
-};
-
-const sidePanelStyle = { 
-  width: 400, 
-  borderRight: "1px solid #444", 
-  p: 1,
-  height: "calc(100vh - 132px)", // Full height minus toolbars
-  overflowY: "auto",
-  overflowX: "hidden",
-  display: "flex",
-  flexDirection: "column"
-};
-
-const svgStyle = { // Full size SVG canvas
-    position: "absolute",
-    inset: 0,
-    width: "100%",
-    height: "100%",
-    zIndex: 0
-};
-
-const actionsTooltipStyle = { // Help box in canvas
-  position: "fixed", 
-  bottom: 0, 
-  right: 0, 
-  margin: "20px",
-  padding: "16px", 
-  borderRadius: "8px", 
-  fontSize: "12px", 
-  boxShadow: "0 2px 8px rgba(0,0,0,0.7)",
-};
-
 
 
 const View = () => {
   const { 
     addTask, 
     toTaskObject,
-    getTask, 
+    getTask,
+    getTasks, 
+    getPrecedences,
     removeTask, 
     deleteSchedule,
     connectTasks, 
@@ -115,8 +65,8 @@ const View = () => {
   
   const [nextTaskId, setNextTaskId] = useState(1); // For generating new task IDs
 
-  const { tasks, precedences } = toGraph();
-
+  const tasks = [...getTasks()];
+  const precedences = getPrecedences();
 
   useEffect(() => { // Auto-save to localStorage
     const autoSaveData = () => {
@@ -138,7 +88,7 @@ const View = () => {
     // Auto-save when tasks or positions change (including when cleared)
     const timeoutId = setTimeout(autoSaveData, 1000); // Debounce saves
     return () => clearTimeout(timeoutId);
-  }, [tasks, precedences, toGraph]);
+  }, [precedences, toGraph]);
 
   useEffect(() => { // Load saved data on component mount
     const savedData = loadFromLocalStorage('savedSchedules');
@@ -197,6 +147,7 @@ const View = () => {
       D: 10,
       a: 0,
       M: 1
+      // Initial position is random
     });
     setDialogOpen(true);
   };
@@ -351,62 +302,19 @@ const View = () => {
             handleImport={handleImport}/>
 
           <Box sx={{ display: "flex", flex: 1, height: "100%" }}>
-            <Box sx={sidePanelStyle} className={classes.sidePanel}>
-              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
-                <Typography variant="subtitle1" sx={{fontWeight: "bold"}}>Tasks</Typography>
-                <Tooltip title="Add task">
-                    <IconButton color="primary" onClick={handleAddTask}>
-                        <AddCircle />
-                    </IconButton>
-                </Tooltip>
-              </Box>
-
-              <Box sx={{ flexGrow: 1, overflow: "auto", minHeight: 0 }}>
-                <List dense>
-                  {tasks.map(n => (
-                    <React.Fragment key={n.id}>
-                      <ListItem
-                        selected={selectedNode === n.id}
-                        sx={{ 
-                          cursor: "pointer", 
-                          backgroundColor: selectedNode === n.id ? "#000" : (connectingFrom === n.id ? "#666" : "inherit") }}
-                        secondaryAction={
-                            <Stack direction="row" spacing={1}>
-                              <IconButton edge="end" onClick={e => handleStartConnecting(e, n)} size="small">
-                                  <Link fontSize="small" />
-                              </IconButton>
-                              <IconButton edge="end" onClick={() => {setEditingTask(n); setDialogOpen(true);}} size="small">
-                                  <Edit fontSize="small" />
-                              </IconButton>
-                              <IconButton edge="end" onClick={() => removeTask(n.id)} size="small">
-                                  <Delete fontSize="small" />
-                              </IconButton>
-                            </Stack>
-                        }>
-                        <ListItemText primary={`${n.label} - ${n.mist ? "Mist" : "Edge/Cloud"}`} secondary={`id: ${n.id} (C:${n.C} T:${n.T} D:${n.D} a:${n.a} M:${n.M})`} />
-                      </ListItem>
-                      <Divider />
-                    </React.Fragment>
-                  ))}
-                </List>
-
-                <Typography variant="subtitle1" sx={{ mt: 2, fontWeight: 'bold' }}>
-                    Precedences
-                </Typography>
-
-                <List dense>
-                    {precedences.map(e => (
-                      <ListItem key={e.id} secondaryAction={
-                        <IconButton onClick={() => disconnectTasks(e.from, e.to)} size="small">
-                          <Delete fontSize="small"/>
-                        </IconButton>
-                      }>
-                      <ListItemText primary={`${getTask(e.from)?.label ?? e.from} → ${getTask(e.to)?.label ?? e.to}`} secondary={`id: ${e.id}`} />
-                      </ListItem>
-                    ))}
-                </List>
-              </Box>
-            </Box>
+            
+            <SidePanel
+              tasks={tasks}
+              precedences={precedences}
+              selectedNode={selectedNode}
+              connectingFrom={connectingFrom}
+              handleAddTask={handleAddTask}
+              handleStartConnecting={handleStartConnecting}
+              setEditingTask={setEditingTask}
+              setDialogOpen={setDialogOpen}
+              removeTask={removeTask}
+              disconnectTasks={disconnectTasks}
+              getTask={getTask} />
 
             <Box style={{ flexGrow: 1, overflow: "hidden", position: "relative"}}>
               <svg
@@ -437,13 +345,13 @@ const View = () => {
                     )
                   )}
 
-                  {precedences.map((prec, idx) => (
-                      <Arrow 
-                        key={idx} 
-                        from={getTask(prec.from).position} 
-                        to={getTask(prec.to).position} />
-                    )
-                  )}
+                  
+                  {precedences.map(({from, to}, idx) => (
+                      <Arrow
+                        key={idx}
+                        from={from.position}
+                        to={to.position} />
+                    ))}
                 </g>
               </svg>
 

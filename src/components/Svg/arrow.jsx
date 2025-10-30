@@ -1,7 +1,7 @@
 const arrowLen = 10;
 const arrowAngle = Math.PI / 6;
 
-const Arrow = (props) => {
+const Arrow = props => {
 
     const {
         from,

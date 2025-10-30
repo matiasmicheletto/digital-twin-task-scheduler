@@ -55,6 +55,7 @@ export default class Schedule {
     }
 
     addTask(task) { // Create or update task
+
         if(!(task instanceof Task)) {
             throw new Error("Invalid task object");
         }
@@ -74,7 +75,7 @@ export default class Schedule {
     }
 
     static toTaskObject(obj) {
-        return new Task(obj.id, obj.label, obj.mist, obj.C, obj.T, obj.D, obj.a, obj.M);
+        return new Task(obj.id, obj.label, obj.mist, obj.C, obj.T, obj.D, obj.a, obj.M, obj.position);
     }
 
     removeTask(taskId) {
@@ -131,6 +132,20 @@ export default class Schedule {
 
     getTask(taskId) {
         return this.tasks.get(taskId);
+    }
+
+    getTasks() {
+        return this.tasks.values();
+    }
+
+    getPrecedences() {
+        const precedences = [];
+        for(let task of this.tasks.values()) {
+            for(let succId of task.successors) {
+                precedences.push({ id: `${task.id}_${succId}`, from: task, to: this.tasks.get(succId) });
+            }
+        }
+        return precedences;
     }
 
     toGraph() { // Returns tasks and their precedences as arrays

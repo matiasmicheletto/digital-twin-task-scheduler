@@ -11,15 +11,22 @@ export class Link {
 
 export const NODE_TYPES = {
     UNDEFINED: "UNDEFINED",
-    MIST: "SENSOR",
+    MIST: "MIST",
     EDGE: "EDGE",
     CLOUD: "CLOUD"
 };
+export const NODE_TYPE_LABELS = {
+    UNDEFINED: "-",
+    MIST: "Mist",
+    EDGE: "Edge",
+    CLOUD: "Cloud"
+};
 
 export class Node {
-    constructor(id, type = NODE_TYPES.UNDEFINED) {
+    constructor(id, label, type = NODE_TYPES.UNDEFINED) {
         this.id = id;
         this.type = type
+        this.label = label || id;
         this.tasks = new Map();
         this.memory = 1; // Default memory capacity
         this.u = 0; // Utilization

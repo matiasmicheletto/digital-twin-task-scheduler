@@ -4,7 +4,9 @@ const View = () => {
 
   return (
     <MainView>
-      <h1>Network Editor View</h1>
+      <Paper elevation={3} sx={containerStyle}>
+        
+      </Paper>
     </MainView>
   );
 };

@@ -44,6 +44,14 @@ const useSchedule = () => {
         return scheduleRef.current.getTask(taskId);
     }, []);
 
+    const getTasks = useCallback(() => {
+        return scheduleRef.current.getTasks();
+    }, []);
+
+    const getPrecedences = useCallback(() => {
+        return scheduleRef.current.getPrecedences();
+    }, []);
+
     const toGraph = useCallback(() => {
         return scheduleRef.current.toGraph();
     }, []);
@@ -62,6 +70,8 @@ const useSchedule = () => {
         connectTasks,
         disconnectTasks,
         getTask,
+        getTasks,
+        getPrecedences,
         toGraph,
         fromGraph
     };
