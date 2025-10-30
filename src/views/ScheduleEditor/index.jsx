@@ -28,6 +28,7 @@ import {
 } from "./geometries";
 import { useScheduleContext } from "../../context/Model";
 import TaskGenerator, {PRESETS} from "../../model/taskGenerator";
+import GraphLayout from "../../model/graphLayout";
 import { 
   importJSON, 
   exportJSON,
@@ -299,6 +300,20 @@ const View = () => {
     deleteSchedule();
     const generator = new TaskGenerator(PRESETS.medium); // Random task set generator
     const schedule = generator.generate(); // Generate random schedule
+    // Apply graph layout to organize nodes
+    const svgRect = svgRef.current?.getBoundingClientRect();
+    const viewportDimensions = svgRect ? { 
+      width: svgRect.width, 
+      height: svgRect.height 
+    } : null;
+    const layout = new GraphLayout({
+      width: viewportDimensions?.width || 1200,
+      height: viewportDimensions?.height || 800,
+      horizontalSpacing: 150,
+      verticalSpacing: 100
+    });
+    layout.applyLayout(schedule);
+    // Add generated tasks to current schedule
     fromGraph(schedule.toGraph());
   };
 
