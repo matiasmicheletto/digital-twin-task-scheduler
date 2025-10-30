@@ -16,7 +16,8 @@ import {
     ZoomOut, 
     RestartAlt,
     Upload,
-    Download
+    Download,
+    Shuffle
 } from "@mui/icons-material";
 
 const AppBar = props => {
@@ -26,6 +27,7 @@ const AppBar = props => {
         handleZoomOut,
         handleResetView,
         handleDeleteTasks,
+        handleGenerateTasks,
         handleExport,
         handleImport
     } = props;
@@ -44,9 +46,14 @@ const AppBar = props => {
         <MuiAppBar position="static" color="default" elevation={1}>
             <Toolbar variant="dense">
                 <Typography variant="h6" sx={{ flexGrow: 1 }}>
-                Tasks schedule editor
+                Tasks precedences editor
                 </Typography>
                 <Stack direction="row" spacing={1}>
+                    <Tooltip title="Generate Random Tasks">
+                        <IconButton onClick={handleGenerateTasks}>
+                            <Shuffle/>
+                        </IconButton>
+                    </Tooltip>
                     <Tooltip title="Zoom In">
                         <IconButton onClick={handleZoomIn}>
                         <ZoomIn/>
@@ -58,7 +65,7 @@ const AppBar = props => {
                         </IconButton>
                     </Tooltip>
                     <Tooltip title="Reset View">
-                        <IconButton onClick={() => handleResetView()}>
+                        <IconButton onClick={handleResetView}>
                         <RestartAlt/>
                         </IconButton>
                     </Tooltip>

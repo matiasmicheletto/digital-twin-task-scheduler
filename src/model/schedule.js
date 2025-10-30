@@ -1,7 +1,7 @@
-const TASK_ATTRIBUTES = ['id', 'mist', 'label', 'C', 'T', 'D', 'a', 'M', 'successors'];
+const TASK_ATTRIBUTES = ['id', 'mist', 'label', 'C', 'T', 'D', 'a', 'M', 'successors', 'position'];
 
 export class Task {
-    constructor(id, label, mist, C, T, D, a, M) {
+    constructor(id, label, mist, C, T, D, a, M, position) {
         this.id = id;
         this.mist = mist; // If the allocation of this task is fixed to a node
         this.label = label; // Task name
@@ -11,6 +11,10 @@ export class Task {
         this.a = a; // Activation time
         this.M = M; // Memory requirement
         this.successors = []; // List of successor task IDs
+        this.position = position || { // For visualization
+            x: 400 + Math.random() * 200,
+            y: 300 + Math.random() * 200
+        };
     }
 
     static getAttributeNames() {
@@ -31,6 +35,10 @@ export class Task {
         this.successors = this.successors.filter(id => id !== taskId);  
     }
 
+    setPosition(x, y) {
+        this.position = { x, y };
+    }
+
     setAttributes(attrs) {
         for (const [key, value] of Object.entries(attrs)) {
             if (this.hasOwnProperty(key)) 
@@ -46,10 +54,22 @@ export default class Schedule {
         this.tasks = new Map(); // Map of taskId to Task objects
     }
 
-    addTask(task) {
+    addTask(task) { // Create or update task
         if(!(task instanceof Task)) {
             throw new Error("Invalid task object");
         }
+
+        // Check if task ID already exists
+        if(this.tasks.has(task.id)) {
+            console.warn(`Task with ID ${task.id} already exists. It will be overwritten.`);
+            if(task.mist) {
+                // If the new task is a mist task, ensure no other task has it as successor
+                for(let t of this.tasks.values()) {
+                    t.removeSuccessor(task.id);
+                }
+            }
+        }
+
         this.tasks.set(task.id, task);
     }
 
@@ -129,14 +149,8 @@ export default class Schedule {
         this.tasks.clear();
         const attributeNames = Task.getAttributeNames();
         for(let t of tasks) {
-            Object.keys(t).some(key => { // Validate attributes
-                if(!attributeNames.includes(key) && key !== 'x' && key !== 'y') {
-                    throw new Error(`Unknown attribute in task: ${key}`);
-                }
-            });
-
             // Parameters validation
-            Object.values(Task.getAttributeNames()).forEach(attr => {
+            Object.values(attributeNames).forEach(attr => {
                 if(t[attr] === undefined) {
                     throw new Error(`Missing attribute ${attr} in task ${t.id}`);
                 }
@@ -145,7 +159,7 @@ export default class Schedule {
                 }
             });
 
-            const task = new Task(t.id, t.label, t.mist, t.C, t.T, t.D, t.a, t.M);
+            const task = new Task(t.id, t.label, t.mist, t.C, t.T, t.D, t.a, t.M, t.position);
             this.addTask(task);
         }
         

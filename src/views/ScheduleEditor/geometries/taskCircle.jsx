@@ -4,7 +4,6 @@ const TaskCircle = ({
     onContextMenu, 
     onMouseEnter, 
     onMouseLeave, 
-    position, 
     isSelected, 
     isConnecting}) => (
         <g
@@ -14,16 +13,16 @@ const TaskCircle = ({
             onMouseLeave={onMouseLeave}
             style={{ cursor: "pointer" }}>
             <circle
-                cx={position.x}
-                cy={position.y}
+                cx={task.position.x}
+                cy={task.position.y}
                 r={30}
                 fill={isConnecting ? "#5f2e2eff" : isSelected ? "#949494ff" : "#161616ff"}
                 stroke={isConnecting ? "#ff0000" : isSelected ? "#ffffffff" : "#727272ff"}
                 strokeDasharray={isConnecting ? "4 2" : "none"}
                 strokeWidth={3}/>
             <text
-                x={position.x}
-                y={position.y+5}
+                x={task.position.x}
+                y={task.position.y+5}
                 textAnchor="middle"
                 fill={isSelected ? "#161616ff" : "#ebebebff"}
                 fontSize="14"

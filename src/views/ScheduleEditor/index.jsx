@@ -27,6 +27,7 @@ import {
   TaskTooltip
 } from "./geometries";
 import { useScheduleContext } from "../../context/Model";
+import TaskGenerator, {PRESETS} from "../../model/taskGenerator";
 import { 
   importJSON, 
   exportJSON,
@@ -96,7 +97,6 @@ const View = () => {
 
   // Canvas
   const svgRef = useRef(null);
-  const [nodePositions, setNodePositions] = useState({}); // { taskId: {x, y} }
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
@@ -114,7 +114,8 @@ const View = () => {
   
   const [nextTaskId, setNextTaskId] = useState(1); // For generating new task IDs
 
-  const { tasks, precedences } = toGraph(); // For display purposes, no positions needed
+  const { tasks, precedences } = toGraph();
+
 
   useEffect(() => { // Auto-save to localStorage
     const autoSaveData = () => {
@@ -126,7 +127,6 @@ const View = () => {
       
       const scheduleData = {
         ...toGraph(),
-        nodePositions,
         viewportDimensions
       };
       
@@ -137,7 +137,7 @@ const View = () => {
     // Auto-save when tasks or positions change (including when cleared)
     const timeoutId = setTimeout(autoSaveData, 1000); // Debounce saves
     return () => clearTimeout(timeoutId);
-  }, [tasks, precedences, nodePositions, toGraph]);
+  }, [tasks, precedences, toGraph]);
 
   useEffect(() => { // Load saved data on component mount
     const savedData = loadFromLocalStorage('savedSchedules');
@@ -145,17 +145,13 @@ const View = () => {
       try {
         fromGraph(savedData);
         
-        if (savedData.nodePositions) {
-          setNodePositions(savedData.nodePositions);
-        }
-        
         // Update next task ID based on loaded tasks
         const maxId = savedData.tasks.reduce((max, task) => {
           const idNum = parseInt(task.id.replace('T', ''));
           return isNaN(idNum) ? max : Math.max(max, idNum);
         }, 0);
         setNextTaskId(maxId + 1);
-        handleResetView(savedData.nodePositions);
+        handleResetView();
         toast("Loaded saved schedule from previous session", "info");
       } catch (error) {
         console.error('Failed to load saved schedule:', error);
@@ -165,11 +161,11 @@ const View = () => {
     }
   }, [fromGraph]);
 
-  const handleResetView = (positions = nodePositions) => { // Reset pan and zoom to fit all nodes
+  const handleResetView = () => { // Reset pan and zoom to fit all nodes
     const svgRect = svgRef.current?.getBoundingClientRect();
     if (svgRect) {
       // Calculate bounding box of all nodes
-      const pos = Object.values(positions);
+      const pos = tasks.map(t => t.position);
       if (pos.length === 0) return;
       const xs = pos.map(p => p.x);
       const ys = pos.map(p => p.y);
@@ -208,23 +204,10 @@ const View = () => {
     if (editingTask) {
       try {
         addTask(toTaskObject(editingTask)); // Overwrites if id exists
-        
-        const nodePosition = {
-            x: 400 + Math.random() * 200,
-            y: 300 + Math.random() * 200
-        };
-
-        if (!nodePositions[editingTask.id]) {
-          setNodePositions(prev => ({
-            ...prev,
-            [editingTask.id]: nodePosition
-          }));
-        }
-        
         setNextTaskId(prev => prev + 1);
         setDialogOpen(false);
         setEditingTask(null);
-        handleResetView(...[nodePositions, nodePosition]);
+        handleResetView();
         toast("Task saved successfully", "success");
       } catch (error) {
         toast(error.message, "error");
@@ -262,10 +245,7 @@ const View = () => {
       const rect = svgRef.current.getBoundingClientRect();
       const x = (e.clientX - rect.left - pan.x) / zoom;
       const y = (e.clientY - rect.top - pan.y) / zoom;
-      setNodePositions(prev => ({
-        ...prev,
-        [draggingNode]: { x, y }
-      }));
+      getTask(draggingNode).setPosition(x, y);      
     } else if (isPanning) {
       setPan({
         x: pan.x + (e.clientX - panStart.x),
@@ -311,8 +291,15 @@ const View = () => {
 
   const handleDeleteTasks = () => {
     deleteSchedule();
-    setNodePositions({});
+    setNextTaskId(1);
     setSelectedNode(null);
+  };
+
+  const handleGenerateTasks = () => {
+    deleteSchedule();
+    const generator = new TaskGenerator(PRESETS.medium); // Random task set generator
+    const schedule = generator.generate(); // Generate random schedule
+    fromGraph(schedule.toGraph());
   };
 
   const handleExport = () => {
@@ -321,31 +308,14 @@ const View = () => {
       width: svgRect.width, 
       height: svgRect.height 
     } : null;
-    exportJSON({...toGraph(), nodePositions, viewportDimensions});
+    exportJSON({...toGraph(), viewportDimensions});
   };
 
   const handleImport = file => {
     importJSON(file).then(data => {
-      const svgRect = svgRef.current?.getBoundingClientRect();
-      const viewportDimensions = svgRect ? { 
-        width: svgRect.width, 
-        height: svgRect.height 
-      } : null;
-      
-      const newPositions = {...nodePositions}; // Previous positions
-      if (data.nodePositions && viewportDimensions) {
-        Object.keys(data.nodePositions).forEach(taskId => {
-          const pos = data.nodePositions[taskId];
-          newPositions[taskId] = {
-            x: pos.x,
-            y: pos.y
-          };    
-        });
-      }
-
       try{
         fromGraph(data);
-        setNodePositions(newPositions);
+        handleResetView();
         toast("Imported schedule successfully", "success");
       } catch (error) {
         toast(error.message, "error");
@@ -361,6 +331,7 @@ const View = () => {
             handleZoomOut={handleZoomOut}
             handleResetView={handleResetView}
             handleDeleteTasks={handleDeleteTasks}
+            handleGenerateTasks={handleGenerateTasks}
             handleExport={handleExport}
             handleImport={handleImport}/>
 
@@ -436,8 +407,7 @@ const View = () => {
                     {tasks.map(task => (
                       <g key={task.id}>
                         <TaskCircle
-                          task={task}
-                          position={nodePositions[task.id] || { x: 400, y: 300 }}
+                          task={task}                          
                           isSelected={selectedNode === task.id}
                           isConnecting={connectingFrom === task.id}
                           onMouseDown={e => handleNodeMouseDown(e, task.id)}
@@ -446,7 +416,7 @@ const View = () => {
                           onMouseLeave={() => setHoveredNode(null)} />
 
                         {hoveredNode === task.id && !draggingNode &&
-                          <TaskTooltip task={task} position={nodePositions[task.id] || { x: 400, y: 300 }} />
+                          <TaskTooltip task={task} position={task.position} />
                         }
                       </g>
                     )
@@ -455,8 +425,8 @@ const View = () => {
                   {precedences.map((prec, idx) => (
                       <Arrow 
                         key={idx} 
-                        from={nodePositions[prec.from]} 
-                        to={nodePositions[prec.to]} />
+                        from={getTask(prec.from).position} 
+                        to={getTask(prec.to).position} />
                     )
                   )}
                 </g>

@@ -7,7 +7,7 @@ import Error from "./Error";
 const views = [
     {
         path: "/schedule-editor",
-        name: "Schedule Editor",
+        name: "Precedences Editor",
         component: <ScheduleEditor />
     },
     {
