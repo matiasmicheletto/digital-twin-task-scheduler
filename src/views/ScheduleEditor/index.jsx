@@ -1,40 +1,32 @@
 import React, { useRef, useState, useEffect } from "react";
 import { 
-    AppBar,
-    Toolbar,
     List,
     ListItem,
     ListItemText,
     Divider,
     Box, 
-    Button, 
-    TextField,
     Stack,
-    DialogTitle,
-    DialogContent,
-    DialogActions, 
-    Dialog,
     Paper,
     Typography,
     Tooltip,
-    IconButton,
-    Menu,
-    MenuItem,
-    darkScrollbar
+    IconButton
 } from "@mui/material";
-import MainView from "../../components/MainView";
-import { useScheduleContext } from "../../context/Model";
 import { 
     AddCircle, 
     Delete, 
-    ZoomIn, 
-    ZoomOut, 
-    RestartAlt,
-    Upload,
-    Download,
     Link,
     Edit
 } from "@mui/icons-material";
+import MainView from "../../components/MainView";
+import EditDialog from "./editDialog";
+import AppBar from "./appBar";
+import useToast from "../../hooks/useToast";
+import {
+  TaskCircle,
+  Arrow,
+  TaskTooltip
+} from "./geometries";
+import { useScheduleContext } from "../../context/Model";
 import { 
   importJSON, 
   exportJSON,
@@ -42,6 +34,7 @@ import {
   loadFromLocalStorage 
 } from "../../model/utils";
 import classes from './style.module.css';
+
 
 const containerStyle = { 
   position: "absolute",
@@ -85,17 +78,21 @@ const actionsTooltipStyle = { // Help box in canvas
 };
 
 
+
 const View = () => {
   const { 
     addTask, 
     toTaskObject,
     getTask, 
     removeTask, 
+    deleteSchedule,
     connectTasks, 
     disconnectTasks,
     toGraph,
     fromGraph 
   } = useScheduleContext();
+
+  const toast = useToast();
 
   // Canvas
   const svgRef = useRef(null);
@@ -115,7 +112,6 @@ const View = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   
-  const [anchorEl, setAnchorEl] = useState(null);
   const [nextTaskId, setNextTaskId] = useState(1); // For generating new task IDs
 
   const { tasks, precedences } = toGraph(); // For display purposes, no positions needed
@@ -135,13 +131,12 @@ const View = () => {
       };
       
       saveToLocalStorage('savedSchedules', scheduleData);
+      console.log('Auto-saved schedule to localStorage');
     };
 
-    // Auto-save when tasks or positions change
-    if (tasks.length > 0 || Object.keys(nodePositions).length > 0) {
-      const timeoutId = setTimeout(autoSaveData, 1000); // Debounce saves
-      return () => clearTimeout(timeoutId);
-    }
+    // Auto-save when tasks or positions change (including when cleared)
+    const timeoutId = setTimeout(autoSaveData, 1000); // Debounce saves
+    return () => clearTimeout(timeoutId);
   }, [tasks, precedences, nodePositions, toGraph]);
 
   useEffect(() => { // Load saved data on component mount
@@ -161,8 +156,11 @@ const View = () => {
         }, 0);
         setNextTaskId(maxId + 1);
         handleResetView(savedData.nodePositions);
+        toast("Loaded saved schedule from previous session", "info");
       } catch (error) {
         console.error('Failed to load saved schedule:', error);
+        toast("Failed to load saved schedule: " + error.message, "error");
+        localStorage.removeItem('savedSchedules');
       }
     }
   }, [fromGraph]);
@@ -196,6 +194,7 @@ const View = () => {
     setEditingTask({
       id: `T${nextTaskId}`,
       label: `Task ${nextTaskId}`,
+      mist: false,
       C: 1,
       T: 10,
       D: 10,
@@ -207,22 +206,29 @@ const View = () => {
 
   const handleSaveTask = () => { // Save task after completing form
     if (editingTask) {
-      addTask(toTaskObject(editingTask));
-      
-      if (!nodePositions[editingTask.id]) {
-        setNodePositions(prev => ({
-          ...prev,
-          [editingTask.id]: {
+      try {
+        addTask(toTaskObject(editingTask)); // Overwrites if id exists
+        
+        const nodePosition = {
             x: 400 + Math.random() * 200,
             y: 300 + Math.random() * 200
-          }
-        }));
+        };
+
+        if (!nodePositions[editingTask.id]) {
+          setNodePositions(prev => ({
+            ...prev,
+            [editingTask.id]: nodePosition
+          }));
+        }
+        
+        setNextTaskId(prev => prev + 1);
+        setDialogOpen(false);
+        setEditingTask(null);
+        handleResetView(...[nodePositions, nodePosition]);
+        toast("Task saved successfully", "success");
+      } catch (error) {
+        toast(error.message, "error");
       }
-      
-      setNextTaskId(prev => prev + 1);
-      setDialogOpen(false);
-      setEditingTask(null);
-      handleResetView();
     }
   };
 
@@ -241,8 +247,12 @@ const View = () => {
       setConnectingFrom(taskId);
     } else {
       if (connectingFrom !== taskId) {
-        connectTasks(connectingFrom, taskId);
-        setConnectingFrom(null);
+        try{
+          connectTasks(connectingFrom, taskId);
+          setConnectingFrom(null);
+        } catch (error) {
+          toast(error.message, "error");
+        }
       }
     }
   };
@@ -299,16 +309,10 @@ const View = () => {
       setConnectingFrom(n.id);
   };
 
-  const handleDeleteTask = () => {
-    if (selectedNode) {
-      removeTask(selectedNode);
-      setNodePositions(prev => {
-        const newPositions = { ...prev };
-        delete newPositions[selectedNode];
-        return newPositions;
-      });
-      setSelectedNode(null);
-    }
+  const handleDeleteTasks = () => {
+    deleteSchedule();
+    setNodePositions({});
+    setSelectedNode(null);
   };
 
   const handleExport = () => {
@@ -339,77 +343,26 @@ const View = () => {
         });
       }
 
-      fromGraph(data);
-      setNodePositions(newPositions);
+      try{
+        fromGraph(data);
+        setNodePositions(newPositions);
+        toast("Imported schedule successfully", "success");
+      } catch (error) {
+        toast(error.message, "error");
+      }
     });
-  };
-
-  const openMenu = e => {
-    setAnchorEl(e.currentTarget);
-  };
-
-  const closeMenu = () => {
-    setAnchorEl(null);
   };
 
   return (
     <MainView>
         <Paper elevation={3} sx={containerStyle}>
-          <AppBar position="static" color="default" elevation={1}>
-            <Toolbar variant="dense">
-              <Typography variant="h6" sx={{ flexGrow: 1 }}>
-                Tasks schedule editor
-              </Typography>
-              <Stack direction="row" spacing={1}>
-                  <Tooltip title="Zoom In">
-                      <IconButton onClick={handleZoomIn}>
-                        <ZoomIn/>
-                      </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Zoom Out">
-                      <IconButton onClick={handleZoomOut}>
-                          <ZoomOut/>
-                      </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Reset View">
-                      <IconButton onClick={() => handleResetView()}>
-                        <RestartAlt/>
-                      </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Delete Selected Task">
-                      <IconButton onClick={handleDeleteTask} disabled={!selectedNode}>
-                          <Delete/>
-                      </IconButton>
-                  </Tooltip>
-
-                  <Tooltip title="Import / Export">
-                      <IconButton onClick={openMenu}>
-                          <Download />
-                      </IconButton>
-                  </Tooltip>
-                  <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={closeMenu}>
-                    <MenuItem>
-                        <label style={{ cursor: "pointer", width: "100%" }}>
-                        <input
-                            type="file"
-                            accept="application/json"
-                            style={{ display: "none" }}
-                            onChange={ev => {
-                              const f = ev.target.files?.[0];
-                              if (f) 
-                                handleImport(f);
-                              closeMenu();
-                            }}/>
-                        <Upload fontSize="small" sx={{ mr: 1 }} /> Import JSON
-                        </label>
-                    </MenuItem>
-                    <MenuItem onClick={() => {closeMenu(); handleExport();}}>
-                        <Download fontSize="small" sx={{ mr: 1 }} /> Export JSON
-                    </MenuItem>
-                  </Menu>
-              </Stack>
-            </Toolbar>
-          </AppBar>
+          <AppBar
+            handleZoomIn={handleZoomIn}
+            handleZoomOut={handleZoomOut}
+            handleResetView={handleResetView}
+            handleDeleteTasks={handleDeleteTasks}
+            handleExport={handleExport}
+            handleImport={handleImport}/>
 
           <Box sx={{ display: "flex", flex: 1, height: "100%" }}>
             <Box sx={sidePanelStyle} className={classes.sidePanel}>
@@ -417,7 +370,7 @@ const View = () => {
                 <Typography variant="subtitle1" sx={{fontWeight: "bold"}}>Tasks</Typography>
                 <Tooltip title="Add task">
                     <IconButton color="primary" onClick={handleAddTask}>
-                        <AddCircle/>
+                        <AddCircle />
                     </IconButton>
                 </Tooltip>
               </Box>
@@ -444,7 +397,7 @@ const View = () => {
                               </IconButton>
                             </Stack>
                         }>
-                        <ListItemText primary={`${n.label} (C:${n.C} T:${n.T} D:${n.D} a:${n.a} M:${n.M})`} secondary={`id: ${n.id}`} />
+                        <ListItemText primary={`${n.label} - ${n.mist ? "Mist" : "Edge/Cloud"}`} secondary={`id: ${n.id} (C:${n.C} T:${n.T} D:${n.D} a:${n.a} M:${n.M})`} />
                       </ListItem>
                       <Divider />
                     </React.Fragment>
@@ -457,8 +410,12 @@ const View = () => {
 
                 <List dense>
                     {precedences.map(e => (
-                      <ListItem key={e.id} secondaryAction={<IconButton onClick={() => disconnectTasks(e.from, e.to)} size="small"><Delete fontSize="small"/></IconButton>}>
-                          <ListItemText primary={`${getTask(e.from)?.label ?? e.from} → ${getTask(e.to)?.label ?? e.to}`} secondary={`id: ${e.id}`} />
+                      <ListItem key={e.id} secondaryAction={
+                        <IconButton onClick={() => disconnectTasks(e.from, e.to)} size="small">
+                          <Delete fontSize="small"/>
+                        </IconButton>
+                      }>
+                      <ListItemText primary={`${getTask(e.from)?.label ?? e.from} → ${getTask(e.to)?.label ?? e.to}`} secondary={`id: ${e.id}`} />
                       </ListItem>
                     ))}
                 </List>
@@ -475,145 +432,33 @@ const View = () => {
                   onContextMenu={handleSvgContextMenu}
                   style={{ cursor: isPanning ? "grabbing" : "grab", ...svgStyle }}>
                   <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
-                    {precedences.map((prec, idx) => {
-                      const from = nodePositions[prec.from];
-                      const to = nodePositions[prec.to];
-                      if (!from || !to) return null;
-                      
-                      const dx = to.x - from.x;
-                      const dy = to.y - from.y;
-                      const len = Math.sqrt(dx * dx + dy * dy);
-                      const ux = dx / len;
-                      const uy = dy / len;
-                      
-                      const startX = from.x + ux * 40;
-                      const startY = from.y + uy * 40;
-                      const endX = to.x - ux * 40;
-                      const endY = to.y - uy * 40;
-                      
-                      const arrowLen = 10;
-                      const arrowAngle = Math.PI / 6;
-                      const angle = Math.atan2(dy, dx);
-                      
-                      return (
-                          <g key={idx}>
-                            <line
-                                x1={startX}
-                                y1={startY}
-                                x2={endX}
-                                y2={endY}
-                                stroke="#666"
-                                strokeWidth={2}/>
-                            <polygon
-                                points={`${endX},${endY} ${endX - arrowLen * Math.cos(angle - arrowAngle)},${endY - arrowLen * Math.sin(angle - arrowAngle)} ${endX - arrowLen * Math.cos(angle + arrowAngle)},${endY - arrowLen * Math.sin(angle + arrowAngle)}`}
-                                fill="#666"/>
-                          </g>
-                      );
-                      })
-                    }
+                    
+                    {tasks.map(task => (
+                      <g key={task.id}>
+                        <TaskCircle
+                          task={task}
+                          position={nodePositions[task.id] || { x: 400, y: 300 }}
+                          isSelected={selectedNode === task.id}
+                          isConnecting={connectingFrom === task.id}
+                          onMouseDown={e => handleNodeMouseDown(e, task.id)}
+                          onContextMenu={e => handleNodeContextMenu(e, task.id)}
+                          onMouseEnter={() => setHoveredNode(task.id)}
+                          onMouseLeave={() => setHoveredNode(null)} />
 
-                    {tasks.map(task => {
-                      const pos = nodePositions[task.id] || { x: 400, y: 300 };
-                      const isSelected = selectedNode === task.id;
-                      const isConnecting = connectingFrom === task.id;
-                      
-                      return (
-                        <g key={task.id}>
-                          <g
-                            onMouseDown={e => handleNodeMouseDown(e, task.id)}
-                            onContextMenu={e => handleNodeContextMenu(e, task.id)}
-                            onMouseEnter={() => setHoveredNode(task.id)}
-                            onMouseLeave={() => setHoveredNode(null)}
-                            style={{ cursor: "pointer" }}>
-                            <circle
-                                cx={pos.x}
-                                cy={pos.y}
-                                r={30}
-                                fill={isConnecting ? "#5f2e2eff" : isSelected ? "#949494ff" : "#161616ff"}
-                                stroke={isConnecting ? "#ff0000" : isSelected ? "#ffffffff" : "#727272ff"}
-                                strokeDasharray={isConnecting ? "4 2" : "none"}
-                                strokeWidth={3}/>
-                            <text
-                                x={pos.x}
-                                y={pos.y+5}
-                                textAnchor="middle"
-                                fill={isSelected ? "#161616ff" : "#ebebebff"}
-                                fontSize="14"
-                                fontWeight="bold"
-                                pointerEvents="none">
-                                {task.label}
-                            </text>
-                          </g>
-                          {hoveredNode === task.id && !draggingNode &&
-                            <g>
-                              <rect
-                                x={pos.x-15}
-                                y={pos.y}
-                                width={80}
-                                height={140}
-                                fill="white"
-                                stroke="black"
-                                strokeWidth={2}/>
-                              <text
-                                  x={pos.x}
-                                  y={pos.y + 20}
-                                  textAnchor="start"
-                                  fill="black"
-                                  fontSize="12"
-                                  pointerEvents="none">
-                                  {`id: ${task.id}`}
-                              </text>
-                              <text
-                                  x={pos.x}
-                                  y={pos.y + 40}
-                                  textAnchor="start"
-                                  fill="black"
-                                  fontSize="12"
-                                  pointerEvents="none">
-                                  {`C: ${task.C}`}
-                              </text>
-                              <text
-                                  x={pos.x}
-                                  y={pos.y + 60}
-                                  textAnchor="start"
-                                  fill="black"
-                                  fontSize="12"
-                                  pointerEvents="none">
-                                  {`T: ${task.T}`}
-                              </text>
-                              <text
-                                  x={pos.x}
-                                  y={pos.y + 80}
-                                  textAnchor="start"
-                                  fill="black"
-                                  fontSize="12"
-                                  pointerEvents="none">
-                                  {`D: ${task.D}`}
-                              </text>
-                              <text
-                                  x={pos.x}
-                                  y={pos.y + 100}
-                                  textAnchor="start"
-                                  fill="black"
-                                  fontSize="12"
-                                  pointerEvents="none">
-                                  {`a: ${task.a}`}
-                              </text>
-                              <text
-                                  x={pos.x}
-                                  y={pos.y + 120}
-                                  textAnchor="start"
-                                  fill="black"
-                                  fontSize="12"
-                                  pointerEvents="none">
-                                  {`M: ${task.M}`}
-                              </text>
-                            </g>
-                          }
-                        </g>
-                      );
-                    })
-                  }
+                        {hoveredNode === task.id && !draggingNode &&
+                          <TaskTooltip task={task} position={nodePositions[task.id] || { x: 400, y: 300 }} />
+                        }
+                      </g>
+                    )
+                  )}
+
+                  {precedences.map((prec, idx) => (
+                      <Arrow 
+                        key={idx} 
+                        from={nodePositions[prec.from]} 
+                        to={nodePositions[prec.to]} />
+                    )
+                  )}
                 </g>
               </svg>
 
@@ -626,52 +471,13 @@ const View = () => {
           </Box>
         </Box>
 
-        <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="xs" fullWidth>
-          <DialogTitle>Add New Task</DialogTitle>
-          <DialogContent>
-              <Stack spacing={2} sx={{ mt: 1 }}>
-                  <TextField
-                      label="Task ID"
-                      type="text"
-                      value={editingTask?.id || ""}
-                      disabled/>
-                  <TextField
-                      label="Label"
-                      type="text"
-                      value={editingTask?.label || ""}
-                      onChange={e => setEditingTask({ ...editingTask, label: e.target.value })}/>
-                  <TextField
-                      label="Execution Time"
-                      type="number"
-                      value={editingTask?.C || 0}
-                      onChange={e => setEditingTask({ ...editingTask, C: e.target.value })}/>
-                  <TextField
-                      label="Period"
-                      type="number"
-                      value={editingTask?.T || 0}
-                      onChange={e => setEditingTask({ ...editingTask, T: e.target.value })}/>
-                  <TextField
-                      label="Deadline"
-                      type="number"
-                      value={editingTask?.D || 0}
-                      onChange={e => setEditingTask({ ...editingTask, D: e.target.value })}/>
-                  <TextField
-                      label="Activation Time"
-                      type="number"
-                      value={editingTask?.a || 0}
-                      onChange={e => setEditingTask({ ...editingTask, a: e.target.value })}/>
-                  <TextField
-                      label="Memory"
-                      type="number"
-                      value={editingTask?.M || 0}
-                      onChange={e => setEditingTask({ ...editingTask, M: e.target.value })}/>
-              </Stack>
-          </DialogContent>
-          <DialogActions>
-              <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button onClick={handleSaveTask} variant="contained">Save</Button>
-          </DialogActions>
-        </Dialog>
+        <EditDialog
+            dialogOpen={dialogOpen}
+            setDialogOpen={setDialogOpen}
+            editingTask={editingTask}
+            setEditingTask={setEditingTask}
+            handleSaveTask={handleSaveTask}
+        />
       </Paper>
     </MainView>
   );

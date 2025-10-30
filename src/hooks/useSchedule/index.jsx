@@ -21,6 +21,11 @@ const useSchedule = () => {
         forceUpdate();
     }, []);
 
+    const deleteSchedule = useCallback(() => {
+        scheduleRef.current = new Schedule();
+        forceUpdate();
+    }, []);
+
     const connectTasks = useCallback((fromTaskId, toTaskId) => {
         try{
             scheduleRef.current.connectTasks(fromTaskId, toTaskId);
@@ -53,6 +58,7 @@ const useSchedule = () => {
         addTask,
         toTaskObject,
         removeTask,
+        deleteSchedule,
         connectTasks,
         disconnectTasks,
         getTask,

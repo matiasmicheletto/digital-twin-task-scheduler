@@ -1,6 +1,9 @@
+const TASK_ATTRIBUTES = ['id', 'mist', 'label', 'C', 'T', 'D', 'a', 'M', 'successors'];
+
 export class Task {
-    constructor(id, label, C, T, D, a, M) {
+    constructor(id, label, mist, C, T, D, a, M) {
         this.id = id;
+        this.mist = mist; // If the allocation of this task is fixed to a node
         this.label = label; // Task name
         this.C = C; // Worst-case execution time
         this.T = T; // Period
@@ -11,7 +14,7 @@ export class Task {
     }
 
     static getAttributeNames() {
-        return ['id', 'label', 'C', 'T', 'D', 'a', 'M', 'successors'];
+        return TASK_ATTRIBUTES;
     }
 
     addSuccessor(taskId) {
@@ -51,7 +54,7 @@ export default class Schedule {
     }
 
     static toTaskObject(obj) {
-        return new Task(obj.id, obj.label, obj.C, obj.T, obj.D, obj.a, obj.M);
+        return new Task(obj.id, obj.label, obj.mist, obj.C, obj.T, obj.D, obj.a, obj.M);
     }
 
     removeTask(taskId) {
@@ -67,6 +70,10 @@ export default class Schedule {
     connectTasks(fromTaskId, toTaskId) {
         const fromTask = this.tasks.get(fromTaskId);
         const toTask = this.tasks.get(toTaskId);
+        if(toTask.mist) {
+            throw new Error("Cannot add precedence to a mist task");
+        }
+
         if(fromTask && toTask) {
             if(fromTask.successors.includes(toTaskId)) {
                 throw new Error("This precedence already exists");
@@ -127,7 +134,18 @@ export default class Schedule {
                     throw new Error(`Unknown attribute in task: ${key}`);
                 }
             });
-            const task = new Task(t.id, t.label, t.C, t.T, t.D, t.a, t.M);
+
+            // Parameters validation
+            Object.values(Task.getAttributeNames()).forEach(attr => {
+                if(t[attr] === undefined) {
+                    throw new Error(`Missing attribute ${attr} in task ${t.id}`);
+                }
+                if((attr === 'C' || attr === 'T' || attr === 'D' || attr === 'a' || attr === 'M') && isNaN(t[attr])) {
+                    throw new Error(`Attribute ${attr} in task ${t.id} must be a number`);
+                }
+            });
+
+            const task = new Task(t.id, t.label, t.mist, t.C, t.T, t.D, t.a, t.M);
             this.addTask(task);
         }
         
