@@ -11,7 +11,7 @@ import SidePanel from "../../components/SidePanel";
 import useToast from "../../hooks/useToast";
 import { containerStyle } from "../../themes/common";
 import { useScheduleContext, useNetworkContext } from "../../context/Model";
-import TaskGenerator, {PRESETS} from "../../model/taskGenerator";
+import TaskGenerator from "../../model/taskGenerator";
 import { Task } from "../../model/schedule";
 import GraphLayout from "../../model/graphLayout";
 import { 
@@ -296,9 +296,9 @@ const View = () => {
     setSelectedNode(null);
   };
 
-  const handleGenerateTasks = () => {
+  const handleGenerateTasks = (config) => {
     deleteSchedule();
-    const generator = new TaskGenerator(PRESETS.medium); // Random task set generator
+    const generator = new TaskGenerator(config); // Random task set generator
     const schedule = generator.generate(); // Generate random schedule
     // Apply graph layout to organize nodes
     const svgRect = svgRef.current?.getBoundingClientRect();

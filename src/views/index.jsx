@@ -1,12 +1,12 @@
-import ScheduleEditor from "./ScheduleEditor";
+import GraphEditor from "./GraphEditor";
 import About from "./About";
 import Error from "./Error";
 
 const views = [
     {
-        path: "/schedule-editor",
+        path: "/graph-editor",
         name: "Editor",
-        component: <ScheduleEditor />
+        component: <GraphEditor />
     },
     {
         path: "/about",

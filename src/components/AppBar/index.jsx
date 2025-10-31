@@ -1,5 +1,4 @@
 import { useState } from "react";
-
 import { 
     AppBar as MuiAppBar,
     Toolbar,
@@ -20,6 +19,7 @@ import {
     Download,
     Shuffle
 } from "@mui/icons-material";
+import { PRESETS } from "../../model/taskGenerator";
 
 const AppBar = props => {
 
@@ -33,14 +33,23 @@ const AppBar = props => {
         handleImport
     } = props;
 
-    const [anchorEl, setAnchorEl] = useState(null);
+    const [exportMenuAnchorEl, setExportMenuAnchorEl] = useState(null);
+    const [generateTasksMenuAnchorEl, setGenerateTasksMenuAnchorEl] = useState(null);
 
-    const openMenu = e => {
-        setAnchorEl(e.currentTarget);
+    const openExportMenu = e => {
+        setExportMenuAnchorEl(e.currentTarget);
     };
 
-    const closeMenu = () => {
-        setAnchorEl(null);
+    const closeExportMenu = () => {
+        setExportMenuAnchorEl(null);
+    };
+
+    const openGenerateTasksMenu = e => {
+        setGenerateTasksMenuAnchorEl(e.currentTarget);
+    };
+
+    const closeGenerateTasksMenu = () => {
+        setGenerateTasksMenuAnchorEl(null);
     };
 
     return (
@@ -57,10 +66,22 @@ const AppBar = props => {
 
                 <Stack direction="row" spacing={1}>
                     <Tooltip title="Generate Random Tasks">
-                        <IconButton onClick={handleGenerateTasks}>
+                        <IconButton onClick={openGenerateTasksMenu}>
                             <Shuffle/>
                         </IconButton>
                     </Tooltip>
+                    <Menu
+                        anchorEl={generateTasksMenuAnchorEl}
+                        open={Boolean(generateTasksMenuAnchorEl)}
+                        onClose={closeGenerateTasksMenu}>
+                        <MenuItem onClick={() => {handleGenerateTasks(PRESETS.small); closeGenerateTasksMenu();}}>Small (5 tasks)</MenuItem>
+                        <MenuItem onClick={() => {handleGenerateTasks(PRESETS.medium); closeGenerateTasksMenu();}}>Medium (20 tasks)</MenuItem>
+                        <MenuItem onClick={() => {handleGenerateTasks(PRESETS.largeSparse); closeGenerateTasksMenu();}}>Large sparse (100 tasks)</MenuItem>
+                        <MenuItem onClick={() => {handleGenerateTasks(PRESETS.largeDense); closeGenerateTasksMenu();}}>Large dense (50 tasks)</MenuItem>
+                        <MenuItem onClick={() => {handleGenerateTasks(PRESETS.pipeline); closeGenerateTasksMenu();}}>Pipeline (30 tasks)</MenuItem>
+                        <MenuItem onClick={() => {handleGenerateTasks(PRESETS.highUtilization); closeGenerateTasksMenu();}}>High utilization (25 tasks)</MenuItem>                        
+                    </Menu>
+
                     <Tooltip title="Zoom In">
                         <IconButton onClick={handleZoomIn}>
                         <ZoomIn/>
@@ -83,29 +104,32 @@ const AppBar = props => {
                     </Tooltip>
 
                     <Tooltip title="Import / Export">
-                        <IconButton onClick={openMenu}>
+                        <IconButton onClick={openExportMenu}>
                             <Download />
                         </IconButton>
                     </Tooltip>
-                    <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={closeMenu}>
-                    <MenuItem>
-                        <label style={{ cursor: "pointer", width: "100%" }}>
-                        <input
-                            type="file"
-                            accept="application/json"
-                            style={{ display: "none" }}
-                            onChange={ev => {
-                                const f = ev.target.files?.[0];
-                                if (f) 
-                                handleImport(f);
-                                closeMenu();
-                            }}/>
-                        <Upload fontSize="small" sx={{ mr: 1 }} /> Import JSON
-                        </label>
-                    </MenuItem>
-                    <MenuItem onClick={() => {closeMenu(); handleExport();}}>
-                        <Download fontSize="small" sx={{ mr: 1 }} /> Export JSON
-                    </MenuItem>
+                    <Menu 
+                        exportMenuAnchorEl={exportMenuAnchorEl} 
+                        open={Boolean(exportMenuAnchorEl)} 
+                        onClose={closeExportMenu}>
+                        <MenuItem>
+                            <label style={{ cursor: "pointer", width: "100%" }}>
+                            <input
+                                type="file"
+                                accept="application/json"
+                                style={{ display: "none" }}
+                                onChange={ev => {
+                                    const f = ev.target.files?.[0];
+                                    if (f) 
+                                    handleImport(f);
+                                    closeExportMenu();
+                                }}/>
+                            <Upload fontSize="small" sx={{ mr: 1 }} /> Import JSON
+                            </label>
+                        </MenuItem>
+                        <MenuItem onClick={() => {closeExportMenu(); handleExport();}}>
+                            <Download fontSize="small" sx={{ mr: 1 }} /> Export JSON
+                        </MenuItem>
                     </Menu>
                 </Stack>
             </Toolbar>
