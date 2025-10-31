@@ -86,7 +86,7 @@ export default class TaskGenerator {
      */
     generateTasks() {
         const tasks = [];
-        const { numTasks, taskPrefix, mistTaskRatio } = this.config;
+        const { numTasks, mistTaskRatio } = this.config;
         
         // Determine which tasks are MIST tasks
         const numMistTasks = Math.floor(numTasks * mistTaskRatio);
@@ -109,8 +109,7 @@ export default class TaskGenerator {
         
         // Generate each task
         for (let i = 0; i < numTasks; i++) {
-            const id = `${taskPrefix}${i + 1}`;
-            const label = id;
+            const label = `Task ${i}`;
             const mist = mistIndices.has(i);
             
             const T = periods[i];
@@ -121,7 +120,7 @@ export default class TaskGenerator {
             const a = this.generateActivationTime(i);
             const M = this.generateMemory(C);
             
-            tasks.push(new Task(id, label, mist, C, T, D, a, M));
+            tasks.push(new Task(label, mist, C, T, D, a, M));
         }
         
         return tasks;
@@ -278,28 +277,25 @@ export default class TaskGenerator {
     createTopology(schedule, tasks) {
         const { graphType } = this.config;
         
-        // Filter out MIST tasks for topology creation (they can't have predecessors)
-        const nonMistTasks = tasks.filter(t => !t.mist);
-        
         switch (graphType) {
             case 'chain':
-                this.createChain(schedule, nonMistTasks);
+                this.createChain(schedule, tasks);
                 break;
             
             case 'tree':
-                this.createTree(schedule, nonMistTasks);
+                this.createTree(schedule, tasks);
                 break;
             
             case 'fork-join':
-                this.createForkJoin(schedule, nonMistTasks);
+                this.createForkJoin(schedule, tasks);
                 break;
             
             case 'random':
-                this.createRandomDAG(schedule, nonMistTasks);
+                this.createRandomDAG(schedule, tasks);
                 break;
             
             case 'layered':
-                this.createLayered(schedule, nonMistTasks);
+                this.createLayered(schedule, tasks);
                 break;
             
             case 'independent':
@@ -307,7 +303,7 @@ export default class TaskGenerator {
                 break;
             
             default:
-                this.createRandomDAG(schedule, nonMistTasks);
+                this.createRandomDAG(schedule, tasks);
         }
     }
     

@@ -4,11 +4,12 @@ import {
     AppBar as MuiAppBar,
     Toolbar,
     Stack,
-    Typography,
     Tooltip,
     IconButton,
     Menu,
-    MenuItem
+    FormControl,
+    MenuItem,
+    Select
 } from "@mui/material";
 import { 
     Delete, 
@@ -45,9 +46,15 @@ const AppBar = props => {
     return (
         <MuiAppBar position="static" color="default" elevation={1}>
             <Toolbar variant="dense">
-                <Typography variant="h6" sx={{ flexGrow: 1 }}>
-                Tasks precedences editor
-                </Typography>
+                <FormControl fullWidth>
+                    <Select
+                        value="Tasks Precedences Editor"
+                        onChange={()=>{}}>
+                            <MenuItem value="Tasks Precedences Editor">Tasks Precedences Editor</MenuItem>
+                            <MenuItem value="Network Editor">Network Editor</MenuItem>
+                    </Select>
+                </FormControl>
+
                 <Stack direction="row" spacing={1}>
                     <Tooltip title="Generate Random Tasks">
                         <IconButton onClick={handleGenerateTasks}>

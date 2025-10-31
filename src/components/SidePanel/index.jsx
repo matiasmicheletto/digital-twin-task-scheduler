@@ -27,21 +27,37 @@ const SidePanel = props => {
         precedences,
         selectedNode,
         connectingFrom,
-        handleAddTask,
         handleStartConnecting,
-        setEditingTask,
+        setEditingNode,
         setDialogOpen,
         removeTask,
-        disconnectTasks,
-        getTask
+        disconnectTasks
     } = props;
+
+    const handleAddNode = (node) => { // Add or edit a node
+        if(node){
+            setEditingNode({ ...node });
+        }else{
+            setEditingNode({
+                label: `Task ${tasks.length + 1}`,
+                mist: false,
+                C: 1,
+                T: 10,
+                D: 10,
+                a: 0,
+                M: 1
+                // Initial position is random
+            });
+        }
+        setDialogOpen(true);
+    };
 
     return (
         <Box sx={sidePanelStyle} className={classes.sidePanel}>
             <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
             <Typography variant="subtitle1" sx={{fontWeight: "bold"}}>Tasks</Typography>
             <Tooltip title="Add task">
-                <IconButton color="primary" onClick={handleAddTask}>
+                <IconButton color="primary" onClick={() => handleAddNode()}>
                     <AddCircle />
                 </IconButton>
             </Tooltip>
@@ -61,7 +77,7 @@ const SidePanel = props => {
                             <IconButton edge="end" onClick={e => handleStartConnecting(e, n)} size="small">
                                 <Link fontSize="small" />
                             </IconButton>
-                            <IconButton edge="end" onClick={() => {setEditingTask(n); setDialogOpen(true);}} size="small">
+                            <IconButton edge="end" onClick={() => {handleAddNode(n);}} size="small">
                                 <Edit fontSize="small" />
                             </IconButton>
                             <IconButton edge="end" onClick={() => removeTask(n.id)} size="small">
@@ -69,7 +85,7 @@ const SidePanel = props => {
                             </IconButton>
                         </Stack>
                     }>
-                    <ListItemText primary={`${n.label} - ${n.mist ? "Mist" : "Edge/Cloud"}`} secondary={`id: ${n.id} (C:${n.C} T:${n.T} D:${n.D} a:${n.a} M:${n.M})`} />
+                    <ListItemText primary={`${n.label} - ${n.mist ? "Mist" : "Edge/Cloud"}`} secondary={`C:${n.C} T:${n.T} D:${n.D} a:${n.a} M:${n.M}`} />
                     </ListItem>
                     <Divider />
                 </React.Fragment>

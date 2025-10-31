@@ -4,22 +4,15 @@ import {
     Paper
 } from "@mui/material";
 import MainView from "../../components/MainView";
-import EditDialog from "./editDialog";
-import AppBar from "./appBar";
-import SidePanel from "./sidePanel";
+import SvgCanvas from "../../components/Svg";
+import EditDialog from "../../components/EditDialog";
+import AppBar from "../../components/AppBar";
+import SidePanel from "../../components/SidePanel";
 import useToast from "../../hooks/useToast";
-import {
-  TaskCircle,
-  Arrow,
-  TaskTooltip
-} from "../../components/Svg";
-import {
-  containerStyle,
-  svgStyle,
-  actionsTooltipStyle
-} from "../../themes/common";
-import { useScheduleContext } from "../../context/Model";
+import { containerStyle } from "../../themes/common";
+import { useScheduleContext, useNetworkContext } from "../../context/Model";
 import TaskGenerator, {PRESETS} from "../../model/taskGenerator";
+import { Task } from "../../model/schedule";
 import GraphLayout from "../../model/graphLayout";
 import { 
   importJSON, 
@@ -29,10 +22,93 @@ import {
 } from "../../model/utils";
 
 
+const taskEditDialogConfig = {
+    title: "Edit Task",
+    fields: [
+        {
+            attrName: "id",
+            label: "Task ID",
+            type: "text",
+            disabled: true
+        },
+        {
+            attrName: "label",
+            label: "Label",
+            type: "text"
+        },
+        {
+            attrName: "C",
+            label: "Execution Time",
+            type: "number"
+        },
+        {
+            attrName: "mist",
+            labelTrue: "Mist Task",
+            labelFalse: "Edge/Cloud Task",
+            type: "switch"
+        },
+        {
+            attrName: "T",
+            label: "Period",
+            type: "number"
+        },
+        {
+            attrName: "D",
+            label: "Deadline",
+            type: "number"
+        },
+        {
+            attrName: "a",
+            label: "Activation Time",
+            type: "number"
+        },
+        {
+            attrName: "M",
+            label: "Memory Requirement",
+            type: "number"
+        }
+    ]
+};
+
+const nodeEditDialogConfig = {
+    title: "Edit Node",
+    fields: [
+        {
+            attrName: "id",
+            label: "Node ID",
+            type: "text",
+            disabled: true
+        },
+        {
+            attrName: "label",
+            label: "Label",
+            type: "text"
+        },
+        {
+            attrName: "type",
+            label: "Node Type",
+            type: "select",
+            options: [
+                { value: "edge", text: "Edge Server" },
+                { value: "cloud", text: "Cloud Server" }
+            ]
+        },
+        {
+            attrName: "m",
+            label: "Memory",
+            type: "text"
+        },
+        {
+            attrName: "u",
+            label: "Utilization",
+            type: "text"
+        }
+    ]
+};
+
 const View = () => {
   const { 
     addTask, 
-    toTaskObject,
     getTask,
     getTasks, 
     getPrecedences,
@@ -57,13 +133,10 @@ const View = () => {
   const [draggingNode, setDraggingNode] = useState(null);
   const [connectingFrom, setConnectingFrom] = useState(null);
   const [selectedNode, setSelectedNode] = useState(null);
-  const [hoveredNode, setHoveredNode] = useState(null);
   
   // Task parameteres editing dialog
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingTask, setEditingTask] = useState(null);
-  
-  const [nextTaskId, setNextTaskId] = useState(1); // For generating new task IDs
+  const [editingNode, setEditingNode] = useState(null);
 
   const tasks = [...getTasks()];
   const precedences = getPrecedences();
@@ -80,7 +153,7 @@ const View = () => {
         ...toGraph(),
         viewportDimensions
       };
-      
+
       saveToLocalStorage('savedSchedules', scheduleData);
       console.log('Auto-saved schedule to localStorage');
     };
@@ -88,20 +161,13 @@ const View = () => {
     // Auto-save when tasks or positions change (including when cleared)
     const timeoutId = setTimeout(autoSaveData, 1000); // Debounce saves
     return () => clearTimeout(timeoutId);
-  }, [precedences, toGraph]);
+  }, [tasks, precedences, toGraph]);
 
   useEffect(() => { // Load saved data on component mount
     const savedData = loadFromLocalStorage('savedSchedules');
     if (savedData && savedData.tasks && savedData.tasks.length > 0) {
       try {
         fromGraph(savedData);
-        
-        // Update next task ID based on loaded tasks
-        const maxId = savedData.tasks.reduce((max, task) => {
-          const idNum = parseInt(task.id.replace('T', ''));
-          return isNaN(idNum) ? max : Math.max(max, idNum);
-        }, 0);
-        setNextTaskId(maxId + 1);
         handleResetView();
         toast("Loaded saved schedule from previous session", "info");
       } catch (error) {
@@ -137,28 +203,12 @@ const View = () => {
     }
   };
 
-  const handleAddTask = () => { // Add a task with default initial parameters
-    setEditingTask({
-      id: `T${nextTaskId}`,
-      label: `Task ${nextTaskId}`,
-      mist: false,
-      C: 1,
-      T: 10,
-      D: 10,
-      a: 0,
-      M: 1
-      // Initial position is random
-    });
-    setDialogOpen(true);
-  };
-
-  const handleSaveTask = () => { // Save task after completing form
-    if (editingTask) {
+  const handleSaveNode = () => { // Save task after completing form
+    if (editingNode) {
       try {
-        addTask(toTaskObject(editingTask)); // Overwrites if id exists
-        setNextTaskId(prev => prev + 1);
+        addTask(Task.fromObject(editingNode)); // Overwrites if id exists
         setDialogOpen(false);
-        setEditingTask(null);
+        setEditingNode(null);
         handleResetView();
         toast("Task saved successfully", "success");
       } catch (error) {
@@ -243,7 +293,6 @@ const View = () => {
 
   const handleDeleteTasks = () => {
     deleteSchedule();
-    setNextTaskId(1);
     setSelectedNode(null);
   };
 
@@ -291,7 +340,7 @@ const View = () => {
 
   return (
     <MainView>
-        <Paper elevation={3} sx={containerStyle}>
+      <Paper elevation={3} sx={containerStyle}>
           <AppBar
             handleZoomIn={handleZoomIn}
             handleZoomOut={handleZoomOut}
@@ -302,75 +351,43 @@ const View = () => {
             handleImport={handleImport}/>
 
           <Box sx={{ display: "flex", flex: 1, height: "100%" }}>
-            
             <SidePanel
               tasks={tasks}
               precedences={precedences}
               selectedNode={selectedNode}
               connectingFrom={connectingFrom}
-              handleAddTask={handleAddTask}
               handleStartConnecting={handleStartConnecting}
-              setEditingTask={setEditingTask}
+              setEditingNode={setEditingNode}
               setDialogOpen={setDialogOpen}
               removeTask={removeTask}
-              disconnectTasks={disconnectTasks}
-              getTask={getTask} />
+              disconnectTasks={disconnectTasks} />
 
-            <Box style={{ flexGrow: 1, overflow: "hidden", position: "relative"}}>
-              <svg
-                  ref={svgRef}
-                  onMouseMove={handleMouseMove}
-                  onMouseUp={handleMouseUp}
-                  onMouseDown={handleSvgMouseDown}
-                  onMouseLeave={handleMouseUp}
-                  onContextMenu={handleSvgContextMenu}
-                  style={{ cursor: isPanning ? "grabbing" : "grab", ...svgStyle }}>
-                  <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
-                    
-                    {tasks.map(task => (
-                      <g key={task.id}>
-                        <TaskCircle
-                          task={task}                          
-                          isSelected={selectedNode === task.id}
-                          isConnecting={connectingFrom === task.id}
-                          onMouseDown={e => handleNodeMouseDown(e, task.id)}
-                          onContextMenu={e => handleNodeContextMenu(e, task.id)}
-                          onMouseEnter={() => setHoveredNode(task.id)}
-                          onMouseLeave={() => setHoveredNode(null)} />
+            <SvgCanvas
+              svgRef={svgRef}
+              pan={pan}
+              zoom={zoom}
+              isPanning={isPanning}
+              handleMouseMove={handleMouseMove}
+              handleMouseUp={handleMouseUp}
+              handleSvgMouseDown={handleSvgMouseDown}
+              handleSvgContextMenu={handleSvgContextMenu}
+              tasks={tasks}
+              precedences={precedences}
+              selectedNode={selectedNode}
+              connectingFrom={connectingFrom}
+              handleNodeMouseDown={handleNodeMouseDown}
+              handleNodeContextMenu={handleNodeContextMenu}
+              draggingNode={draggingNode} /> 
+          </Box> 
 
-                        {hoveredNode === task.id && !draggingNode &&
-                          <TaskTooltip task={task} position={task.position} />
-                        }
-                      </g>
-                    )
-                  )}
-
-                  
-                  {precedences.map(({from, to}, idx) => (
-                      <Arrow
-                        key={idx}
-                        from={from.position}
-                        to={to.position} />
-                    ))}
-                </g>
-              </svg>
-
-              <Box style={actionsTooltipStyle}>
-              <Box style={{ marginBottom: "4px" }}>Left-click + drag: Move nodes</Box>
-              <Box style={{ marginBottom: "4px" }}>Right-click: Connect tasks</Box>
-              <Box style={{ marginBottom: "4px" }}>Canvas drag: Pan view</Box>
-              <Box>Zoom: {(zoom * 100).toFixed(0)}%</Box>
-            </Box>
-          </Box>
-        </Box>
-
-        <EditDialog
-            dialogOpen={dialogOpen}
-            setDialogOpen={setDialogOpen}
-            editingTask={editingTask}
-            setEditingTask={setEditingTask}
-            handleSaveTask={handleSaveTask}
-        />
+          <EditDialog
+              dialogConfig={taskEditDialogConfig}
+              dialogOpen={dialogOpen}
+              setDialogOpen={setDialogOpen}
+              editingNode={editingNode}
+              setEditingNode={setEditingNode}
+              handleSave={handleSaveNode}
+          />
       </Paper>
     </MainView>
   );

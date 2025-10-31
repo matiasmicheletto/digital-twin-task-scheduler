@@ -1,10 +1,11 @@
+import { generateUUID8 } from './utils.js';
 const TASK_ATTRIBUTES = ['id', 'mist', 'label', 'C', 'T', 'D', 'a', 'M', 'successors', 'position'];
 
 export class Task {
-    constructor(id, label, mist, C, T, D, a, M, position) {
-        this.id = id;
-        this.mist = mist; // If the allocation of this task is fixed to a node
+    constructor(label, mist, C, T, D, a, M, position) {
+        this.id = generateUUID8(); // Unique task identifier
         this.label = label; // Task name
+        this.mist = mist; // If the allocation of this task is fixed to a node
         this.C = C; // Worst-case execution time
         this.T = T; // Period
         this.D = D; // Deadline
@@ -35,6 +36,15 @@ export class Task {
         this.successors = this.successors.filter(id => id !== taskId);  
     }
 
+    static fromObject(obj) {
+        const task = new Task(obj.label, obj.mist, obj.C, obj.T, obj.D, obj.a, obj.M, obj.position);
+        if(obj.id) // If object has id, use it to preserve identity
+            task.id = obj.id;
+        if(obj.successors) // Same for successors
+            task.successors = obj.successors;
+        return task;
+    }
+
     setPosition(x, y) {
         this.position = { x, y };
     }
@@ -54,28 +64,20 @@ export default class Schedule {
         this.tasks = new Map(); // Map of taskId to Task objects
     }
 
-    addTask(task) { // Create or update task
+    addTask(task) { // Create or update task (Update if id is already present)
 
         if(!(task instanceof Task)) {
             throw new Error("Invalid task object");
         }
 
-        // Check if task ID already exists
-        if(this.tasks.has(task.id)) {
-            console.warn(`Task with ID ${task.id} already exists. It will be overwritten.`);
-            if(task.mist) {
-                // If the new task is a mist task, ensure no other task has it as successor
-                for(let t of this.tasks.values()) {
-                    t.removeSuccessor(task.id);
-                }
+        if(task.mist) {
+            // If the new task is a mist task, ensure no other task has it as successor
+            for(let t of this.tasks.values()) {
+                t.removeSuccessor(task.id);
             }
         }
 
         this.tasks.set(task.id, task);
-    }
-
-    static toTaskObject(obj) {
-        return new Task(obj.id, obj.label, obj.mist, obj.C, obj.T, obj.D, obj.a, obj.M, obj.position);
     }
 
     removeTask(taskId) {
@@ -97,7 +99,7 @@ export default class Schedule {
 
         if(fromTask && toTask) {
             if(fromTask.successors.includes(toTaskId)) {
-                throw new Error("This precedence already exists");
+                throw new Error(`Precedence from task ${fromTask.label} to task ${toTask.label} already exists`);
             }
             // Prevent circular dependencies
             let visited = new Set();
@@ -162,10 +164,9 @@ export default class Schedule {
 
     fromGraph({tasks, precedences}) { // Rebuild schedule from tasks and precedences arrays
         this.tasks.clear();
-        const attributeNames = Task.getAttributeNames();
         for(let t of tasks) {
             // Parameters validation
-            Object.values(attributeNames).forEach(attr => {
+            Object.values(TASK_ATTRIBUTES).forEach(attr => {
                 if(t[attr] === undefined) {
                     throw new Error(`Missing attribute ${attr} in task ${t.id}`);
                 }
@@ -174,13 +175,14 @@ export default class Schedule {
                 }
             });
 
-            const task = new Task(t.id, t.label, t.mist, t.C, t.T, t.D, t.a, t.M, t.position);
+            const task = new Task(t.label, t.mist, t.C, t.T, t.D, t.a, t.M, t.position);
+            task.setAttributes({ id: t.id });
             this.addTask(task);
         }
         
         for(let e of precedences) {
             if(this.tasks.has(e.from) && this.tasks.has(e.to)) {
-                this.connectTasks(e.from, e.to);    
+                this.connectTasks(e.from, e.to);
             } else {
                 throw new Error(`Invalid precedence from ${e.from} to ${e.to}`);
             }
