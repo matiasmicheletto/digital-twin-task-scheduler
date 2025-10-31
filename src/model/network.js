@@ -85,11 +85,24 @@ export default class Network {
     connectNodes(sourceId, targetId, delay = 1) {
         const sourceNode = this.nodes.get(sourceId);
         const targetNode = this.nodes.get(targetId);
-        if(sourceNode && targetNode) {
-            const linkId = `${sourceId}->${targetId}`;
-            const link = new Link(linkId, sourceId, targetId, delay);
-            sourceNode.addLink(link);
+
+        if(!sourceNode || !targetNode) {
+            throw new Error("Source or target node does not exist");
         }
+
+        // Cloud cannot connect to anything
+        if(sourceNode?.type === NODE_TYPES.CLOUD) {
+            throw new Error("Cloud nodes cannot initiate connections");
+        }
+
+        // Edge cannot connect to Mist
+        if(sourceNode?.type === NODE_TYPES.EDGE && targetNode?.type === NODE_TYPES.MIST) {
+            throw new Error("Edge nodes cannot connect to Mist nodes");
+        }
+        
+        const linkId = `${sourceId}->${targetId}`;
+        const link = new Link(linkId, sourceId, targetId, delay);
+        sourceNode.addLink(link);
     }
 
     disconnectNodes(sourceId, targetId) {

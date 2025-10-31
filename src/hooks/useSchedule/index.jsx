@@ -48,11 +48,11 @@ const useSchedule = () => {
         return scheduleRef.current.getPrecedences();
     }, []);
 
-    const toGraph = useCallback(() => {
+    const scheduleToGraph = useCallback(() => {
         return scheduleRef.current.toGraph();
     }, []);
 
-    const fromGraph = useCallback(graph => {
+    const scheduleFromGraph = useCallback(graph => {
         scheduleRef.current.fromGraph(graph);
         forceUpdate();
     }, []);
@@ -67,8 +67,8 @@ const useSchedule = () => {
         getTask,
         getTasks,
         getPrecedences,
-        toGraph,
-        fromGraph
+        scheduleToGraph,
+        scheduleFromGraph
     };
 };
 

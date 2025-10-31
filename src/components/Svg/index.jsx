@@ -23,8 +23,8 @@ const SvgCanvas = props => {
         handleMouseUp,
         handleSvgMouseDown,
         handleSvgContextMenu,
-        tasks,
-        precedences,
+        nodes,
+        edges,
         selectedNode,
         connectingFrom,
         handleNodeMouseDown,
@@ -45,7 +45,7 @@ const SvgCanvas = props => {
                 onContextMenu={handleSvgContextMenu}
                 style={{ cursor: isPanning ? "grabbing" : "grab", ...svgStyle }}>
                 <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
-                    {tasks.map(task => (
+                    {nodes.map(task => (
                         <TaskCircle
                             key={task.id}
                             task={task}
@@ -55,17 +55,16 @@ const SvgCanvas = props => {
                             onContextMenu={e => handleNodeContextMenu(e, task.id)}
                             onMouseEnter={() => setHoveredNode(task.id)}
                             onMouseLeave={() => setHoveredNode(null)} />
-                        
                     ))}
         
-                    {precedences.map(({from, to}, idx) => (
+                    {edges.map(({from, to}, idx) => (
                         <Arrow
                             key={idx}
                             from={from.position}
                             to={to.position} />
                     ))}
 
-                    {tasks.map(task => (// Render last to be on top
+                    {nodes.map(task => (// Render tooltips last to be on top
                         hoveredNode === task.id && !draggingNode &&
                             <TaskTooltip key={task} task={task} position={task.position} />
                     ))
@@ -75,7 +74,7 @@ const SvgCanvas = props => {
 
             <Box style={actionsTooltipStyle}>
                 <Box style={{ marginBottom: "4px" }}>Left-click + drag: Move nodes</Box>
-                <Box style={{ marginBottom: "4px" }}>Right-click: Connect tasks</Box>
+                <Box style={{ marginBottom: "4px" }}>Right-click: Connect nodes</Box>
                 <Box style={{ marginBottom: "4px" }}>Canvas drag: Pan view</Box>
                 <Box>Zoom: {(zoom * 100).toFixed(0)}%</Box>
             </Box>

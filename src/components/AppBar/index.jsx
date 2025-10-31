@@ -58,7 +58,7 @@ const AppBar = props => {
                 <FormControl fullWidth>
                     <Select
                         value="Tasks Precedences Editor"
-                        onChange={()=>{}}>
+                        onChange={e => console.log(e.target.value)}>
                             <MenuItem value="Tasks Precedences Editor">Tasks Precedences Editor</MenuItem>
                             <MenuItem value="Network Editor">Network Editor</MenuItem>
                     </Select>

@@ -16,6 +16,7 @@ import {
     Link,
     Edit
 } from "@mui/icons-material";
+import { NODE_TYPES, NODE_TYPE_LABELS } from "../../model/network";
 import { sidePanelStyle } from "../../themes/common";
 import classes from './style.module.css';
 
@@ -23,31 +24,25 @@ import classes from './style.module.css';
 const SidePanel = props => {
 
     const {
-        tasks,
-        precedences,
+        nodes,
+        edges,
+        topListName,
+        bottomListName,
         selectedNode,
+        defaultNode,
         connectingFrom,
         handleStartConnecting,
         setEditingNode,
         setDialogOpen,
-        removeTask,
-        disconnectTasks
+        removeNode,
+        disconnectNodes
     } = props;
 
     const handleAddNode = (node) => { // Add or edit a node
         if(node){
             setEditingNode({ ...node });
         }else{
-            setEditingNode({
-                label: `Task ${tasks.length + 1}`,
-                mist: false,
-                C: 1,
-                T: 10,
-                D: 10,
-                a: 0,
-                M: 1
-                // Initial position is random
-            });
+            setEditingNode(defaultNode);
         }
         setDialogOpen(true);
     };
@@ -55,7 +50,9 @@ const SidePanel = props => {
     return (
         <Box sx={sidePanelStyle} className={classes.sidePanel}>
             <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
-            <Typography variant="subtitle1" sx={{fontWeight: "bold"}}>Tasks</Typography>
+            <Typography variant="subtitle1" sx={{fontWeight: "bold"}}>
+                {topListName}
+            </Typography>
             <Tooltip title="Add task">
                 <IconButton color="primary" onClick={() => handleAddNode()}>
                     <AddCircle />
@@ -65,7 +62,7 @@ const SidePanel = props => {
 
             <Box sx={{ flexGrow: 1, overflow: "auto", minHeight: 0 }}>
             <List dense>
-                {tasks.map(n => (
+                {nodes.map(n => (
                 <React.Fragment key={n.id}>
                     <ListItem
                     selected={selectedNode === n.id}
@@ -80,12 +77,19 @@ const SidePanel = props => {
                             <IconButton edge="end" onClick={() => {handleAddNode(n);}} size="small">
                                 <Edit fontSize="small" />
                             </IconButton>
-                            <IconButton edge="end" onClick={() => removeTask(n.id)} size="small">
+                            <IconButton edge="end" onClick={() => removeNode(n.id)} size="small">
                                 <Delete fontSize="small" />
                             </IconButton>
                         </Stack>
                     }>
-                    <ListItemText primary={`${n.label} - ${n.mist ? "Mist" : "Edge/Cloud"}`} secondary={`C:${n.C} T:${n.T} D:${n.D} a:${n.a} M:${n.M}`} />
+                    <ListItemText 
+                        primary={`${n.label} - ${n.mist ? "Mist" : "Edge/Cloud"}`} 
+                        secondary={`C:${n.C} T:${n.T} D:${n.D} a:${n.a} M:${n.M}`} />
+                    {/* For network nodes
+                    <ListItemText 
+                        primary={`${n.label} - ${NODE_TYPE_LABELS[n.type]}`}
+                        secondary={`M:${n.memory} U:${n.u}`} />
+                    */}
                     </ListItem>
                     <Divider />
                 </React.Fragment>
@@ -93,13 +97,13 @@ const SidePanel = props => {
             </List>
 
             <Typography variant="subtitle1" sx={{ mt: 2, fontWeight: 'bold' }}>
-                Precedences
+                {bottomListName}
             </Typography>
 
             <List dense>
-                {precedences.map(e => (
+                {edges.map(e => (
                     <ListItem key={e.id} secondaryAction={
-                    <IconButton onClick={() => disconnectTasks(e.from.id, e.to.id)} size="small">
+                    <IconButton onClick={() => disconnectNodes(e.from.id, e.to.id)} size="small">
                         <Delete fontSize="small"/>
                     </IconButton>
                     }>

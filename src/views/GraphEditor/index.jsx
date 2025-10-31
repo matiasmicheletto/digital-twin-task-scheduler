@@ -116,9 +116,19 @@ const View = () => {
     deleteSchedule,
     connectTasks, 
     disconnectTasks,
-    toGraph,
-    fromGraph 
+    scheduleToGraph,
+    scheduleFromGraph 
   } = useScheduleContext();
+
+  const {
+    addNode,
+    removeNode,
+    connectNodes,
+    disconnectNodes,
+    getNode,
+    networkToGraph,
+    networkFromGraph
+  } = useNetworkContext();
 
   const toast = useToast();
 
@@ -150,7 +160,7 @@ const View = () => {
       } : null;
       
       const scheduleData = {
-        ...toGraph(),
+        ...scheduleToGraph(),
         viewportDimensions
       };
 
@@ -161,13 +171,13 @@ const View = () => {
     // Auto-save when tasks or positions change (including when cleared)
     const timeoutId = setTimeout(autoSaveData, 1000); // Debounce saves
     return () => clearTimeout(timeoutId);
-  }, [tasks, precedences, toGraph]);
+  }, [tasks, precedences, scheduleToGraph]);
 
   useEffect(() => { // Load saved data on component mount
     const savedData = loadFromLocalStorage('savedSchedules');
     if (savedData && savedData.tasks && savedData.tasks.length > 0) {
       try {
-        fromGraph(savedData);
+        scheduleFromGraph(savedData);
         handleResetView();
         toast("Loaded saved schedule from previous session", "info");
       } catch (error) {
@@ -176,7 +186,7 @@ const View = () => {
         localStorage.removeItem('savedSchedules');
       }
     }
-  }, [fromGraph]);
+  }, [scheduleFromGraph]);
 
   const handleResetView = () => { // Reset pan and zoom to fit all nodes
     const svgRect = svgRef.current?.getBoundingClientRect();
@@ -314,7 +324,7 @@ const View = () => {
     });
     layout.applyLayout(schedule);
     // Add generated tasks to current schedule
-    fromGraph(schedule.toGraph());
+    scheduleFromGraph(schedule.toGraph());
   };
 
   const handleExport = () => {
@@ -323,13 +333,13 @@ const View = () => {
       width: svgRect.width, 
       height: svgRect.height 
     } : null;
-    exportJSON({...toGraph(), viewportDimensions});
+    exportJSON({...scheduleToGraph(), viewportDimensions});
   };
 
   const handleImport = file => {
     importJSON(file).then(data => {
       try{
-        fromGraph(data);
+        scheduleFromGraph(data);
         handleResetView();
         toast("Imported schedule successfully", "success");
       } catch (error) {
@@ -352,15 +362,27 @@ const View = () => {
 
           <Box sx={{ display: "flex", flex: 1, height: "100%" }}>
             <SidePanel
-              tasks={tasks}
-              precedences={precedences}
+              nodes={tasks}
+              edges={precedences}
+              topListName={"Tasks"}
+              bottomListName={"Precedences"}
               selectedNode={selectedNode}
+              defaultNode={{
+                label: `Task ${tasks.length + 1}`,
+                mist: false,
+                C: 1,
+                T: 10,
+                D: 10,
+                a: 0,
+                M: 1
+                // Initial position is random
+              }}
               connectingFrom={connectingFrom}
               handleStartConnecting={handleStartConnecting}
               setEditingNode={setEditingNode}
               setDialogOpen={setDialogOpen}
-              removeTask={removeTask}
-              disconnectTasks={disconnectTasks} />
+              removeNode={removeTask}
+              disconnectNodes={disconnectTasks} />
 
             <SvgCanvas
               svgRef={svgRef}
@@ -371,8 +393,8 @@ const View = () => {
               handleMouseUp={handleMouseUp}
               handleSvgMouseDown={handleSvgMouseDown}
               handleSvgContextMenu={handleSvgContextMenu}
-              tasks={tasks}
-              precedences={precedences}
+              nodes={tasks}
+              edges={precedences}
               selectedNode={selectedNode}
               connectingFrom={connectingFrom}
               handleNodeMouseDown={handleNodeMouseDown}
