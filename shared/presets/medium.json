@@ -1,0 +1,9 @@
+{
+    "numTasks": 20,
+    "graphType": "layered",
+    "layers": 4,
+    "density": 0.3,
+    "mistTaskRatio": 0.15,
+    "C": { "strategy": "uniform", "min": 1, "max": 10 },
+    "T": { "strategy": "harmonic", "values": [10, 20, 40, 80] }
+}

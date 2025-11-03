@@ -1,0 +1,9 @@
+{
+    "numTasks": 25,
+    "graphType": "layered",
+    "layers": 5,
+    "mistTaskRatio": 0.2,
+    "targetUtilization": 0.9,
+    "T": { "strategy": "harmonic", "values": [10, 20, 40, 80] },
+    "D": { "strategy": "constrained", "min": 0.8, "max": 1.0 }
+}

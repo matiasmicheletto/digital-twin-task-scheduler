@@ -1,0 +1,11 @@
+{
+    "numTasks": 100,
+    "graphType": "random",
+    "density": 0.1,
+    "mistTaskRatio": 0.1,
+    "C": { "strategy": "bimodal", "modes": [
+        { "weight": 0.8, "min": 1, "max": 5 },
+        { "weight": 0.2, "min": 10, "max": 20 }
+    ]},
+    "T": { "strategy": "harmonic", "values": [10, 20, 40, 80, 160] }
+}

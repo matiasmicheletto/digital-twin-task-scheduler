@@ -1,4 +1,10 @@
 import Schedule, { Task } from '../shared/schedule.js';
+import small from './presets/small.json' with { type: "json" };
+import medium from './presets/medium.json' with { type: "json" };
+import largeSparse from './presets/large-sparse.json' with { type: "json" };
+import largeDense from './presets/large-dense.json' with { type: "json" };
+import pipeline from './presets/pipeline.json' with { type: "json" };
+import highUtilization from './presets/high-utilization.json' with { type: "json" };
 
 /**
  * Problem Generator for Real-Time Task Scheduling
@@ -53,9 +59,6 @@ export default class TaskGenerator {
             
             // Utilization control (optional)
             targetUtilization: null, // If set, adjusts C values to meet target (0-1)
-            
-            // Naming
-            taskPrefix: 'T',
             
             // Seed for reproducibility (not implemented, but can be added)
             seed: null
@@ -485,69 +488,12 @@ export default class TaskGenerator {
  * Preset configurations for common test scenarios
  */
 export const PRESETS = {
-    // Small test case
-    small: {
-        numTasks: 5,
-        graphType: 'chain',
-        mistTaskRatio: 0.2,
-        C: { min: 1, max: 5 },
-        T: { strategy: 'harmonic', values: [10, 20, 40] }
-    },
-    
-    // Medium complexity
-    medium: {
-        numTasks: 20,
-        graphType: 'layered',
-        layers: 4,
-        density: 0.3,
-        mistTaskRatio: 0.15,
-        C: { strategy: 'uniform', min: 1, max: 10 },
-        T: { strategy: 'harmonic', values: [10, 20, 40, 80] }
-    },
-    
-    // Large sparse graph
-    largeSparse: {
-        numTasks: 100,
-        graphType: 'random',
-        density: 0.1,
-        mistTaskRatio: 0.1,
-        C: { strategy: 'bimodal', modes: [
-            { weight: 0.8, min: 1, max: 5 },
-            { weight: 0.2, min: 10, max: 20 }
-        ]},
-        T: { strategy: 'harmonic', values: [10, 20, 40, 80, 160] }
-    },
-    
-    // Large dense graph
-    largeDense: {
-        numTasks: 50,
-        graphType: 'random',
-        density: 0.4,
-        mistTaskRatio: 0.2,
-        targetUtilization: 0.7,
-        T: { strategy: 'harmonic', values: [10, 20, 40, 80] }
-    },
-    
-    // Pipeline (fork-join)
-    pipeline: {
-        numTasks: 30,
-        graphType: 'fork-join',
-        forkJoinGroups: 5,
-        mistTaskRatio: 0.1,
-        C: { strategy: 'uniform', min: 2, max: 8 },
-        T: { strategy: 'harmonic', values: [20, 40, 80] }
-    },
-    
-    // High utilization stress test
-    highUtilization: {
-        numTasks: 25,
-        graphType: 'layered',
-        layers: 5,
-        mistTaskRatio: 0.2,
-        targetUtilization: 0.9,
-        T: { strategy: 'harmonic', values: [10, 20, 40, 80] },
-        D: { strategy: 'constrained', min: 0.8, max: 1.0 }
-    }
+    small: small,
+    medium: medium,
+    largeSparse: largeSparse,
+    largeDense: largeDense,
+    pipeline: pipeline,
+    highUtilization: highUtilization
 };
 
 /**

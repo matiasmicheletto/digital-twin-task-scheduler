@@ -1,0 +1,8 @@
+{
+    "numTasks": 50,
+    "graphType": "random",
+    "density": 0.4,
+    "mistTaskRatio": 0.2,
+    "targetUtilization": 0.7,
+    "T": { "strategy": "harmonic", "values": [10, 20, 40, 80] }
+}

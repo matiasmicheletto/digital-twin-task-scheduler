@@ -2,7 +2,7 @@
 
 /**
  * Task Graph Generator CLI
- * Usage: node generate-tasks.js [options]
+ * Usage: node instance-generator.js [options]
  */
 
 import fs from 'fs';
@@ -36,7 +36,7 @@ if (fs.existsSync(PRESETS_FILE)) {
  */
 const CONFIG = {
     outputDir: './generated-tasks',
-    applyLayout: true,
+    applyLayout: false,
     layoutAlgorithm: 'hierarchical', // 'hierarchical', 'force', 'circular', 'grid'
     layoutConfig: {
         width: 1200,
@@ -266,6 +266,42 @@ function generateCustom(customConfig, outputFilename) {
     console.log('='.repeat(60));
 }
 
+/** 
+ * Validate preset format provided in JSON file
+ */
+function validatePresetFormat(presets) {
+    if (typeof presets !== 'object' || presets === null || Array.isArray(presets)) {
+        throw new Error('Presets must be a JSON object with preset names as keys.');
+    }
+
+    const keys = Object.keys(presets);
+    if (keys.length === 0) {
+        throw new Error('Presets object is empty.');
+    }
+
+    keys.forEach(presetName => {
+        const config = presets[presetName];
+        if (typeof config !== 'object' || config === null || Array.isArray(config)) {
+            throw new Error(
+                `Preset "${presetName}" is invalid. Each preset must be an object of configuration options.`
+            );
+        }
+
+        // Optional: check for required fields
+        const requiredFields = ['numTasks', 'graphType'];
+        requiredFields.forEach(field => {
+            if (!(field in config)) {
+                throw new Error(
+                    `Preset "${presetName}" is missing required field "${field}".`
+                );
+            }
+        });
+    });
+
+    return true; // passed validation
+}
+
+
 /**
  * Parse command line arguments
  */
@@ -299,7 +335,7 @@ function showHelp() {
 Task Graph Generator CLI
 
 Usage:
-  node generate-tasks.js [mode] [options]
+  node instance-generator.js [mode] [options]
 
 Modes:
   presets              Generate all preset configurations
@@ -318,19 +354,19 @@ Options:
 
 Examples:
   # Generate all presets
-  node generate-tasks.js presets
+  node instance-generator.js presets
 
   # Generate presets from custom file
-  node generate-tasks.js presets --presets ./my-presets.json
+  node instance-generator.js presets --presets ./my-presets.json
 
   # Generate test suite with custom output directory
-  node generate-tasks.js test-suite --output-dir ./my-tests
+  node instance-generator.js test-suite --output-dir ./my-tests
 
   # Generate custom instance from config file
-  node generate-tasks.js custom --config my-config.json --file my-instance.json
+  node instance-generator.js custom --config my-config.json --file my-instance.json
 
   # Generate with force-directed layout
-  node generate-tasks.js presets --layout force
+  node instance-generator.js presets --layout force
 
 Preset Configurations:
   - small: 5 tasks, chain topology
@@ -367,6 +403,7 @@ function main() {
             const presetsPath = path.resolve(options['presets']);
             const presetsData = fs.readFileSync(presetsPath, 'utf8');
             PRESETS = JSON.parse(presetsData);
+            validatePresetFormat(PRESETS);
             console.log(`Loaded presets from ${presetsPath}\n`);
         } catch (error) {
             console.error(`Error loading presets file: ${error.message}`);
@@ -387,7 +424,7 @@ function main() {
         case 'custom':
             if (!options['config']) {
                 console.error('Error: --config option required for custom mode');
-                console.log('Use: node generate-tasks.js help');
+                console.log('Use: node instance-generator.js help');
                 process.exit(1);
             }
             

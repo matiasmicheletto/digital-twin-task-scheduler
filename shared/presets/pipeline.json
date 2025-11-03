@@ -1,0 +1,8 @@
+{
+    "numTasks": 30,
+    "graphType": "fork-join",
+    "forkJoinGroups": 5,
+    "mistTaskRatio": 0.1,
+    "C": { "strategy": "uniform", "min": 2, "max": 8 },
+    "T": { "strategy": "harmonic", "values": [20, 40, 80] }
+}

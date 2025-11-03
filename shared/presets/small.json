@@ -1,0 +1,7 @@
+{
+    "numTasks": 5,
+    "graphType": "chain",
+    "mistTaskRatio": 0.2,
+    "C": { "min": 1, "max": 5 },
+    "T": { "strategy": "harmonic", "values": [10, 20, 40] }
+}
