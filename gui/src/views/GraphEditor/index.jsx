@@ -174,10 +174,10 @@ const View = () => {
   }, [tasks, precedences, scheduleToGraph]);
 
   useEffect(() => { // Load saved data on component mount
-    const savedData = loadFromLocalStorage('savedSchedules');
-    if (savedData && savedData.tasks && savedData.tasks.length > 0) {
+    const savedSchedules = loadFromLocalStorage('savedSchedules');
+    if (savedSchedules && savedSchedules.tasks && savedSchedules.tasks.length > 0) {
       try {
-        scheduleFromGraph(savedData);
+        scheduleFromGraph(savedSchedules);
         handleResetView();
         toast("Loaded saved schedule from previous session", "info");
       } catch (error) {

@@ -6,6 +6,7 @@ export class Link {
         this.sourceId = sourceId;
         this.targetId = targetId;
         this.delay = delay; // Optional delay for the edge
+        this.bidirectional = false; // By default, links are unidirectional
     }
 }
 
@@ -31,6 +32,10 @@ export class Node {
         this.memory = 1; // Default memory capacity
         this.u = 0; // Utilization
         this.links = []; // Outgoing links
+        this.position = position || { // For visualization
+            x: 400 + Math.random() * 200,
+            y: 300 + Math.random() * 200
+        };
     }
 
     addTask(task) {
@@ -54,6 +59,10 @@ export class Node {
     removeLink(targetId) {
         this.links = this.links.filter(link => link.targetId !== targetId);
     }
+
+    setPosition(x, y) {
+        this.position = { x, y };
+    }
 }
 
 export default class Network {
@@ -64,6 +73,19 @@ export default class Network {
     addNode(node) {
         if(!(node instanceof Node)) {
             throw new Error("Invalid node object");
+        }
+        
+        if(!Object.values(NODE_TYPES).includes(node.type)) {
+            throw new Error(`Invalid node type: ${node.type}`);
+        }
+
+        if(node.type === NODE_TYPES.CLOUD) {
+            // Ensure only one cloud node exists
+            for(let n of this.nodes.values()) {
+                if(n.type === NODE_TYPES.CLOUD) {
+                    throw new Error("Only one Cloud node is allowed in the network");
+                }
+            }
         }
         this.nodes.set(node.id, node);
     }
@@ -82,7 +104,7 @@ export default class Network {
         }
     }
 
-    connectNodes(sourceId, targetId, delay = 1) {
+    connectNodes(sourceId, targetId, delay = 1, bidirectional = false) {
         const sourceNode = this.nodes.get(sourceId);
         const targetNode = this.nodes.get(targetId);
 
@@ -90,19 +112,18 @@ export default class Network {
             throw new Error("Source or target node does not exist");
         }
 
-        // Cloud cannot connect to anything
-        if(sourceNode?.type === NODE_TYPES.CLOUD) {
-            throw new Error("Cloud nodes cannot initiate connections");
-        }
-
         // Edge cannot connect to Mist
         if(sourceNode?.type === NODE_TYPES.EDGE && targetNode?.type === NODE_TYPES.MIST) {
             throw new Error("Edge nodes cannot connect to Mist nodes");
         }
         
-        const linkId = `${sourceId}->${targetId}`;
-        const link = new Link(linkId, sourceId, targetId, delay);
+        const linkId = `${sourceId}${bidirectional ? "<->" : "->"}${targetId}`;
+        const link = new Link(linkId, sourceId, targetId, delay, bidirectional);
         sourceNode.addLink(link);
+        if(bidirectional) {
+            const reverseLink = new Link(linkId, targetId, sourceId, delay, bidirectional);
+            targetNode.addLink(reverseLink);
+        }
     }
 
     disconnectNodes(sourceId, targetId) {
