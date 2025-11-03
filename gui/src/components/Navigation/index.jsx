@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { AppBar, Box, Toolbar, Button, Typography } from "@mui/material";
-import { removeSlash } from '../../model/utils';
+import { removeSlash } from '../../../../shared/utils.js';
 import views from "../../views";
 
 const toolbarStyle = {

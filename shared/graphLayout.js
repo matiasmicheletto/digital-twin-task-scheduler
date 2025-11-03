@@ -1,4 +1,4 @@
-import Schedule from "./schedule";
+import Schedule from "../shared/schedule.js";
 
 /**
  * Graph Layout Algorithms for Task Visualization

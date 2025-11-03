@@ -16,7 +16,6 @@ import {
     Link,
     Edit
 } from "@mui/icons-material";
-import { NODE_TYPES, NODE_TYPE_LABELS } from "../../model/network";
 import { sidePanelStyle } from "../../themes/common";
 import classes from './style.module.css';
 

@@ -1,5 +1,5 @@
 import { useRef, useReducer, useCallback } from "react";
-import Schedule from "../../model/schedule.js";
+import Schedule from "../../../../shared/schedule.js";
 
 const schedule = new Schedule();
 

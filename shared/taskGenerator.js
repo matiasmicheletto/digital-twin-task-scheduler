@@ -1,4 +1,4 @@
-import Schedule, { Task } from './schedule.js'; // Adjust import path as needed
+import Schedule, { Task } from '../shared/schedule.js';
 
 /**
  * Problem Generator for Real-Time Task Scheduling

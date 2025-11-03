@@ -19,7 +19,7 @@ import {
     Download,
     Shuffle
 } from "@mui/icons-material";
-import { PRESETS } from "../../model/taskGenerator";
+import { PRESETS } from "../../../../shared/taskGenerator.js";
 
 const AppBar = props => {
 

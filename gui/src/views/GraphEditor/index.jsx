@@ -11,9 +11,9 @@ import SidePanel from "../../components/SidePanel";
 import useToast from "../../hooks/useToast";
 import { containerStyle } from "../../themes/common";
 import { useScheduleContext, useNetworkContext } from "../../context/Model";
-import TaskGenerator from "../../model/taskGenerator";
-import { Task } from "../../model/schedule";
-import GraphLayout from "../../model/graphLayout";
+import TaskGenerator from "../../../../shared/taskGenerator.js";
+import { Task } from "../../../../shared/schedule.js";
+import GraphLayout from "../../../../shared/graphLayout.js";
 import { 
   importJSON, 
   exportJSON,

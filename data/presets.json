@@ -1,0 +1,54 @@
+{
+    "small": {
+        "numTasks": 5,
+        "graphType": "chain",
+        "mistTaskRatio": 0.2,
+        "C": { "min": 1, "max": 5 },
+        "T": { "strategy": "harmonic", "values": [10, 20, 40] }
+    },
+    "medium": {
+        "numTasks": 20,
+        "graphType": "layered",
+        "layers": 4,
+        "density": 0.3,
+        "mistTaskRatio": 0.15,
+        "C": { "strategy": "uniform", "min": 1, "max": 10 },
+        "T": { "strategy": "harmonic", "values": [10, 20, 40, 80] }
+    },
+    "largeSparse": {
+        "numTasks": 100,
+        "graphType": "random",
+        "density": 0.1,
+        "mistTaskRatio": 0.1,
+        "C": { "strategy": "bimodal", "modes": [
+            { "weight": 0.8, "min": 1, "max": 5 },
+            { "weight": 0.2, "min": 10, "max": 20 }
+        ]},
+        "T": { "strategy": "harmonic", "values": [10, 20, 40, 80, 160] }
+    },
+    "largeDense": {
+        "numTasks": 50,
+        "graphType": "random",
+        "density": 0.4,
+        "mistTaskRatio": 0.2,
+        "targetUtilization": 0.7,
+        "T": { "strategy": "harmonic", "values": [10, 20, 40, 80] }
+    },
+    "pipeline": {
+        "numTasks": 30,
+        "graphType": "fork-join",
+        "forkJoinGroups": 5,
+        "mistTaskRatio": 0.1,
+        "C": { "strategy": "uniform", "min": 2, "max": 8 },
+        "T": { "strategy": "harmonic", "values": [20, 40, 80] }
+    },
+    "highUtilization": {
+        "numTasks": 25,
+        "graphType": "layered",
+        "layers": 5,
+        "mistTaskRatio": 0.2,
+        "targetUtilization": 0.9,
+        "T": { "strategy": "harmonic", "values": [10, 20, 40, 80] },
+        "D": { "strategy": "constrained", "min": 0.8, "max": 1.0 }
+    }
+}

@@ -1,5 +1,5 @@
 import { useRef, useReducer, useCallback } from "react";
-import Network from "../../model/network.js";
+import Network from "../../../../shared/network.js";
 
 const network = new Network();
 
