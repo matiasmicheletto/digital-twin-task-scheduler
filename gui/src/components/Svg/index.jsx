@@ -2,9 +2,9 @@
 import { useState } from "react";
 import { Box } from "@mui/material";
 import {
-  TaskCircle,
   Arrow,
-  TaskTooltip
+  TaskTooltip,
+  Node
 } from "./geometries";
 import {
   svgStyle,
@@ -45,15 +45,16 @@ const SvgCanvas = props => {
                 onContextMenu={handleSvgContextMenu}
                 style={{ cursor: isPanning ? "grabbing" : "grab", ...svgStyle }}>
                 <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
-                    {nodes.map(task => (
-                        <TaskCircle
-                            key={task.id}
-                            task={task}
-                            isSelected={selectedNode === task.id}
-                            isConnecting={connectingFrom === task.id}
-                            onMouseDown={e => handleNodeMouseDown(e, task.id)}
-                            onContextMenu={e => handleNodeContextMenu(e, task.id)}
-                            onMouseEnter={() => setHoveredNode(task.id)}
+                    {nodes.map(node => (
+                        <Node
+                            type={node.type}
+                            key={node.id}
+                            node={node}
+                            isSelected={selectedNode === node.id}
+                            isConnecting={connectingFrom === node.id}
+                            onMouseDown={e => handleNodeMouseDown(e, node.id)}
+                            onContextMenu={e => handleNodeContextMenu(e, node.id)}
+                            onMouseEnter={() => setHoveredNode(node.id)}
                             onMouseLeave={() => setHoveredNode(null)} />
                     ))}
         

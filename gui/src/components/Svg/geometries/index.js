@@ -1,13 +1,9 @@
-import TaskCircle from "./taskCircle";
-import Cloud from "./cloud";
-import EdgeServer from "./edgeServer";
+import Node from "./node";
 import Arrow from "./arrow";
 import TaskTooltip from "./taskTooltip";
 
 export {
-    TaskCircle,
-    Cloud,
-    EdgeServer,
+    Node,
     Arrow,
     TaskTooltip
 };

@@ -4,6 +4,7 @@ const TASK_ATTRIBUTES = ['id', 'mist', 'label', 'C', 'T', 'D', 'a', 'M', 'succes
 export class Task {
     constructor(label, mist, C, T, D, a, M, position) {
         this.id = generateUUID8(); // Unique task identifier
+        this.type = "TASK"; // For visualization purposes
         this.label = label; // Task name
         this.mist = mist; // If the allocation of this task is fixed to a node
         this.C = C; // Worst-case execution time
