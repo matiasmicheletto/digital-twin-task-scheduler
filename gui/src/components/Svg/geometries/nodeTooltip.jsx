@@ -24,10 +24,10 @@ const NodeTooltip = ({ node, position }) => (
             stroke="black"
             strokeWidth={2}/>
         <ParamText x={position.x+20} y={position.y + 20} text={`ID: ${node.id}`} />
-        <ParamText x={position.x+20} y={position.y + 60} text={`T: ${node.label}`} />
-        <ParamText x={position.x+20} y={position.y + 40} text={`C: ${NODE_TYPE_LABELS[node.type]}`} />
-        <ParamText x={position.x+20} y={position.y + 80} text={`D: ${node.memory}`} />
-        <ParamText x={position.x+20} y={position.y + 100} text={`a: ${node.u}`} />
+        <ParamText x={position.x+20} y={position.y + 40} text={`Name: ${node.label}`} />
+        <ParamText x={position.x+20} y={position.y + 60} text={`Type: ${NODE_TYPE_LABELS[node.type]}`} />
+        <ParamText x={position.x+20} y={position.y + 80} text={`Mem: ${node.memory}`} />
+        <ParamText x={position.x+20} y={position.y + 100} text={`U: ${node.u}`} />
     </g>
 );
 

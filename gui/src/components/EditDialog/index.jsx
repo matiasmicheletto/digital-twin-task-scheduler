@@ -22,13 +22,13 @@ const EditDialog = props => {
         dialogConfig,
         dialogOpen,
         setDialogOpen,
-        editingNode,
-        setEditingNode,
+        editingVertex,
+        setEditingVertex,
         handleSave
     } = props;
 
     const setAttr = (attrName, value) => {
-        setEditingNode({ ...editingNode, [attrName]: value });
+        setEditingVertex({ ...editingVertex, [attrName]: value });
     };
 
     return (
@@ -43,7 +43,7 @@ const EditDialog = props => {
                                     label={field.label}
                                     type="text"
                                     disabled={field.disabled}
-                                    value={editingNode ? editingNode[field.attrName] : ""}
+                                    value={editingVertex ? editingVertex[field.attrName] : ""}
                                     onChange={e => setAttr(field.attrName, e.target.value)}/>
                             }
 
@@ -52,7 +52,7 @@ const EditDialog = props => {
                                     label={field.label}
                                     type="number"
                                     disabled={field.disabled}
-                                    value={editingNode ? editingNode[field.attrName] : 0}
+                                    value={editingVertex ? editingVertex[field.attrName] : 0}
                                     onChange={e => setAttr(field.attrName, parseInt(e.target.value))}/>
                             }
 
@@ -60,8 +60,8 @@ const EditDialog = props => {
                                 <FormControl fullWidth>
                                     <InputLabel>{field.label}</InputLabel>
                                     <Select
-                                        label="Task Type"
-                                        value={editingNode ? editingNode[field.attrName] : ""}
+                                        label={field.label}
+                                        value={editingVertex ? editingVertex[field.attrName] : ""}
                                         onChange={e => setAttr(field.attrName, e.target.value)}>
                                         {field.options.map(opt =>
                                             <MenuItem key={opt.value} value={opt.value}>{opt.text}</MenuItem>
@@ -84,7 +84,7 @@ const EditDialog = props => {
                                                     backgroundColor: '#2196f3', // blue track when checked
                                                     },
                                                 }}
-                                                checked={editingNode ? editingNode[field.attrName] : false}
+                                                checked={editingVertex ? editingVertex[field.attrName] : false}
                                                 onChange={e => setAttr(field.attrName, e.target.checked)}
                                             />
                                         <span style={{ fontSize: "14px" }}>{field.labelTrue}</span>

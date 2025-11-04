@@ -1,4 +1,5 @@
 import { Task } from "./schedule.js";
+import { generateUUID8 } from "./utils.js";
 
 export class Link {
     constructor(id, sourceId, targetId, delay = 1) {
@@ -24,8 +25,8 @@ export const NODE_TYPE_LABELS = {
 };
 
 export class Node {
-    constructor(id, label, type = NODE_TYPES.UNDEFINED) {
-        this.id = id;
+    constructor(label, type = NODE_TYPES.UNDEFINED, position) {
+        this.id = generateUUID8(); // Unique task identifier
         this.type = type
         this.label = label || id;
         this.tasks = new Map();
@@ -53,11 +54,21 @@ export class Node {
         if(!(link instanceof Link)) {
             throw new Error("Invalid link object");
         }
+
         this.links.push(link);
     }
 
     removeLink(targetId) {
         this.links = this.links.filter(link => link.targetId !== targetId);
+    }
+
+    static fromObject(obj) {
+        const node = new Node(obj.label, obj.type);
+        if(obj.id) // If object has id, use it to preserve identity
+            node.id = obj.id;
+        if(obj.links) // Same for links
+            node.links = obj.links.map(l => new Link(l.id, l.sourceId, l.targetId, l.delay));
+        return node;
     }
 
     setPosition(x, y) {
@@ -104,7 +115,7 @@ export default class Network {
         }
     }
 
-    connectNodes(sourceId, targetId, delay = 1, bidirectional = false) {
+    connectNodes(sourceId, targetId, delay = 1) {
         const sourceNode = this.nodes.get(sourceId);
         const targetNode = this.nodes.get(targetId);
 
@@ -116,6 +127,11 @@ export default class Network {
         if(sourceNode?.type === NODE_TYPES.EDGE && targetNode?.type === NODE_TYPES.MIST) {
             throw new Error("Edge nodes cannot connect to Mist nodes");
         }
+
+        // If both nodes are edge or cloud, make link bidirectional
+        const bidirectional = 
+            (sourceNode.type === NODE_TYPES.EDGE || sourceNode.type === NODE_TYPES.CLOUD) &&
+            (targetNode.type === NODE_TYPES.EDGE || targetNode.type === NODE_TYPES.CLOUD);
         
         const linkId = `${sourceId}${bidirectional ? "<->" : "->"}${targetId}`;
         const link = new Link(linkId, sourceId, targetId, delay, bidirectional);
@@ -137,19 +153,35 @@ export default class Network {
         return this.nodes.get(nodeId);
     }
 
+    getNodes() {
+        return Array.from(this.nodes.values());
+    }
+
+    getConnections() {
+        const connections = [];
+        for (let node of this.nodes.values()) {
+            for (let link of node.links) {
+                connections.push(link);
+            }
+        }
+        return connections;
+    }
+
     toGraph() {
         const nodesArray = Array.from(this.nodes.values());
         const linksArray = [];
-        nodesArray.forEach(node => {
+        for(let node of nodesArray) {
             node.links.forEach(link => {
                 linksArray.push({
                     id: link.id,
-                    source: link.sourceId,
-                    target: link.targetId,
-                    delay: link.delay
+                    from: link.sourceId,
+                    to: link.targetId,
+                    delay: link.delay,
+                    bidirectional: link.bidirectional
                 });
             });
-        });
+        }
+        
         return { vertices: nodesArray, edges: linksArray };
     }
 

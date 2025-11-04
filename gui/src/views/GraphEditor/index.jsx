@@ -10,10 +10,10 @@ import AppBar from "../../components/AppBar";
 import SidePanel from "../../components/SidePanel";
 import useToast from "../../hooks/useToast";
 import { containerStyle } from "../../themes/common";
-import { useScheduleContext, useNetworkContext } from "../../context/Model";
+import useGraph, { GRAPH_MODES } from "../../hooks/useGraph";
 import TaskGenerator from "../../../../shared/taskGenerator.js";
-import { Task } from "../../../../shared/schedule.js";
 import GraphLayout from "../../../../shared/graphLayout.js";
+import { NODE_TYPES, NODE_TYPE_LABELS } from "../../../../shared/network.js";
 import { 
   importJSON, 
   exportJSON,
@@ -88,13 +88,13 @@ const nodeEditDialogConfig = {
             attrName: "type",
             label: "Node Type",
             type: "select",
-            options: [
-                { value: "edge", text: "Edge Server" },
-                { value: "cloud", text: "Cloud Server" }
-            ]
+            options: Object
+              .keys(NODE_TYPES)
+              .filter(key => key !== "UNDEFINED")
+              .map(key => ({ value:key, text: NODE_TYPE_LABELS[key] }))
         },
         {
-            attrName: "m",
+            attrName: "memory",
             label: "Memory",
             type: "text"
         },
@@ -106,29 +106,41 @@ const nodeEditDialogConfig = {
     ]
 };
 
+const getDefaultVertex = (mode, vertices) => (mode === GRAPH_MODES.SCHEDULE ? {
+    label: `Task ${vertices.length + 1}`,
+    mist: false,
+    C: 1,
+    T: 10,
+    D: 10,
+    a: 0,
+    M: 1
+    // Initial position is random
+  }
+  :
+  {
+    label: `Node ${vertices.length + 1}`,
+    type: NODE_TYPES.MIST,
+    memory: 1024,
+    u: 0.5
+  });
+
 const View = () => {
-  const { 
-    addTask, 
-    getTask,
-    getTasks, 
-    getPrecedences,
-    removeTask, 
-    deleteSchedule,
-    connectTasks, 
-    disconnectTasks,
-    scheduleToGraph,
-    scheduleFromGraph 
-  } = useScheduleContext();
+  
+  const [mode, setMode] = useState(GRAPH_MODES.SCHEDULE);
 
   const {
-    addNode,
+    addVertex,
     removeVertex,
-    connectNodes,
+    connectVertices,
     disconnectVertices,
-    getNode,
-    networkToGraph,
-    networkFromGraph
-  } = useNetworkContext();
+    getVertex,
+    getVertices,
+    getEdges,
+    deleteGraph,
+    fromObject,
+    graphToModel,
+    modelToGraph
+  } = useGraph(mode);
 
   const toast = useToast();
 
@@ -148,8 +160,8 @@ const View = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingVertex, setEditingVertex] = useState(null);
 
-  const tasks = [...getTasks()];
-  const precedences = getPrecedences();
+  const vertices = getVertices();
+  const edges = getEdges();
 
   useEffect(() => { // Auto-save to localStorage
     const autoSaveData = () => {
@@ -159,40 +171,46 @@ const View = () => {
         height: svgRect.height 
       } : null;
       
-      const scheduleData = {
-        ...scheduleToGraph(),
+      const graph = {...modelToGraph()};
+      const data = mode === GRAPH_MODES.SCHEDULE ? {
+        tasks: graph.vertices,
+        precedences: graph.edges,
+        viewportDimensions
+      } : {
+        nodes: graph.vertices,
+        connections: graph.edges,
         viewportDimensions
       };
-
-      saveToLocalStorage('savedSchedules', scheduleData);
-      console.log('Auto-saved schedule to localStorage');
+      
+      saveToLocalStorage(mode === GRAPH_MODES.SCHEDULE ? 'savedSchedules' : 'savedNetworks', data);
+      console.log('Auto-saved graph to localStorage');
     };
 
-    // Auto-save when tasks or positions change (including when cleared)
+    // Auto-save when vertices or positions change (including when cleared)
     const timeoutId = setTimeout(autoSaveData, 1000); // Debounce saves
     return () => clearTimeout(timeoutId);
-  }, [tasks, precedences, scheduleToGraph]);
+  }, [vertices, edges, modelToGraph]);
 
   useEffect(() => { // Load saved data on component mount
-    const savedSchedules = loadFromLocalStorage('savedSchedules');
-    if (savedSchedules && savedSchedules.tasks && savedSchedules.tasks.length > 0) {
+    const data = loadFromLocalStorage(mode === GRAPH_MODES.SCHEDULE ? 'savedSchedules' : 'savedNetworks');
+    if (data && data.vertices && data.vertices.length > 0) {
       try {
-        scheduleFromGraph(savedSchedules);
+        graphToModel(data);
         handleResetView();
-        toast("Loaded saved schedule from previous session", "info");
+        toast("Loaded saved graph from previous session", "info");
       } catch (error) {
-        console.error('Failed to load saved schedule:', error);
-        toast("Failed to load saved schedule: " + error.message, "error");
-        localStorage.removeItem('savedSchedules');
+        console.error('Failed to load saved graph:', error);
+        toast("Failed to load saved graph: " + error.message, "error");
+        localStorage.removeItem(mode === GRAPH_MODES.SCHEDULE ? 'savedSchedules' : 'savedNetworks');
       }
     }
-  }, [scheduleFromGraph]);
+  }, [graphToModel]);
 
   const handleResetView = () => { // Reset pan and zoom to fit all vertices
     const svgRect = svgRef.current?.getBoundingClientRect();
     if (svgRect) {
       // Calculate bounding box of all vertices
-      const pos = tasks.map(t => t.position);
+      const pos = vertices.map(t => t.position);
       if (pos.length === 0) return;
       const xs = pos.map(p => p.x);
       const ys = pos.map(p => p.y);
@@ -213,10 +231,11 @@ const View = () => {
     }
   };
 
-  const handleSaveVertex = () => { // Save task after completing form
+  const handleSaveVertex = () => { // Save vertex after completing form
     if (editingVertex) {
       try {
-        addTask(Task.fromObject(editingVertex)); // Overwrites if id exists
+        const vrtx = fromObject(editingVertex);
+        addVertex(vrtx); // Overwrites if id exists
         setDialogOpen(false);
         setEditingVertex(null);
         handleResetView();
@@ -227,23 +246,23 @@ const View = () => {
     }
   };
 
-  const handleVertexMouseDown = (e, taskId) => {
+  const handleVertexMouseDown = (e, vertexId) => {
     if (e.button === 0) {
       e.stopPropagation();
-      setDraggingVertex(taskId);
-      setSelectedVertex(taskId);
+      setDraggingVertex(vertexId);
+      setSelectedVertex(vertexId);
     }
   };
 
-  const handleVertexContextMenu = (e, taskId) => {
+  const handleVertexContextMenu = (e, vertexId) => {
     e.preventDefault();
     e.stopPropagation();
     if (connectingFrom === null) {
-      setConnectingFrom(taskId);
+      setConnectingFrom(vertexId);
     } else {
-      if (connectingFrom !== taskId) {
+      if (connectingFrom !== vertexId) {
         try{
-          connectTasks(connectingFrom, taskId);
+          connectVertices(connectingFrom, vertexId);
           setConnectingFrom(null);
         } catch (error) {
           toast(error.message, "error");
@@ -257,7 +276,7 @@ const View = () => {
       const rect = svgRef.current.getBoundingClientRect();
       const x = (e.clientX - rect.left - pan.x) / zoom;
       const y = (e.clientY - rect.top - pan.y) / zoom;
-      getTask(draggingVertex).setPosition(x, y);      
+      getVertex(draggingVertex).setPosition(x, y);      
     } else if (isPanning) {
       setPan({
         x: pan.x + (e.clientX - panStart.x),
@@ -301,13 +320,13 @@ const View = () => {
       setConnectingFrom(n.id);
   };
 
-  const handleDeleteTasks = () => {
-    deleteSchedule();
+  const handleDeleteVertices = () => {
+    deleteGraph();
     setSelectedVertex(null);
   };
 
-  const handleGenerateTasks = (config) => {
-    deleteSchedule();
+  const handleGenerateSchedule = config => {
+    deleteGraph();
     const generator = new TaskGenerator(config); // Random task set generator
     const schedule = generator.generate(); // Generate random schedule
     // Apply graph layout to organize vertices
@@ -324,8 +343,8 @@ const View = () => {
     });
     const graph = schedule.toGraph();
     layout.applyLayout(graph);
-    // Add generated tasks to current schedule
-    scheduleFromGraph(graph);
+    // Add generated vertices to current schedule
+    graphToModel(graph);
   };
 
   const handleExport = () => {
@@ -334,15 +353,34 @@ const View = () => {
       width: svgRect.width, 
       height: svgRect.height 
     } : null;
-    exportJSON({...scheduleToGraph(), viewportDimensions});
+    const graph = {...modelToGraph()};
+    const data = mode === GRAPH_MODES.SCHEDULE ? {
+      tasks: graph.vertices,
+      precedences: graph.edges,
+      viewportDimensions
+    } : {
+      nodes: graph.vertices,
+      connections: graph.edges,
+      viewportDimensions
+    };
+    exportJSON({data, viewportDimensions});
   };
 
   const handleImport = file => {
     importJSON(file).then(data => {
+      const model = mode === GRAPH_MODES.SCHEDULE ? {
+        tasks: data.vertices,
+        precedences: data.edges,
+        viewportDimensions: data.viewportDimensions
+      } : {
+        nodes: data.vertices,
+        connections: data.edges,
+        viewportDimensions: data.viewportDimensions
+      };
       try{
-        scheduleFromGraph(data);
+        graphToModel(model);
         handleResetView();
-        toast("Imported schedule successfully", "success");
+        toast(`Imported ${mode === GRAPH_MODES.SCHEDULE ? "schedule" : "network"} successfully`, "success");
       } catch (error) {
         toast(error.message, "error");
       }
@@ -353,37 +391,29 @@ const View = () => {
     <MainView>
       <Paper elevation={3} sx={containerStyle}>
           <AppBar
+            mode={mode}
+            setMode={setMode}
             handleZoomIn={handleZoomIn}
             handleZoomOut={handleZoomOut}
             handleResetView={handleResetView}
-            handleDeleteTasks={handleDeleteTasks}
-            handleGenerateTasks={handleGenerateTasks}
+            handleDeleteVertices={handleDeleteVertices}
+            handleGenerateSchedule={handleGenerateSchedule}
             handleExport={handleExport}
             handleImport={handleImport}/>
 
           <Box sx={{ display: "flex", flex: 1, height: "100%" }}>
             <SidePanel
-              vertices={tasks}
-              edges={precedences}
-              topListName={"Tasks"}
-              bottomListName={"Precedences"}
+              vertices={vertices}
+              edges={edges}
+              mode={mode}
               selectedVertex={selectedVertex}
-              defaultVertex={{
-                label: `Task ${tasks.length + 1}`,
-                mist: false,
-                C: 1,
-                T: 10,
-                D: 10,
-                a: 0,
-                M: 1
-                // Initial position is random
-              }}
+              defaultVertex={() => getDefaultVertex(mode, vertices)}
               connectingFrom={connectingFrom}
               handleStartConnecting={handleStartConnecting}
               setEditingVertex={setEditingVertex}
               setDialogOpen={setDialogOpen}
-              removeVertex={removeTask}
-              disconnectVertices={disconnectTasks} />
+              removeVertex={removeVertex}
+              disconnectVertices={disconnectVertices} />
 
             <SvgCanvas
               svgRef={svgRef}
@@ -394,8 +424,8 @@ const View = () => {
               handleMouseUp={handleMouseUp}
               handleSvgMouseDown={handleSvgMouseDown}
               handleSvgContextMenu={handleSvgContextMenu}
-              vertices={tasks}
-              edges={precedences}
+              vertices={vertices}
+              edges={edges}
               selectedVertex={selectedVertex}
               connectingFrom={connectingFrom}
               handleVertexMouseDown={handleVertexMouseDown}
@@ -404,7 +434,7 @@ const View = () => {
           </Box> 
 
           <EditDialog
-              dialogConfig={taskEditDialogConfig}
+              dialogConfig={mode === GRAPH_MODES.SCHEDULE ? taskEditDialogConfig : nodeEditDialogConfig}
               dialogOpen={dialogOpen}
               setDialogOpen={setDialogOpen}
               editingVertex={editingVertex}

@@ -62,8 +62,8 @@ const SvgCanvas = props => {
                     {edges.map(({from, to}, idx) => (
                         <Arrow
                             key={idx}
-                            from={from.position}
-                            to={to.position} />
+                            from={from?.position}
+                            to={to?.position} />
                     ))}
 
                     {vertices.map(vertex => (// Render tooltips last to be on top

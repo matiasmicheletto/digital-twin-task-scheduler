@@ -3,7 +3,7 @@ const arrowAngle = Math.PI / 6;
 
 const Arrow = props => {
 
-    const {from,to} = props;
+    const {from, to, bidirectional} = props;
 
     if (!from || !to) return null;
     
@@ -40,6 +40,20 @@ const Arrow = props => {
                     endY - arrowLen * Math.sin(angle + arrowAngle)
                 }`}
                 fill="#666"/>
+
+            {bidirectional && (
+                <polygon
+                    points={`${startX},${startY} ${
+                        startX + arrowLen * Math.cos(angle - arrowAngle)
+                    },${
+                        startY + arrowLen * Math.sin(angle - arrowAngle)
+                    } ${
+                        startX + arrowLen * Math.cos(angle + arrowAngle)
+                    }, ${
+                        startY + arrowLen * Math.sin(angle + arrowAngle)
+                    }`}
+                    fill="#666"/>
+            )}
         </g>
     );
 };

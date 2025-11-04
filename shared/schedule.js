@@ -138,7 +138,7 @@ export default class Schedule {
     }
 
     getTasks() {
-        return this.tasks.values();
+        return Array.from(this.tasks.values());
     }
 
     getPrecedences() {
@@ -156,7 +156,12 @@ export default class Schedule {
         const precedences = [];
         for(let task of tasksArray) {
             for(let succId of task.successors) {
-                precedences.push({ id: `${task.id}_${succId}`, from: task.id, to: succId });
+                precedences.push({ 
+                    id: `${task.id}_${succId}`, 
+                    from: task.id, 
+                    to: succId,
+                    bidirectional: false 
+                });
             }
         }
         

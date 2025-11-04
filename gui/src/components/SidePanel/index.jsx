@@ -17,6 +17,7 @@ import {
     Edit
 } from "@mui/icons-material";
 import { sidePanelStyle } from "../../themes/common";
+import { GRAPH_MODES } from "../../hooks/useGraph";
 import classes from './style.module.css';
 
 
@@ -25,8 +26,7 @@ const SidePanel = props => {
     const {
         vertices,
         edges,
-        topListName,
-        bottomListName,
+        mode,
         selectedVertex,
         defaultVertex,
         connectingFrom,
@@ -50,9 +50,9 @@ const SidePanel = props => {
         <Box sx={sidePanelStyle} className={classes.sidePanel}>
             <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
             <Typography variant="subtitle1" sx={{fontWeight: "bold"}}>
-                {topListName}
+                {mode === GRAPH_MODES.SCHEDULE ? "Tasks" : "Nodes"}
             </Typography>
-            <Tooltip title="Add task">
+            <Tooltip title={mode === GRAPH_MODES.SCHEDULE ? "Add Task" : "Add Node"}>
                 <IconButton color="primary" onClick={() => handleAddVertex()}>
                     <AddCircle />
                 </IconButton>
@@ -81,9 +81,16 @@ const SidePanel = props => {
                             </IconButton>
                         </Stack>
                     }>
-                    <ListItemText 
-                        primary={`${n.label} - ${n.mist ? "Mist" : "Edge/Cloud"}`} 
-                        secondary={`C:${n.C} T:${n.T} D:${n.D} a:${n.a} M:${n.M}`} />
+                    {mode === GRAPH_MODES.SCHEDULE && 
+                        <ListItemText 
+                            primary={`${n.label} - ${n.mist ? "Mist" : "Edge/Cloud"}`} 
+                            secondary={`C:${n.C} T:${n.T} D:${n.D} a:${n.a} M:${n.M}`} />
+                    }
+                    {mode === GRAPH_MODES.NETWORK && 
+                        <ListItemText 
+                            primary={`${n.label} - ${n.type}`} 
+                            secondary={`Memory: ${n.memory} U: ${n.u}`} />
+                    }
                     </ListItem>
                     <Divider />
                 </React.Fragment>
@@ -91,7 +98,7 @@ const SidePanel = props => {
             </List>
 
             <Typography variant="subtitle1" sx={{ mt: 2, fontWeight: 'bold' }}>
-                {bottomListName}
+                {mode === GRAPH_MODES.SCHEDULE ? "Precedences" : "Connections"}
             </Typography>
 
             <List dense>
@@ -101,7 +108,9 @@ const SidePanel = props => {
                         <Delete fontSize="small"/>
                     </IconButton>
                     }>
-                    <ListItemText primary={`${e.from?.label ?? "-"} → ${e.to?.label ?? "-"}`}/>
+                    <ListItemText 
+                        primary={`${e.from?.label ?? "-"} → ${e.to?.label ?? "-"}`}
+                        secondary={e.delay ? `Delay: ${e.delay}` : "" }/>
                     </ListItem>
                 ))}
             </List>

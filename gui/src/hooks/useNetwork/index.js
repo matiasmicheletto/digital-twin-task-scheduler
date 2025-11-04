@@ -17,9 +17,18 @@ const useNetwork = () => {
         forceUpdate();
     }, []);
 
-    const connectNodes = useCallback((fromNodeId, toNodeId, delay) => {
-        networkRef.current.connectNodes(fromNodeId, toNodeId, delay);
+    const deleteNetwork = useCallback(() => {
+        networkRef.current = new Network();
         forceUpdate();
+    }, []);
+
+    const connectNodes = useCallback((fromNodeId, toNodeId, delay) => {
+        try{
+            networkRef.current.connectNodes(fromNodeId, toNodeId, delay);
+            forceUpdate();
+        } catch (error) {
+            throw error;
+        }
     }, []);
 
     const disconnectNodes = useCallback((fromNodeId, toNodeId) => {
@@ -29,6 +38,14 @@ const useNetwork = () => {
 
     const getNode = useCallback(nodeId => {
         return networkRef.current.getNode(nodeId);
+    }, []);
+
+    const getNodes = useCallback(() => {
+        return networkRef.current.getNodes();
+    }, []);
+
+    const getConnections = useCallback(() => {
+        return networkRef.current.getConnections();
     }, []);
 
     const networkToGraph = useCallback(() => {
@@ -44,9 +61,12 @@ const useNetwork = () => {
         network: networkRef.current,
         addNode,
         removeNode,
+        deleteNetwork,
         connectNodes,
         disconnectNodes,
         getNode,
+        getNodes,
+        getConnections,
         networkToGraph,
         networkFromGraph
     };

@@ -4,6 +4,13 @@ import useNetwork from "../../hooks/useNetwork";
 
 const ModelContext = createContext(null);
 
+/* 
+ * ModelProvider component to provide schedule, network, and graph contexts
+ * schedule: set of precedence related tasks
+ * network: set of connected nodes with delays
+ * graph: visual representation of schedule and network
+*/
+
 export const ModelProvider = ({ children }) => {
     const schedule = useSchedule();
     const network = useNetwork();
