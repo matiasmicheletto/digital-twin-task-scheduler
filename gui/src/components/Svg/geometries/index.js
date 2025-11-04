@@ -1,9 +1,11 @@
-import Node from "./node";
+import Vertex from "./vertex";
 import Arrow from "./arrow";
 import TaskTooltip from "./taskTooltip";
+import NodeTooltip from "./nodeTooltip";
 
 export {
-    Node,
+    Vertex,
     Arrow,
-    TaskTooltip
+    TaskTooltip,
+    NodeTooltip
 };

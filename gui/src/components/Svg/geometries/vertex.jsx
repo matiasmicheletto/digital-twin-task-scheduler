@@ -11,8 +11,8 @@ const strokeColors = {
     connecting: "#ff0000"
 };
 
-const getFillColor = (node, isSelected, isConnecting) => {
-    if(node.mist) return fillColors.mist;
+const getFillColor = (vertex, isSelected, isConnecting) => {
+    if(vertex.mist) return fillColors.mist;
     if(isConnecting) return fillColors.connecting;
     if(isSelected) return fillColors.selected;
     return fillColors.default;
@@ -24,9 +24,9 @@ const getStrokeColor = (isSelected, isConnecting) => {
     return strokeColors.default;
 };
 
-// Draws geometric representation of a graph node (square for edge servers, circles for tasks and mist devices, and cloud)
-const Node = ({ 
-    node, 
+// Draws geometric representation of a graph vertex (square for edge servers, circles for tasks and mist devices, and cloud)
+const Vertex = ({ 
+    vertex, 
     type,
     onMouseDown, 
     onContextMenu, 
@@ -35,7 +35,7 @@ const Node = ({
     isSelected, 
     isConnecting}) => {
 
-    const fill = getFillColor(node, isSelected, isConnecting);
+    const fill = getFillColor(vertex, isSelected, isConnecting);
     const stroke = getStrokeColor(isSelected, isConnecting);
 
     return (
@@ -48,8 +48,8 @@ const Node = ({
 
             {(type === "TASK" || type === "MIST") && 
             <circle
-                cx={node.position.x}
-                cy={node.position.y}
+                cx={vertex.position.x}
+                cy={vertex.position.y}
                 r={30}
                 fill={fill}
                 stroke={stroke}
@@ -58,8 +58,8 @@ const Node = ({
 
             {type === "EDGE" && 
             <rect
-                x={node.position.x - 30}
-                y={node.position.y - 30}
+                x={vertex.position.x - 30}
+                y={vertex.position.y - 30}
                 width={60}
                 height={60}
                 rx="10"
@@ -72,11 +72,11 @@ const Node = ({
             {type === "CLOUD" &&   
             <path
                 d={`
-                M ${node.position.x - 40},${node.position.y}
-                C ${node.position.x - 60},${node.position.y - 30} ${node.position.x - 10},${node.position.y - 40} ${node.position.x},${node.position.y - 20}
-                C ${node.position.x + 20},${node.position.y - 50} ${node.position.x + 60},${node.position.y - 20} ${node.position.x + 40},${node.position.y}
-                C ${node.position.x + 60},${node.position.y + 30} ${node.position.x + 10},${node.position.y + 40} ${node.position.x},${node.position.y + 20}
-                C ${node.position.x - 20},${node.position.y + 40} ${node.position.x - 60},${node.position.y + 20} ${node.position.x - 40},${node.position.y}
+                M ${vertex.position.x - 40},${vertex.position.y}
+                C ${vertex.position.x - 60},${vertex.position.y - 30} ${vertex.position.x - 10},${vertex.position.y - 40} ${vertex.position.x},${vertex.position.y - 20}
+                C ${vertex.position.x + 20},${vertex.position.y - 50} ${vertex.position.x + 60},${vertex.position.y - 20} ${vertex.position.x + 40},${vertex.position.y}
+                C ${vertex.position.x + 60},${vertex.position.y + 30} ${vertex.position.x + 10},${vertex.position.y + 40} ${vertex.position.x},${vertex.position.y + 20}
+                C ${vertex.position.x - 20},${vertex.position.y + 40} ${vertex.position.x - 60},${vertex.position.y + 20} ${vertex.position.x - 40},${vertex.position.y}
                 Z
                 `}
                 fill={fill}
@@ -86,17 +86,17 @@ const Node = ({
             />}
 
             <text
-                x={node.position.x}
-                y={node.position.y+5}
+                x={vertex.position.x}
+                y={vertex.position.y+5}
                 style={{ userSelect: "none" }}
                 textAnchor="middle"
                 fill={isSelected ? "#161616ff" : "#ebebebff"}
                 fontSize="14"
                 fontWeight="bold"
                 pointerEvents="none">
-                {node.label}
+                {vertex.label}
             </text>
         </g>
     );
 };
-export default Node;
+export default Vertex;

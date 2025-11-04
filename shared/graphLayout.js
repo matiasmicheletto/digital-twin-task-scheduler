@@ -1,8 +1,6 @@
-import Schedule from "../shared/schedule.js";
-
 /**
- * Graph Layout Algorithms for Task Visualization
- * Provides automatic positioning for task graphs
+ * Graph Layout Algorithms for Visualization
+ * Provides automatic positioning for graphs
  */
 
 export default class GraphLayout {
@@ -10,7 +8,7 @@ export default class GraphLayout {
         this.config = {
             width: 1200,
             height: 800,
-            nodeRadius: 40, // For circular nodes (if using rectangles, add nodeWidth/nodeHeight)
+            nodeRadius: 40, // For circular vertices (if using rectangles, add nodeWidth/nodeHeight)
             horizontalSpacing: 150,
             verticalSpacing: 100,
             marginX: 100,
@@ -20,36 +18,34 @@ export default class GraphLayout {
     }
 
     /**
-     * Apply layout to a schedule
-     * @param {Schedule} schedule - The schedule to layout
-     * @param {string} algorithm - 'hierarchical', 'force', 'circular', 'grid'
+     * Apply layout to a graph
      */
-    applyLayout(schedule, algorithm = 'hierarchical') {
-        const { tasks, precedences } = schedule.toGraph();
+    applyLayout(graph, algorithm = 'hierarchical') {
+        const { vertices, edges } = graph;
         
         let positions;
         switch (algorithm) {
             case 'hierarchical':
-                positions = this.hierarchicalLayout(tasks, precedences);
+                positions = this.hierarchicalLayout(vertices, edges);
                 break;
             case 'force':
-                positions = this.forceDirectedLayout(tasks, precedences);
+                positions = this.forceDirectedLayout(vertices, edges);
                 break;
             case 'circular':
-                positions = this.circularLayout(tasks, precedences);
+                positions = this.circularLayout(vertices, edges);
                 break;
             case 'grid':
-                positions = this.gridLayout(tasks);
+                positions = this.gridLayout(vertices);
                 break;
             default:
-                positions = this.hierarchicalLayout(tasks, precedences);
+                positions = this.hierarchicalLayout(vertices, edges);
         }
         
-        // Apply positions to tasks
-        tasks.forEach(task => {
-            const pos = positions.get(task.id);
+        // Apply positions to vertices
+        vertices.forEach(vertex => {
+            const pos = positions.get(vertex.id);
             if (pos) {
-                task.position = pos;
+                vertex.position = pos;
             }
         });
         
@@ -58,60 +54,60 @@ export default class GraphLayout {
 
     /**
      * Hierarchical (Layered) Layout - Best for DAGs
-     * Places tasks in layers based on their topological order
+     * Places vertices in layers based on their topological order
      */
-    hierarchicalLayout(tasks, precedences) {
+    hierarchicalLayout(vertices, edges) {
         const positions = new Map();
         
         // Build adjacency lists
         const successors = new Map();
         const predecessors = new Map();
         
-        tasks.forEach(task => {
-            successors.set(task.id, []);
-            predecessors.set(task.id, []);
+        vertices.forEach(vertex => {
+            successors.set(vertex.id, []);
+            predecessors.set(vertex.id, []);
         });
         
-        precedences.forEach(edge => {
+        edges.forEach(edge => {
             successors.get(edge.from).push(edge.to);
             predecessors.get(edge.to).push(edge.from);
         });
         
         // Assign layers using longest path algorithm
-        const layers = this.assignLayers(tasks, successors, predecessors);
+        const layers = this.assignLayers(vertices, successors, predecessors);
         
-        // Position tasks within layers
+        // Position vertices within layers
         const { width, height, horizontalSpacing, verticalSpacing, marginX, marginY } = this.config;
         
         const numLayers = Math.max(...layers.values()) + 1;
         const layerHeight = (height - 2 * marginY) / Math.max(numLayers - 1, 1);
         
-        // Group tasks by layer
+        // Group vertices by layer
         const tasksByLayer = new Map();
         for (let i = 0; i < numLayers; i++) {
             tasksByLayer.set(i, []);
         }
         
-        tasks.forEach(task => {
-            const layer = layers.get(task.id);
-            tasksByLayer.get(layer).push(task);
+        vertices.forEach(vertex => {
+            const layer = layers.get(vertex.id);
+            tasksByLayer.get(layer).push(vertex);
         });
         
         // Apply barycenter heuristic for crossing reduction
         this.reduceCrossings(tasksByLayer, successors, predecessors, numLayers);
         
-        // Position nodes
+        // Position vertices
         tasksByLayer.forEach((layerTasks, layerIndex) => {
             const numInLayer = layerTasks.length;
             const layerWidth = (width - 2 * marginX) / Math.max(numInLayer - 1, 1);
             
-            layerTasks.forEach((task, indexInLayer) => {
+            layerTasks.forEach((vertex, indexInLayer) => {
                 const x = numInLayer === 1 
                     ? width / 2 
                     : marginX + indexInLayer * layerWidth;
                 const y = marginY + layerIndex * layerHeight;
                 
-                positions.set(task.id, { x, y });
+                positions.set(vertex.id, { x, y });
             });
         });
         
@@ -119,18 +115,18 @@ export default class GraphLayout {
     }
 
     /**
-     * Assign tasks to layers based on longest path from sources
+     * Assign vertices to layers based on longest path from sources
      */
-    assignLayers(tasks, successors, predecessors) {
+    assignLayers(vertices, successors, predecessors) {
         const layers = new Map();
         const visited = new Set();
         
-        // Initialize all tasks to layer 0
-        tasks.forEach(task => layers.set(task.id, 0));
+        // Initialize all vertices to layer 0
+        vertices.forEach(vertex => layers.set(vertex.id, 0));
         
-        // Find source nodes (no predecessors)
-        const sources = tasks.filter(task => 
-            predecessors.get(task.id).length === 0
+        // Find source vertices (no predecessors)
+        const sources = vertices.filter(vertex => 
+            predecessors.get(vertex.id).length === 0
         );
         
         // BFS to assign layers
@@ -167,16 +163,16 @@ export default class GraphLayout {
             for (let layer = 1; layer < numLayers; layer++) {
                 const layerTasks = tasksByLayer.get(layer);
                 
-                layerTasks.forEach(task => {
-                    const preds = predecessors.get(task.id);
+                layerTasks.forEach(vertex => {
+                    const preds = predecessors.get(vertex.id);
                     if (preds.length > 0) {
                         const prevLayer = tasksByLayer.get(layer - 1);
                         const positions = preds.map(predId => 
                             prevLayer.findIndex(t => t.id === predId)
                         );
-                        task._barycenter = positions.reduce((a, b) => a + b, 0) / positions.length;
+                        vertex._barycenter = positions.reduce((a, b) => a + b, 0) / positions.length;
                     } else {
-                        task._barycenter = layerTasks.indexOf(task);
+                        vertex._barycenter = layerTasks.indexOf(vertex);
                     }
                 });
                 
@@ -187,16 +183,16 @@ export default class GraphLayout {
             for (let layer = numLayers - 2; layer >= 0; layer--) {
                 const layerTasks = tasksByLayer.get(layer);
                 
-                layerTasks.forEach(task => {
-                    const succs = successors.get(task.id);
+                layerTasks.forEach(vertex => {
+                    const succs = successors.get(vertex.id);
                     if (succs.length > 0) {
                         const nextLayer = tasksByLayer.get(layer + 1);
                         const positions = succs.map(succId => 
                             nextLayer.findIndex(t => t.id === succId)
                         );
-                        task._barycenter = positions.reduce((a, b) => a + b, 0) / positions.length;
+                        vertex._barycenter = positions.reduce((a, b) => a + b, 0) / positions.length;
                     } else {
-                        task._barycenter = layerTasks.indexOf(task);
+                        vertex._barycenter = layerTasks.indexOf(vertex);
                     }
                 });
                 
@@ -207,31 +203,31 @@ export default class GraphLayout {
 
     /**
      * Force-Directed Layout - Good for general graphs
-     * Uses a physics simulation to position nodes
+     * Uses a physics simulation to position vertices
      */
-    forceDirectedLayout(tasks, precedences, iterations = 100) {
+    forceDirectedLayout(vertices, edges, iterations = 100) {
         const positions = new Map();
         const velocities = new Map();
         
         const { width, height } = this.config;
         
         // Initialize random positions
-        tasks.forEach(task => {
-            positions.set(task.id, {
+        vertices.forEach(vertex => {
+            positions.set(vertex.id, {
                 x: width / 2 + (Math.random() - 0.5) * width * 0.5,
                 y: height / 2 + (Math.random() - 0.5) * height * 0.5
             });
-            velocities.set(task.id, { x: 0, y: 0 });
+            velocities.set(vertex.id, { x: 0, y: 0 });
         });
         
         // Build edge map
-        const edges = new Set();
-        precedences.forEach(edge => {
-            edges.add(`${edge.from}-${edge.to}`);
+        const eds = new Set();
+        edges.forEach(edge => {
+            eds.add(`${edge.from}-${edge.to}`);
         });
         
         // Simulation parameters
-        const k = Math.sqrt((width * height) / tasks.length); // Optimal distance
+        const k = Math.sqrt((width * height) / vertices.length); // Optimal distance
         const repulsionStrength = k * k;
         const attractionStrength = 0.1;
         const damping = 0.9;
@@ -239,13 +235,13 @@ export default class GraphLayout {
         // Run simulation
         for (let iter = 0; iter < iterations; iter++) {
             const forces = new Map();
-            tasks.forEach(task => forces.set(task.id, { x: 0, y: 0 }));
+            vertices.forEach(vertex => forces.set(vertex.id, { x: 0, y: 0 }));
             
             // Repulsive forces between all pairs
-            for (let i = 0; i < tasks.length; i++) {
-                for (let j = i + 1; j < tasks.length; j++) {
-                    const task1 = tasks[i];
-                    const task2 = tasks[j];
+            for (let i = 0; i < vertices.length; i++) {
+                for (let j = i + 1; j < vertices.length; j++) {
+                    const task1 = vertices[i];
+                    const task2 = vertices[j];
                     
                     const pos1 = positions.get(task1.id);
                     const pos2 = positions.get(task2.id);
@@ -269,7 +265,7 @@ export default class GraphLayout {
             }
             
             // Attractive forces for edges
-            precedences.forEach(edge => {
+            edges.forEach(edge => {
                 const pos1 = positions.get(edge.from);
                 const pos2 = positions.get(edge.to);
                 
@@ -292,10 +288,10 @@ export default class GraphLayout {
             
             // Update positions
             const temperature = 1 - (iter / iterations);
-            tasks.forEach(task => {
-                const pos = positions.get(task.id);
-                const vel = velocities.get(task.id);
-                const force = forces.get(task.id);
+            vertices.forEach(vertex => {
+                const pos = positions.get(vertex.id);
+                const vel = velocities.get(vertex.id);
+                const force = forces.get(vertex.id);
                 
                 vel.x = (vel.x + force.x) * damping;
                 vel.y = (vel.y + force.y) * damping;
@@ -313,9 +309,9 @@ export default class GraphLayout {
     }
 
     /**
-     * Circular Layout - Places nodes in a circle
+     * Circular Layout - Places vertices in a circle
      */
-    circularLayout(tasks, precedences) {
+    circularLayout(vertices, edges) {
         const positions = new Map();
         const { width, height } = this.config;
         
@@ -323,12 +319,12 @@ export default class GraphLayout {
         const centerY = height / 2;
         const radius = Math.min(width, height) * 0.4;
         
-        tasks.forEach((task, index) => {
-            const angle = (2 * Math.PI * index) / tasks.length - Math.PI / 2;
+        vertices.forEach((vertex, index) => {
+            const angle = (2 * Math.PI * index) / vertices.length - Math.PI / 2;
             const x = centerX + radius * Math.cos(angle);
             const y = centerY + radius * Math.sin(angle);
             
-            positions.set(task.id, { x, y });
+            positions.set(vertex.id, { x, y });
         });
         
         return positions;
@@ -337,24 +333,24 @@ export default class GraphLayout {
     /**
      * Grid Layout - Simple grid arrangement
      */
-    gridLayout(tasks) {
+    gridLayout(vertices) {
         const positions = new Map();
         const { width, height, marginX, marginY } = this.config;
         
-        const cols = Math.ceil(Math.sqrt(tasks.length));
-        const rows = Math.ceil(tasks.length / cols);
+        const cols = Math.ceil(Math.sqrt(vertices.length));
+        const rows = Math.ceil(vertices.length / cols);
         
         const cellWidth = (width - 2 * marginX) / cols;
         const cellHeight = (height - 2 * marginY) / rows;
         
-        tasks.forEach((task, index) => {
+        vertices.forEach((vertex, index) => {
             const col = index % cols;
             const row = Math.floor(index / cols);
             
             const x = marginX + col * cellWidth + cellWidth / 2;
             const y = marginY + row * cellHeight + cellHeight / 2;
             
-            positions.set(task.id, { x, y });
+            positions.set(vertex.id, { x, y });
         });
         
         return positions;
@@ -373,16 +369,16 @@ export default class GraphLayout {
  * });
  * 
  * // Apply hierarchical layout (best for DAGs)
- * layout.applyLayout(schedule, 'hierarchical');
+ * layout.applyLayout(graph, 'hierarchical');
  * 
  * // Or try other layouts
- * layout.applyLayout(schedule, 'force');
- * layout.applyLayout(schedule, 'circular');
- * layout.applyLayout(schedule, 'grid');
+ * layout.applyLayout(graph, 'force');
+ * layout.applyLayout(graph, 'circular');
+ * layout.applyLayout(graph, 'grid');
  * 
- * // The task positions are now automatically set
- * const { tasks } = schedule.toGraph();
- * tasks.forEach(task => {
- *     console.log(`${task.id}: (${task.position.x}, ${task.position.y})`);
+ * // The vertex positions are now automatically set
+ * const { vertices } = graph;
+ * vertices.forEach(vertex => {
+ *     console.log(`${vertex.id}: (${vertex.position.x}, ${vertex.position.y})`);
  * });
  */

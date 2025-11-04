@@ -23,25 +23,25 @@ import classes from './style.module.css';
 const SidePanel = props => {
 
     const {
-        nodes,
+        vertices,
         edges,
         topListName,
         bottomListName,
-        selectedNode,
-        defaultNode,
+        selectedVertex,
+        defaultVertex,
         connectingFrom,
         handleStartConnecting,
-        setEditingNode,
+        setEditingVertex,
         setDialogOpen,
-        removeNode,
-        disconnectNodes
+        removeVertex,
+        disconnectVertices
     } = props;
 
-    const handleAddNode = (node) => { // Add or edit a node
-        if(node){
-            setEditingNode({ ...node });
+    const handleAddVertex = (vertex) => { // Add or edit a vertex
+        if(vertex){
+            setEditingVertex({ ...vertex });
         }else{
-            setEditingNode(defaultNode);
+            setEditingVertex(defaultVertex);
         }
         setDialogOpen(true);
     };
@@ -53,7 +53,7 @@ const SidePanel = props => {
                 {topListName}
             </Typography>
             <Tooltip title="Add task">
-                <IconButton color="primary" onClick={() => handleAddNode()}>
+                <IconButton color="primary" onClick={() => handleAddVertex()}>
                     <AddCircle />
                 </IconButton>
             </Tooltip>
@@ -61,22 +61,22 @@ const SidePanel = props => {
 
             <Box sx={{ flexGrow: 1, overflow: "auto", minHeight: 0 }}>
             <List dense>
-                {nodes.map(n => (
+                {vertices.map(n => (
                 <React.Fragment key={n.id}>
                     <ListItem
-                    selected={selectedNode === n.id}
+                    selected={selectedVertex === n.id}
                     sx={{ 
                         cursor: "pointer", 
-                        backgroundColor: selectedNode === n.id ? "#000" : (connectingFrom === n.id ? "#666" : "inherit") }}
+                        backgroundColor: selectedVertex === n.id ? "#000" : (connectingFrom === n.id ? "#666" : "inherit") }}
                     secondaryAction={
                         <Stack direction="row" spacing={1}>
                             <IconButton edge="end" onClick={e => handleStartConnecting(e, n)} size="small">
                                 <Link fontSize="small" />
                             </IconButton>
-                            <IconButton edge="end" onClick={() => {handleAddNode(n);}} size="small">
+                            <IconButton edge="end" onClick={() => {handleAddVertex(n);}} size="small">
                                 <Edit fontSize="small" />
                             </IconButton>
-                            <IconButton edge="end" onClick={() => removeNode(n.id)} size="small">
+                            <IconButton edge="end" onClick={() => removeVertex(n.id)} size="small">
                                 <Delete fontSize="small" />
                             </IconButton>
                         </Stack>
@@ -84,11 +84,6 @@ const SidePanel = props => {
                     <ListItemText 
                         primary={`${n.label} - ${n.mist ? "Mist" : "Edge/Cloud"}`} 
                         secondary={`C:${n.C} T:${n.T} D:${n.D} a:${n.a} M:${n.M}`} />
-                    {/* For network nodes
-                    <ListItemText 
-                        primary={`${n.label} - ${NODE_TYPE_LABELS[n.type]}`}
-                        secondary={`M:${n.memory} U:${n.u}`} />
-                    */}
                     </ListItem>
                     <Divider />
                 </React.Fragment>
@@ -102,7 +97,7 @@ const SidePanel = props => {
             <List dense>
                 {edges.map(e => (
                     <ListItem key={e.id} secondaryAction={
-                    <IconButton onClick={() => disconnectNodes(e.from.id, e.to.id)} size="small">
+                    <IconButton onClick={() => disconnectVertices(e.from.id, e.to.id)} size="small">
                         <Delete fontSize="small"/>
                     </IconButton>
                     }>

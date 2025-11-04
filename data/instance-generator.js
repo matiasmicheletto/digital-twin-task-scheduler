@@ -63,14 +63,14 @@ function generateInstance(config, name = 'instance') {
     // Apply layout if requested
     if (CONFIG.applyLayout) {
         const layout = new GraphLayout(CONFIG.layoutConfig);
-        layout.applyLayout(schedule, CONFIG.layoutAlgorithm);
+        layout.applyLayout(schedule.toGraph(), CONFIG.layoutAlgorithm);
         console.log(`  Applied ${CONFIG.layoutAlgorithm} layout`);
     }
     
     // Get graph representation
     const graph = schedule.toGraph();
     
-    console.log(`  Generated ${graph.tasks.length} tasks, ${graph.precedences.length} precedences`);
+    console.log(`  Generated ${graph.vertices.length} tasks, ${graph.edges.length} precedences`);
     
     return {
         metadata: {
@@ -78,13 +78,13 @@ function generateInstance(config, name = 'instance') {
             generatedAt: new Date().toISOString(),
             config: config,
             stats: {
-                numTasks: graph.tasks.length,
-                numPrecedences: graph.precedences.length,
+                numTasks: graph.vertices.length,
+                numPrecedences: graph.edges.length,
                 graphType: config.graphType || 'unknown'
             }
         },
-        tasks: graph.tasks,
-        precedences: graph.precedences
+        tasks: graph.vertices,
+        precedences: graph.edges
     };
 }
 

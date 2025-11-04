@@ -150,20 +150,20 @@ export default class Network {
                 });
             });
         });
-        return { nodes: nodesArray, links: linksArray };
+        return { vertices: nodesArray, edges: linksArray };
     }
 
     fromGraph(graph) {
         this.nodes.clear();
-        graph.nodes.forEach(n => {
-            const node = new Node(n.id, n.type);
-            node.memory = n.memory || 1;
-            node.u = n.u || 0;
-            this.nodes.set(n.id, node);
+        graph.vertices.forEach(v => {
+            const node = new Node(v.id, v.type);
+            node.memory = v.memory || 1;
+            node.u = v.u || 0;
+            this.nodes.set(v.id, node);
         });
-        graph.links.forEach(l => {
-            const link = new Link(l.id, l.source, l.target, l.delay || 1);
-            const sourceNode = this.nodes.get(l.source);
+        graph.edges.forEach(e => {
+            const link = new Link(e.id, e.source, e.target, e.delay || 1);
+            const sourceNode = this.nodes.get(e.source);
             if (sourceNode) {
                 sourceNode.addLink(link);
             }

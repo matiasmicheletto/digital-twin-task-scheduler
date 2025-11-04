@@ -160,28 +160,28 @@ export default class Schedule {
             }
         }
         
-        return { tasks: tasksArray, precedences };
+        return { vertices: tasksArray, edges: precedences };
     }
 
-    fromGraph({tasks, precedences}) { // Rebuild schedule from tasks and precedences arrays
+    fromGraph({vertices, edges}) { // Rebuild schedule from tasks and precedences arrays
         this.tasks.clear();
-        for(let t of tasks) {
+        for(let v of vertices) {
             // Parameters validation
             Object.values(TASK_ATTRIBUTES).forEach(attr => {
-                if(t[attr] === undefined) {
-                    throw new Error(`Missing attribute ${attr} in task ${t.id}`);
+                if(v[attr] === undefined) {
+                    throw new Error(`Missing attribute ${attr} in task ${v.id}`);
                 }
-                if((attr === 'C' || attr === 'T' || attr === 'D' || attr === 'a' || attr === 'M') && isNaN(t[attr])) {
+                if((attr === 'C' || attr === 'T' || attr === 'D' || attr === 'a' || attr === 'M') && isNaN(v[attr])) {
                     throw new Error(`Attribute ${attr} in task ${t.id} must be a number`);
                 }
             });
 
-            const task = new Task(t.label, t.mist, t.C, t.T, t.D, t.a, t.M, t.position);
-            task.setAttributes({ id: t.id });
+            const task = new Task(v.label, v.mist, v.C, v.T, v.D, v.a, v.M, v.position);
+            task.setAttributes({ id: v.id });
             this.addTask(task);
         }
         
-        for(let e of precedences) {
+        for(let e of edges) {
             if(this.tasks.has(e.from) && this.tasks.has(e.to)) {
                 this.connectTasks(e.from, e.to);
             } else {

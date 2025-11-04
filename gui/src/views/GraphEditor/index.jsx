@@ -122,9 +122,9 @@ const View = () => {
 
   const {
     addNode,
-    removeNode,
+    removeVertex,
     connectNodes,
-    disconnectNodes,
+    disconnectVertices,
     getNode,
     networkToGraph,
     networkFromGraph
@@ -140,13 +140,13 @@ const View = () => {
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   
   // Interactions (ids)
-  const [draggingNode, setDraggingNode] = useState(null);
+  const [draggingVertex, setDraggingVertex] = useState(null);
   const [connectingFrom, setConnectingFrom] = useState(null);
-  const [selectedNode, setSelectedNode] = useState(null);
+  const [selectedVertex, setSelectedVertex] = useState(null);
   
   // Task parameteres editing dialog
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingNode, setEditingNode] = useState(null);
+  const [editingVertex, setEditingVertex] = useState(null);
 
   const tasks = [...getTasks()];
   const precedences = getPrecedences();
@@ -188,10 +188,10 @@ const View = () => {
     }
   }, [scheduleFromGraph]);
 
-  const handleResetView = () => { // Reset pan and zoom to fit all nodes
+  const handleResetView = () => { // Reset pan and zoom to fit all vertices
     const svgRect = svgRef.current?.getBoundingClientRect();
     if (svgRect) {
-      // Calculate bounding box of all nodes
+      // Calculate bounding box of all vertices
       const pos = tasks.map(t => t.position);
       if (pos.length === 0) return;
       const xs = pos.map(p => p.x);
@@ -200,25 +200,25 @@ const View = () => {
       const maxX = Math.max(...xs);
       const minY = Math.min(...ys);
       const maxY = Math.max(...ys);
-      const nodesWidth = maxX - minX + 80; // + node diameter
-      const nodesHeight = maxY - minY + 80; // + node diameter
-      const scaleX = svgRect.width / nodesWidth;
-      const scaleY = svgRect.height / nodesHeight;
+      const vertexWidth = maxX - minX + 80; // + vertex diameter
+      const vertexHeight = maxY - minY + 80; // + vertex diameter
+      const scaleX = svgRect.width / vertexWidth;
+      const scaleY = svgRect.height / vertexHeight;
       const newZoom = Math.min(scaleX, scaleY, 1);
       setZoom(newZoom);
       setPan({
-        x: (svgRect.width - nodesWidth * newZoom) / 2 - minX * newZoom + 40 * newZoom,
-        y: (svgRect.height - nodesHeight * newZoom) / 2 - minY * newZoom + 40 * newZoom
+        x: (svgRect.width - vertexWidth * newZoom) / 2 - minX * newZoom + 40 * newZoom,
+        y: (svgRect.height - vertexHeight * newZoom) / 2 - minY * newZoom + 40 * newZoom
       });
     }
   };
 
-  const handleSaveNode = () => { // Save task after completing form
-    if (editingNode) {
+  const handleSaveVertex = () => { // Save task after completing form
+    if (editingVertex) {
       try {
-        addTask(Task.fromObject(editingNode)); // Overwrites if id exists
+        addTask(Task.fromObject(editingVertex)); // Overwrites if id exists
         setDialogOpen(false);
-        setEditingNode(null);
+        setEditingVertex(null);
         handleResetView();
         toast("Task saved successfully", "success");
       } catch (error) {
@@ -227,15 +227,15 @@ const View = () => {
     }
   };
 
-  const handleNodeMouseDown = (e, taskId) => {
+  const handleVertexMouseDown = (e, taskId) => {
     if (e.button === 0) {
       e.stopPropagation();
-      setDraggingNode(taskId);
-      setSelectedNode(taskId);
+      setDraggingVertex(taskId);
+      setSelectedVertex(taskId);
     }
   };
 
-  const handleNodeContextMenu = (e, taskId) => {
+  const handleVertexContextMenu = (e, taskId) => {
     e.preventDefault();
     e.stopPropagation();
     if (connectingFrom === null) {
@@ -253,11 +253,11 @@ const View = () => {
   };
 
   const handleMouseMove = e => {
-    if (draggingNode) {
+    if (draggingVertex) {
       const rect = svgRef.current.getBoundingClientRect();
       const x = (e.clientX - rect.left - pan.x) / zoom;
       const y = (e.clientY - rect.top - pan.y) / zoom;
-      getTask(draggingNode).setPosition(x, y);      
+      getTask(draggingVertex).setPosition(x, y);      
     } else if (isPanning) {
       setPan({
         x: pan.x + (e.clientX - panStart.x),
@@ -268,15 +268,15 @@ const View = () => {
   };
 
   const handleMouseUp = () => {
-    setDraggingNode(null);
+    setDraggingVertex(null);
     setIsPanning(false);
   };
 
   const handleSvgMouseDown = e => {
-    if (e.button === 0 && !draggingNode) {
+    if (e.button === 0 && !draggingVertex) {
       setIsPanning(true);
       setPanStart({ x: e.clientX, y: e.clientY });
-      setSelectedNode(null);
+      setSelectedVertex(null);
     }
     if(e.target.tagName === 'svg' || e.target.tagName === 'g')
       setConnectingFrom(null);
@@ -284,7 +284,7 @@ const View = () => {
 
   const handleSvgContextMenu = e => {
     e.preventDefault();
-    // Only cancel connection if right-clicking on empty canvas (not on a node)
+    // Only cancel connection if right-clicking on empty canvas (not on a vertex)
     if (e.target.tagName === 'svg' || e.target.tagName === 'g') {
       setConnectingFrom(null);
     }
@@ -303,14 +303,14 @@ const View = () => {
 
   const handleDeleteTasks = () => {
     deleteSchedule();
-    setSelectedNode(null);
+    setSelectedVertex(null);
   };
 
   const handleGenerateTasks = (config) => {
     deleteSchedule();
     const generator = new TaskGenerator(config); // Random task set generator
     const schedule = generator.generate(); // Generate random schedule
-    // Apply graph layout to organize nodes
+    // Apply graph layout to organize vertices
     const svgRect = svgRef.current?.getBoundingClientRect();
     const viewportDimensions = svgRect ? { 
       width: svgRect.width, 
@@ -322,9 +322,10 @@ const View = () => {
       horizontalSpacing: 150,
       verticalSpacing: 100
     });
-    layout.applyLayout(schedule);
+    const graph = schedule.toGraph();
+    layout.applyLayout(graph);
     // Add generated tasks to current schedule
-    scheduleFromGraph(schedule.toGraph());
+    scheduleFromGraph(graph);
   };
 
   const handleExport = () => {
@@ -362,12 +363,12 @@ const View = () => {
 
           <Box sx={{ display: "flex", flex: 1, height: "100%" }}>
             <SidePanel
-              nodes={tasks}
+              vertices={tasks}
               edges={precedences}
               topListName={"Tasks"}
               bottomListName={"Precedences"}
-              selectedNode={selectedNode}
-              defaultNode={{
+              selectedVertex={selectedVertex}
+              defaultVertex={{
                 label: `Task ${tasks.length + 1}`,
                 mist: false,
                 C: 1,
@@ -379,10 +380,10 @@ const View = () => {
               }}
               connectingFrom={connectingFrom}
               handleStartConnecting={handleStartConnecting}
-              setEditingNode={setEditingNode}
+              setEditingVertex={setEditingVertex}
               setDialogOpen={setDialogOpen}
-              removeNode={removeTask}
-              disconnectNodes={disconnectTasks} />
+              removeVertex={removeTask}
+              disconnectVertices={disconnectTasks} />
 
             <SvgCanvas
               svgRef={svgRef}
@@ -393,22 +394,22 @@ const View = () => {
               handleMouseUp={handleMouseUp}
               handleSvgMouseDown={handleSvgMouseDown}
               handleSvgContextMenu={handleSvgContextMenu}
-              nodes={tasks}
+              vertices={tasks}
               edges={precedences}
-              selectedNode={selectedNode}
+              selectedVertex={selectedVertex}
               connectingFrom={connectingFrom}
-              handleNodeMouseDown={handleNodeMouseDown}
-              handleNodeContextMenu={handleNodeContextMenu}
-              draggingNode={draggingNode} /> 
+              handleVertexMouseDown={handleVertexMouseDown}
+              handleVertexContextMenu={handleVertexContextMenu}
+              draggingVertex={draggingVertex} /> 
           </Box> 
 
           <EditDialog
               dialogConfig={taskEditDialogConfig}
               dialogOpen={dialogOpen}
               setDialogOpen={setDialogOpen}
-              editingNode={editingNode}
-              setEditingNode={setEditingNode}
-              handleSave={handleSaveNode}
+              editingVertex={editingVertex}
+              setEditingVertex={setEditingVertex}
+              handleSave={handleSaveVertex}
           />
       </Paper>
     </MainView>

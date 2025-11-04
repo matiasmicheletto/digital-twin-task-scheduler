@@ -4,7 +4,8 @@ import { Box } from "@mui/material";
 import {
   Arrow,
   TaskTooltip,
-  Node
+  NodeTooltip,
+  Vertex
 } from "./geometries";
 import {
   svgStyle,
@@ -23,16 +24,16 @@ const SvgCanvas = props => {
         handleMouseUp,
         handleSvgMouseDown,
         handleSvgContextMenu,
-        nodes,
+        vertices,
         edges,
-        selectedNode,
+        selectedVertex,
         connectingFrom,
-        handleNodeMouseDown,
-        handleNodeContextMenu,
-        draggingNode
+        handleVertexMouseDown,
+        handleVertexContextMenu,
+        draggingVertex
     } =  props;
 
-    const [hoveredNode, setHoveredNode] = useState(null);
+    const [hoveredNode, setHoveredVertex] = useState(null);
 
     return (
         <Box sx={{ flexGrow: 1, overflow: "hidden", position: "relative"}}>
@@ -45,17 +46,17 @@ const SvgCanvas = props => {
                 onContextMenu={handleSvgContextMenu}
                 style={{ cursor: isPanning ? "grabbing" : "grab", ...svgStyle }}>
                 <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
-                    {nodes.map(node => (
-                        <Node
-                            type={node.type}
-                            key={node.id}
-                            node={node}
-                            isSelected={selectedNode === node.id}
-                            isConnecting={connectingFrom === node.id}
-                            onMouseDown={e => handleNodeMouseDown(e, node.id)}
-                            onContextMenu={e => handleNodeContextMenu(e, node.id)}
-                            onMouseEnter={() => setHoveredNode(node.id)}
-                            onMouseLeave={() => setHoveredNode(null)} />
+                    {vertices.map(vertex => (
+                        <Vertex
+                            type={vertex.type}
+                            key={vertex.id}
+                            vertex={vertex}
+                            isSelected={selectedVertex === vertex.id}
+                            isConnecting={connectingFrom === vertex.id}
+                            onMouseDown={e => handleVertexMouseDown(e, vertex.id)}
+                            onContextMenu={e => handleVertexContextMenu(e, vertex.id)}
+                            onMouseEnter={() => setHoveredVertex(vertex.id)}
+                            onMouseLeave={() => setHoveredVertex(null)} />
                     ))}
         
                     {edges.map(({from, to}, idx) => (
@@ -65,17 +66,22 @@ const SvgCanvas = props => {
                             to={to.position} />
                     ))}
 
-                    {nodes.map(task => (// Render tooltips last to be on top
-                        hoveredNode === task.id && !draggingNode &&
-                            <TaskTooltip key={task} task={task} position={task.position} />
+                    {vertices.map(vertex => (// Render tooltips last to be on top
+                        hoveredNode === vertex.id && !draggingVertex &&
+                            (vertex.type==="TASK" ? 
+                            <TaskTooltip key={vertex.id} task={vertex} position={vertex.position} />
+                            :
+                            <NodeTooltip key={vertex.id} node={vertex} position={vertex.position} />
+                            )
+                            
                     ))
                     }
                 </g>
             </svg>
 
             <Box style={actionsTooltipStyle}>
-                <Box style={{ marginBottom: "4px" }}>Left-click + drag: Move nodes</Box>
-                <Box style={{ marginBottom: "4px" }}>Right-click: Connect nodes</Box>
+                <Box style={{ marginBottom: "4px" }}>Left-click + drag: Move vertices</Box>
+                <Box style={{ marginBottom: "4px" }}>Right-click: Connect vertices</Box>
                 <Box style={{ marginBottom: "4px" }}>Canvas drag: Pan view</Box>
                 <Box>Zoom: {(zoom * 100).toFixed(0)}%</Box>
             </Box>
