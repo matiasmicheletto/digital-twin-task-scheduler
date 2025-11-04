@@ -1,13 +1,15 @@
 import { Task } from "./schedule.js";
 import { generateUUID8 } from "./utils.js";
+const LINK_ATTRIBUTES = ['id', 'sourceId', 'targetId', 'delay', 'bidirectional'];
+const NODE_ATTRIBUTES = ['id', 'label', 'type', 'memory', 'u', 'links', 'position'];
 
 export class Link {
-    constructor(id, sourceId, targetId, delay = 1) {
+    constructor(id, sourceId, targetId, delay = 1, bidirectional = false) {
         this.id = id;
         this.sourceId = sourceId;
         this.targetId = targetId;
         this.delay = delay; // Optional delay for the edge
-        this.bidirectional = false; // By default, links are unidirectional
+        this.bidirectional = bidirectional;
     }
 }
 
@@ -101,16 +103,12 @@ export default class Network {
         this.nodes.set(node.id, node);
     }
 
-    static toNodeObject(obj) {
-        return new Node(obj.id, obj.type);
-    }
-
     removeNode(nodeId) {
         if(this.nodes.has(nodeId)) {
             this.nodes.delete(nodeId);
-            // Remove links to this node from other nodes
+            // Remove links to or from this node
             for(let node of this.nodes.values()) {
-                node.removeLink(nodeId);
+                node.links = node.links.filter(link => link.targetId !== nodeId);
             }
         }
     }
@@ -128,12 +126,17 @@ export default class Network {
             throw new Error("Edge nodes cannot connect to Mist nodes");
         }
 
+        // Unique links
+        if(sourceNode.links.find(link => link.targetId === targetId)) {
+            throw new Error("A link between these nodes already exists");
+        }
+
         // If both nodes are edge or cloud, make link bidirectional
         const bidirectional = 
             (sourceNode.type === NODE_TYPES.EDGE || sourceNode.type === NODE_TYPES.CLOUD) &&
             (targetNode.type === NODE_TYPES.EDGE || targetNode.type === NODE_TYPES.CLOUD);
         
-        const linkId = `${sourceId}${bidirectional ? "<->" : "->"}${targetId}`;
+        const linkId = `${sourceId}_${targetId}`;
         const link = new Link(linkId, sourceId, targetId, delay, bidirectional);
         sourceNode.addLink(link);
         if(bidirectional) {
@@ -161,7 +164,13 @@ export default class Network {
         const connections = [];
         for (let node of this.nodes.values()) {
             for (let link of node.links) {
-                connections.push(link);
+                connections.push({
+                    id: link.id,
+                    from: node,
+                    to: this.nodes.get(link.targetId),
+                    delay: link.delay,
+                    bidirectional: link.bidirectional
+                });
             }
         }
         return connections;
@@ -172,33 +181,40 @@ export default class Network {
         const linksArray = [];
         for(let node of nodesArray) {
             node.links.forEach(link => {
-                linksArray.push({
-                    id: link.id,
-                    from: link.sourceId,
-                    to: link.targetId,
-                    delay: link.delay,
-                    bidirectional: link.bidirectional
-                });
+                if(!linksArray.find(l => l.id === link.id))
+                    linksArray.push({
+                        id: link.id,
+                        from: link.sourceId,
+                        to: link.targetId,
+                        delay: link.delay,
+                        bidirectional: link.bidirectional
+                    });
             });
         }
-        
+
         return { vertices: nodesArray, edges: linksArray };
     }
 
-    fromGraph(graph) {
+    fromGraph({vertices, edges}) {
         this.nodes.clear();
-        graph.vertices.forEach(v => {
-            const node = new Node(v.id, v.type);
-            node.memory = v.memory || 1;
-            node.u = v.u || 0;
-            this.nodes.set(v.id, node);
-        });
-        graph.edges.forEach(e => {
-            const link = new Link(e.id, e.source, e.target, e.delay || 1);
-            const sourceNode = this.nodes.get(e.source);
-            if (sourceNode) {
-                sourceNode.addLink(link);
+        for(let v of vertices) {
+            // Parameters validation
+            Object.values(NODE_ATTRIBUTES).forEach(attr => {
+                if(!(attr in v)) {
+                    throw new Error(`Missing node attribute: ${attr}`);
+                }
+            });
+
+            const node = Node.fromObject(v);
+            this.addNode(node);
+        }
+        
+        for(let e of edges){
+            if(this.nodes.has(e.from) && this.nodes.has(e.to)) {
+                this.connectNodes(e.from, e.to, e.delay);
+            } else {
+                throw new Error(`Invalid connection from ${e.from} to ${e.to}`);
             }
-        });
+        }
     }
 };

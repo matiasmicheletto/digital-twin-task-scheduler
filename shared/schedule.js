@@ -94,36 +94,38 @@ export default class Schedule {
     connectTasks(fromTaskId, toTaskId) {
         const fromTask = this.tasks.get(fromTaskId);
         const toTask = this.tasks.get(toTaskId);
+
+        if(!fromTask || !toTask) {
+            throw new Error("One or both task IDs do not exist");
+        }
+
         if(toTask.mist) {
             throw new Error("Cannot add precedence to a mist task");
         }
 
-        if(fromTask && toTask) {
-            if(fromTask.successors.includes(toTaskId)) {
-                throw new Error(`Precedence from task ${fromTask.label} to task ${toTask.label} already exists`);
-            }
-            // Prevent circular dependencies
-            let visited = new Set();
-            const hasCycle = (currentId) => {
-                if(visited.has(currentId)) 
-                    return true;
-                visited.add(currentId);
-                const currentTask = this.tasks.get(currentId);
-                for(let succId of currentTask.successors) {
-                    if(succId === fromTaskId || hasCycle(succId)) {
-                        return true;
-                    }
-                }
-                visited.delete(currentId);
-                return false;
-            };
-            if(hasCycle(toTaskId)) {
-                throw new Error("Connecting these tasks would create a circular dependency");
-            }
-            fromTask.addSuccessor(toTaskId);
-        } else {
-            throw new Error("One or both task IDs do not exist");
+        if(fromTask.successors.includes(toTaskId)) {
+            throw new Error(`Precedence from task ${fromTask.label} to task ${toTask.label} already exists`);
         }
+
+        // Prevent circular dependencies
+        let visited = new Set();
+        const hasCycle = (currentId) => {
+            if(visited.has(currentId)) 
+                return true;
+            visited.add(currentId);
+            const currentTask = this.tasks.get(currentId);
+            for(let succId of currentTask.successors) {
+                if(succId === fromTaskId || hasCycle(succId)) {
+                    return true;
+                }
+            }
+            visited.delete(currentId);
+            return false;
+        };
+        if(hasCycle(toTaskId)) {
+            throw new Error("Connecting these tasks would create a circular dependency");
+        }
+        fromTask.addSuccessor(toTaskId);
     }
 
     disconnectTasks(fromTaskId, toTaskId) {
@@ -145,7 +147,11 @@ export default class Schedule {
         const precedences = [];
         for(let task of this.tasks.values()) {
             for(let succId of task.successors) {
-                precedences.push({ id: `${task.id}_${succId}`, from: task, to: this.tasks.get(succId) });
+                precedences.push({ 
+                    id: `${task.id}_${succId}`, 
+                    from: task, 
+                    to: this.tasks.get(succId) 
+                });
             }
         }
         return precedences;
@@ -181,8 +187,7 @@ export default class Schedule {
                 }
             });
 
-            const task = new Task(v.label, v.mist, v.C, v.T, v.D, v.a, v.M, v.position);
-            task.setAttributes({ id: v.id });
+            const task = Task.fromObject(v);
             this.addTask(task);
         }
         
