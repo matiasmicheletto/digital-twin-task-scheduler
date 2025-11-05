@@ -1,0 +1,32 @@
+SOLVER MANUAL  
+
+PROLOG  
+   This manual is part of the digital-twin-task-scheduler project. See project documentation at: https://github.com/matiasmicheletto/digital-twin-task-scheduler
+
+NAME  
+   solve - Computes the optimal allocation of tasks to network nodes
+
+SYNOPSIS  
+   solve -t [TASK_FILE] -n [NETWORK_FILE] -o [OUTPUT_FORMAT]
+
+DESCRIPTION:  
+   
+
+OPTIONS:  
+   -h, --help     Display this help message.  
+   -t, --tasks    File with the tasks the instance. Must be in json format.
+   -n, --network  File with the network of the instance. Must be in json format.
+   -o, --output   (optional) Output format. Must be "json" or "text". Default value is "text".  
+
+EXAMPLES:  
+   solve -t tasks.json -n network.json -o json
+   
+AUTHORS  
+   Code was written by Dr. Matias J. Micheletto from IIDEPyS-GSJ (UNPSJB-CONICET) and supervised by Dr. Rodrigo Santos from ICIC (UNS-CONICET).  
+
+REPORTING BUGS  
+   Guidelines available at <https://github.com/matiasmicheletto/digital-twin-task-scheduler>.  
+
+COPYRIGHT  
+   Copyright   ©   2023   Free   Software   Foundation,  Inc.   License  GPLv3+:  GNU  GPL  version  3  or  later <https://gnu.org/licenses/gpl.html>.  
+   This is free software: you are free to change and redistribute it.  There is NO WARRANTY, to the  extent  permitted by law.  
