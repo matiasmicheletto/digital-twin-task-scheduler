@@ -315,18 +315,18 @@ const View = () => {
       connections: graph.edges,
       viewportDimensions
     };
-    exportJSON({data, viewportDimensions});
+    exportJSON(data);
   };
 
   const handleImport = file => {
     importJSON(file).then(data => {
       const model = mode === GRAPH_MODES.SCHEDULE ? {
-        tasks: data.vertices,
-        precedences: data.edges,
+        vertices: data.tasks,
+        edges: data.precedences,
         viewportDimensions: data.viewportDimensions
       } : {
-        nodes: data.vertices,
-        connections: data.edges,
+        vertices: data.nodes,
+        edges: data.connections,
         viewportDimensions: data.viewportDimensions
       };
       try{

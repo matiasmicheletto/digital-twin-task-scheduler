@@ -117,7 +117,7 @@ const AppBar = props => {
                         </IconButton>
                     </Tooltip>
                     <Menu 
-                        exportMenuAnchorEl={exportMenuAnchorEl} 
+                        anchorEl={exportMenuAnchorEl} 
                         open={Boolean(exportMenuAnchorEl)} 
                         onClose={closeExportMenu}>
                         <MenuItem>
