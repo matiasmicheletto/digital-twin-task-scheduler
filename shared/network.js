@@ -75,7 +75,7 @@ export class Node {
     }
 
     static fromObject(obj) {
-        const node = new Node(obj.label, obj.type);
+        const node = new Node(obj.label, obj.type, obj.position);
         if(obj.id) // If object has id, use it to preserve identity
             node.id = obj.id;
         if(obj.links) // Same for links
@@ -228,7 +228,7 @@ export default class Network {
         return { vertices: nodesArray, edges: linksArray };
     }
 
-    fromGraph({vertices, edges}) {
+    fromGraph({vertices}) {
         this.nodes.clear();
         for(let v of vertices) {
             // Parameters validation
@@ -240,14 +240,6 @@ export default class Network {
 
             const node = Node.fromObject(v);
             this.addNode(node);
-        }
-        
-        for(let e of edges){
-            if(this.nodes.has(e.from) && this.nodes.has(e.to)) {
-                this.connectNodes(e.from, e.to, e.delay);
-            } else {
-                throw new Error(`Invalid connection from ${e.from} to ${e.to}`);
-            }
         }
     }
 };

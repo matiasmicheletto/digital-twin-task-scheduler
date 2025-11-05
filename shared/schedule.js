@@ -174,7 +174,7 @@ export default class Schedule {
         return { vertices: tasksArray, edges: precedences };
     }
 
-    fromGraph({vertices, edges}) { // Rebuild schedule from tasks and precedences arrays
+    fromGraph({vertices}) { // Rebuild schedule from tasks and precedences arrays
         this.tasks.clear();
         for(let v of vertices) {
             // Parameters validation
@@ -189,14 +189,6 @@ export default class Schedule {
 
             const task = Task.fromObject(v);
             this.addTask(task);
-        }
-        
-        for(let e of edges) {
-            if(this.tasks.has(e.from) && this.tasks.has(e.to)) {
-                this.connectTasks(e.from, e.to);
-            } else {
-                throw new Error(`Invalid precedence from ${e.from} to ${e.to}`);
-            }
         }
     }
 };

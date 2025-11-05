@@ -1,3 +1,12 @@
+export const getRandomScreenPosition = () => {
+    const screenWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+    const screenHeight = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+    return {
+        x: (0.5*Math.random()) * (screenWidth - 200),
+        y: (0.5*Math.random()) * (screenHeight - 200)
+    };
+};
+
 export const exportJSON = data => {
     const blob = new Blob([JSON.stringify(data, null, 2)], {
         type: "application/json"

@@ -13,120 +13,16 @@ import { containerStyle } from "../../themes/common";
 import useGraph, { GRAPH_MODES } from "../../hooks/useGraph";
 import TaskGenerator from "../../../../shared/taskGenerator.js";
 import GraphLayout from "../../../../shared/graphLayout.js";
-import { NODE_TYPES, NODE_TYPE_LABELS } from "../../../../shared/network.js";
+import { NODE_TYPES } from "../../../../shared/network.js";
+import { taskEditDialogConfig, nodeEditDialogConfig, edgeEditDialogConfig } from "./dialogFormConfigs.js";
 import { 
   importJSON, 
   exportJSON,
   saveToLocalStorage,
-  loadFromLocalStorage 
+  loadFromLocalStorage,
+  getRandomScreenPosition 
 } from "../../model/utils";
 
-
-const taskEditDialogConfig = {
-    title: "Edit Task",
-    fields: [
-        {
-            attrName: "id",
-            label: "Task ID",
-            type: "text",
-            disabled: true
-        },
-        {
-            attrName: "label",
-            label: "Label",
-            type: "text"
-        },
-        {
-            attrName: "C",
-            label: "Execution Time",
-            type: "number"
-        },
-        {
-            attrName: "mist",
-            labelTrue: "Mist Task",
-            labelFalse: "Edge/Cloud Task",
-            type: "switch"
-        },
-        {
-            attrName: "T",
-            label: "Period",
-            type: "number"
-        },
-        {
-            attrName: "D",
-            label: "Deadline",
-            type: "number"
-        },
-        {
-            attrName: "a",
-            label: "Activation Time",
-            type: "number"
-        },
-        {
-            attrName: "M",
-            label: "Memory Requirement",
-            type: "number"
-        }
-    ]
-};
-
-const nodeEditDialogConfig = {
-    title: "Edit Node",
-    fields: [
-        {
-            attrName: "id",
-            label: "Node ID",
-            type: "text",
-            disabled: true
-        },
-        {
-            attrName: "label",
-            label: "Label",
-            type: "text"
-        },
-        {
-            attrName: "type",
-            label: "Node Type",
-            type: "select",
-            options: Object
-              .keys(NODE_TYPES)
-              .filter(key => key !== "UNDEFINED")
-              .map(key => ({ value:key, text: NODE_TYPE_LABELS[key] }))
-        },
-        {
-            attrName: "memory",
-            label: "Memory",
-            type: "text"
-        },
-        {
-            attrName: "u",
-            label: "Utilization",
-            type: "text"
-        }
-    ]
-};
-
-const edgeEditDialogConfig = {
-    title: "Edit Link",
-    fields: [
-        {
-            attrName: "id",
-            label: "Link ID",
-            type: "text",
-            disabled: true
-        },
-        {
-            attrName: "label",
-            label: "Label",
-            type: "text"
-        },
-        {
-            attrName: "delay",
-            label: "Delay",
-            type: "number"
-        }
-      ]
-};
 
 const getDefaultVertex = (mode, vertices) => (mode === GRAPH_MODES.SCHEDULE ? {
     label: `Task ${vertices.length + 1}`,
@@ -135,15 +31,16 @@ const getDefaultVertex = (mode, vertices) => (mode === GRAPH_MODES.SCHEDULE ? {
     T: 10,
     D: 10,
     a: 0,
-    M: 1
-    // Initial position is random
+    M: 1,
+    position: getRandomScreenPosition()
   }
   :
   {
     label: `Node ${vertices.length + 1}`,
     type: NODE_TYPES.MIST,
     memory: 1024,
-    u: 0.5
+    u: 0.5,
+    position: getRandomScreenPosition()
   });
 
 const View = () => {
@@ -197,17 +94,9 @@ const View = () => {
       } : null;
       
       const graph = {...modelToGraph()};
-      const data = mode === GRAPH_MODES.SCHEDULE ? {
-        tasks: graph.vertices,
-        precedences: graph.edges,
-        viewportDimensions
-      } : {
-        nodes: graph.vertices,
-        connections: graph.edges,
-        viewportDimensions
-      };
+      graph.viewportDimensions = viewportDimensions;
       
-      saveToLocalStorage(mode === GRAPH_MODES.SCHEDULE ? 'savedSchedules' : 'savedNetworks', data);
+      saveToLocalStorage(mode === GRAPH_MODES.SCHEDULE ? 'savedSchedules' : 'savedNetworks', graph);
       console.log('Auto-saved graph to localStorage');
     };
 
@@ -217,8 +106,15 @@ const View = () => {
   }, [vertices, edges, modelToGraph]);
 
   useEffect(() => { // Load saved data on component mount
+    /* For testing
+    const savedSchedules = JSON.parse(localStorage.getItem('savedSchedules'))
+    console.log(savedSchedules);
+    const savedNetworks = JSON.parse(localStorage.getItem('savedNetworks'))
+    console.log(savedNetworks);
+    */
+
     const data = loadFromLocalStorage(mode === GRAPH_MODES.SCHEDULE ? 'savedSchedules' : 'savedNetworks');
-    if (data && data.vertices && data.vertices.length > 0) {
+    if (data) {
       try {
         graphToModel(data);
         handleResetView();
