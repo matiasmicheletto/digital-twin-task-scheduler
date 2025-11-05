@@ -23,6 +23,7 @@ const useGraph = mode => {
             getVertex: schedule.getTask,
             getVertices: schedule.getTasks,
             getEdges: schedule.getPrecedences,
+            setEdgeProp: (edgeId, attr, value) => {},
             fromObject: Task.fromObject,
             graphToModel: schedule.scheduleFromGraph,
             modelToGraph: schedule.scheduleToGraph
@@ -37,6 +38,7 @@ const useGraph = mode => {
             getVertex: network.getNode,
             getVertices: network.getNodes,
             getEdges: network.getConnections,
+            setEdgeProp: network.setConnectionProp,
             fromObject: Node.fromObject,
             graphToModel: network.networkFromGraph,
             modelToGraph: network.networkToGraph

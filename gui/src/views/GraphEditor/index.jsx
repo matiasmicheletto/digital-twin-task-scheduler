@@ -106,6 +106,28 @@ const nodeEditDialogConfig = {
     ]
 };
 
+const edgeEditDialogConfig = {
+    title: "Edit Link",
+    fields: [
+        {
+            attrName: "id",
+            label: "Link ID",
+            type: "text",
+            disabled: true
+        },
+        {
+            attrName: "label",
+            label: "Label",
+            type: "text"
+        },
+        {
+            attrName: "delay",
+            label: "Delay",
+            type: "number"
+        }
+      ]
+};
+
 const getDefaultVertex = (mode, vertices) => (mode === GRAPH_MODES.SCHEDULE ? {
     label: `Task ${vertices.length + 1}`,
     mist: false,
@@ -137,6 +159,7 @@ const View = () => {
     getVertices,
     getEdges,
     deleteGraph,
+    setEdgeProp,
     fromObject,
     graphToModel,
     modelToGraph
@@ -159,6 +182,8 @@ const View = () => {
   // Task parameteres editing dialog
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingVertex, setEditingVertex] = useState(null);
+  const [editingEdge, setEditingEdge] = useState(null);
+  const dialogConfig = editingEdge? edgeEditDialogConfig : (mode === GRAPH_MODES.SCHEDULE ? taskEditDialogConfig : nodeEditDialogConfig);
 
   const vertices = getVertices();
   const edges = getEdges();
@@ -231,7 +256,16 @@ const View = () => {
     }
   };
 
-  const handleSaveVertex = () => { // Save vertex after completing form
+  const handleSetEditingElement = updatedElement => { // Update editing element state
+    if (editingVertex) {
+      setEditingVertex(updatedElement);
+    }
+    if (editingEdge) {
+      setEditingEdge(updatedElement);
+    }
+  };
+
+  const handleSaveElement = () => { // Save vertex after completing form
     if (editingVertex) {
       try {
         const vrtx = fromObject(editingVertex);
@@ -240,6 +274,16 @@ const View = () => {
         setEditingVertex(null);
         handleResetView();
         toast("Task saved successfully", "success");
+      } catch (error) {
+        toast(error.message, "error");
+      }
+    }
+    if (editingEdge) {
+      try {
+        setEdgeProp(editingEdge.id, 'delay', editingEdge.delay);
+        setDialogOpen(false);
+        setEditingEdge(null);
+        toast("Link saved successfully", "success");
       } catch (error) {
         toast(error.message, "error");
       }
@@ -253,6 +297,18 @@ const View = () => {
       setSelectedVertex(vertexId);
     }
   };
+
+  const handleArrowMouseDown = (e, edgeId) => {
+    e.stopPropagation();
+    setSelectedVertex(null);
+    const edge = edges.find(ed => ed.id === edgeId);
+    setEditingEdge({
+      id: edge.id,
+      label: edge.label,
+      delay: edge.delay
+    });
+    setDialogOpen(true);
+  }
 
   const handleVertexContextMenu = (e, vertexId) => {
     e.preventDefault();
@@ -411,6 +467,7 @@ const View = () => {
               connectingFrom={connectingFrom}
               handleStartConnecting={handleStartConnecting}
               setEditingVertex={setEditingVertex}
+              setEditingEdge={setEditingEdge}
               setDialogOpen={setDialogOpen}
               removeVertex={removeVertex}
               disconnectVertices={disconnectVertices} />
@@ -430,16 +487,17 @@ const View = () => {
               connectingFrom={connectingFrom}
               handleVertexMouseDown={handleVertexMouseDown}
               handleVertexContextMenu={handleVertexContextMenu}
+              handleArrowMouseDown={handleArrowMouseDown}
               draggingVertex={draggingVertex} /> 
           </Box> 
 
           <EditDialog
-              dialogConfig={mode === GRAPH_MODES.SCHEDULE ? taskEditDialogConfig : nodeEditDialogConfig}
+              dialogConfig={dialogConfig}
               dialogOpen={dialogOpen}
               setDialogOpen={setDialogOpen}
-              editingVertex={editingVertex}
-              setEditingVertex={setEditingVertex}
-              handleSave={handleSaveVertex}
+              editingElement={editingVertex || editingEdge}
+              setEditingElement={handleSetEditingElement}
+              handleSave={handleSaveElement}
           />
       </Paper>
     </MainView>

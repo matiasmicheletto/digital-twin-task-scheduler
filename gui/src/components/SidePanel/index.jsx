@@ -32,6 +32,7 @@ const SidePanel = props => {
         connectingFrom,
         handleStartConnecting,
         setEditingVertex,
+        setEditingEdge,
         setDialogOpen,
         removeVertex,
         disconnectVertices
@@ -43,6 +44,13 @@ const SidePanel = props => {
         }else{
             setEditingVertex(defaultVertex);
         }
+        setEditingEdge(null);
+        setDialogOpen(true);
+    };
+
+    const handleEditEdge = (edge) => {
+        setEditingEdge({ ...edge });
+        setEditingVertex(null);
         setDialogOpen(true);
     };
 
@@ -104,12 +112,19 @@ const SidePanel = props => {
             <List dense>
                 {edges.map(e => (
                     <ListItem key={e.id} secondaryAction={
-                    <IconButton onClick={() => disconnectVertices(e.from.id, e.to.id)} size="small">
-                        <Delete fontSize="small"/>
-                    </IconButton>
+                        <Stack direction="row" spacing={1}>
+                            {mode === GRAPH_MODES.NETWORK &&
+                                <IconButton edge="end" onClick={() => {handleEditEdge(e);}} size="small">
+                                    <Edit fontSize="small" />
+                                </IconButton>
+                            }
+                            <IconButton onClick={() => disconnectVertices(e.from.id, e.to.id)} size="small">
+                                <Delete fontSize="small"/>
+                            </IconButton>
+                        </Stack>
                     }>
                     <ListItemText 
-                        primary={`${e.from?.label ?? "-"} → ${e.to?.label ?? "-"}`}
+                        primary={e.label}
                         secondary={e.delay ? `Delay: ${e.delay}` : "" }/>
                     </ListItem>
                 ))}

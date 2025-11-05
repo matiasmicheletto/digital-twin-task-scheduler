@@ -48,6 +48,11 @@ const useNetwork = () => {
         return networkRef.current.getConnections();
     }, []);
 
+    const setConnectionProp = useCallback((linkId, attr, value) => {
+        networkRef.current.setConnectionProp(linkId, attr, value);
+        forceUpdate();
+    }, []);
+
     const networkToGraph = useCallback(() => {
         return networkRef.current.toGraph();
     }, []);
@@ -67,6 +72,7 @@ const useNetwork = () => {
         getNode,
         getNodes,
         getConnections,
+        setConnectionProp,
         networkToGraph,
         networkFromGraph
     };

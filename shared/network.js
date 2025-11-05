@@ -4,8 +4,9 @@ const LINK_ATTRIBUTES = ['id', 'sourceId', 'targetId', 'delay', 'bidirectional']
 const NODE_ATTRIBUTES = ['id', 'label', 'type', 'memory', 'u', 'links', 'position'];
 
 export class Link {
-    constructor(id, sourceId, targetId, delay = 1, bidirectional = false) {
+    constructor(id, label, sourceId, targetId, delay = 1, bidirectional = false) {
         this.id = id;
+        this.label = label;
         this.sourceId = sourceId;
         this.targetId = targetId;
         this.delay = delay; // Optional delay for the edge
@@ -64,12 +65,21 @@ export class Node {
         this.links = this.links.filter(link => link.targetId !== targetId);
     }
 
+    setLinkProp(linkId, attr, value) {
+        const link = this.links.find(l => l.id === linkId);
+        if(link && LINK_ATTRIBUTES.includes(attr)) {
+            link[attr] = value;
+        }else{
+            throw new Error(`Invalid link attribute: ${attr}`);
+        }
+    }
+
     static fromObject(obj) {
         const node = new Node(obj.label, obj.type);
         if(obj.id) // If object has id, use it to preserve identity
             node.id = obj.id;
         if(obj.links) // Same for links
-            node.links = obj.links.map(l => new Link(l.id, l.sourceId, l.targetId, l.delay));
+            node.links = obj.links.map(l => new Link(l.id, l.label, l.sourceId, l.targetId, l.delay));
         return node;
     }
 
@@ -137,10 +147,12 @@ export default class Network {
             (targetNode.type === NODE_TYPES.EDGE || targetNode.type === NODE_TYPES.CLOUD);
         
         const linkId = `${sourceId}_${targetId}`;
-        const link = new Link(linkId, sourceId, targetId, delay, bidirectional);
+        const label = `${sourceNode.label} → ${targetNode.label}`;
+        const link = new Link(linkId, label, sourceId, targetId, delay, bidirectional);
         sourceNode.addLink(link);
         if(bidirectional) {
-            const reverseLink = new Link(linkId, targetId, sourceId, delay, bidirectional);
+            const revLabel = `${targetNode.label} → ${sourceNode.label}`;
+            const reverseLink = new Link(linkId, revLabel, targetId, sourceId, delay, bidirectional);
             targetNode.addLink(reverseLink);
         }
     }
@@ -166,6 +178,7 @@ export default class Network {
             for (let link of node.links) {
                 connections.push({
                     id: link.id,
+                    label: link.label,
                     from: node,
                     to: this.nodes.get(link.targetId),
                     delay: link.delay,
@@ -176,6 +189,25 @@ export default class Network {
         return connections;
     }
 
+    setConnectionProp(linkId, attr, value) {
+        console.log("3.- calling setEdgeProp");
+        for(let node of this.nodes.values()) {
+            const link = node.links.find(l => l.id === linkId);
+            if(link) {
+                node.setLinkProp(linkId, attr, value);
+                // If bidirectional, update the reverse link as well
+                if(link.bidirectional) {
+                    const targetNode = this.nodes.get(link.targetId);
+                    if(targetNode) {
+                        targetNode.setLinkProp(linkId, attr, value);
+                    }
+                }
+                return;
+            }
+        }
+        throw new Error(`Link with id ${linkId} not found`);
+    }
+
     toGraph() {
         const nodesArray = Array.from(this.nodes.values());
         const linksArray = [];
@@ -184,6 +216,7 @@ export default class Network {
                 if(!linksArray.find(l => l.id === link.id))
                     linksArray.push({
                         id: link.id,
+                        label: link.label,
                         from: link.sourceId,
                         to: link.targetId,
                         delay: link.delay,

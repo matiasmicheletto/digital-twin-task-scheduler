@@ -30,6 +30,7 @@ const SvgCanvas = props => {
         connectingFrom,
         handleVertexMouseDown,
         handleVertexContextMenu,
+        handleArrowMouseDown,
         draggingVertex
     } =  props;
 
@@ -59,11 +60,13 @@ const SvgCanvas = props => {
                             onMouseLeave={() => setHoveredVertex(null)} />
                     ))}
         
-                    {edges.map(({from, to}, idx) => (
+                    {edges.map((edge, idx) => (
                         <Arrow
+                            onMouseDown={e => handleArrowMouseDown(e, edge.id)}
                             key={idx}
-                            from={from?.position}
-                            to={to?.position} />
+                            from={edge.from?.position}
+                            to={edge.to?.position}
+                            weight={edge.delay} />
                     ))}
 
                     {vertices.map(vertex => (// Render tooltips last to be on top
@@ -72,8 +75,7 @@ const SvgCanvas = props => {
                             <TaskTooltip key={vertex.id} task={vertex} position={vertex.position} />
                             :
                             <NodeTooltip key={vertex.id} node={vertex} position={vertex.position} />
-                            )
-                            
+                            )   
                     ))
                     }
                 </g>

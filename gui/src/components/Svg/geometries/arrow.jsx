@@ -3,7 +3,7 @@ const arrowAngle = Math.PI / 6;
 
 const Arrow = props => {
 
-    const {from, to, bidirectional} = props;
+    const {from, to, weight, bidirectional} = props;
 
     if (!from || !to) return null;
     
@@ -53,6 +53,17 @@ const Arrow = props => {
                         startY + arrowLen * Math.sin(angle + arrowAngle)
                     }`}
                     fill="#666"/>
+            )}
+            {weight !== undefined && (
+                <text
+                    x={(startX + endX) / 2 + 5}
+                    y={(startY + endY) / 2 - 5}
+                    fontSize="12"
+                    fill="#fff"
+                    textAnchor="middle"
+                    dominantBaseline="central">
+                    {weight}
+                </text>
             )}
         </g>
     );
