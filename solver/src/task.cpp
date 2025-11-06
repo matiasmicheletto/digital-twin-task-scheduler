@@ -1,36 +1,5 @@
 #include "../include/task.h"
 
-std::vector<Task> Task::loadTasksFromJSONFile(const std::string& file_path) {
-
-    std::ifstream file(file_path);
-    if (!file.is_open()) {
-        throw std::runtime_error("Could not open file: " + file_path);
-    }
-
-    nlohmann::json j;
-    file >> j;
-
-    // json structure:
-    // {
-    //   "metadata": { ... },
-    //   "tasks": [ ... ],
-    //   "precedences": [ ... ]
-    // }
-
-    if (!j.contains("tasks") || !j.at("tasks").is_array()) {
-        throw std::runtime_error("JSON file does not contain a valid 'tasks' array");
-    }
-
-    std::vector<Task> result;
-    result.reserve(j.at("tasks").size());
-
-    for (const auto& jt : j.at("tasks")) {
-        result.push_back(Task::fromJSON(jt));
-    }
-
-    return result;
-}
-
 Task Task::fromJSON(const nlohmann::json& j) {
     Task task;
 
@@ -46,6 +15,8 @@ Task Task::fromJSON(const nlohmann::json& j) {
     if(j.contains("successors"))
         task.successors = utils::require_type<std::vector<std::string>>(j, "successors");
 
+    task.hasSuccessors = task.successors.size() > 0;
+
     return task;
 }
 
@@ -57,6 +28,14 @@ void Task::print() const {
     std::cout << "Deadline (D): " << D << "\n";
     std::cout << "Memory requirement (M): " << M << "\n";
     std::cout << "Activation time (a): " << a << "\n";
+    std::cout << "Has successors: " << (hasSuccessors ? "Yes" : "No") << "\n";
+    if (hasSuccessors) {
+        std::cout << "Successors: ";
+        for (const auto& succ : successors) {
+            std::cout << succ << " ";
+        }
+        std::cout << "\n";
+    }
     std::cout << "Start time: " << start_time << "\n";
     std::cout << "Finish time: " << finish_time << "\n";
 }

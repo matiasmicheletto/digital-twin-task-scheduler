@@ -5,7 +5,7 @@
 
 #include "../include/json.hpp"
 #include "../include/utils.h"
-#include "../include/task.h"
+#include "../include/digital_twin.h"
 
 
 int main(int argc, char **argv) {
@@ -51,22 +51,12 @@ int main(int argc, char **argv) {
         
     }    
     
-    utils::dbg << "Task file: " << tsk_filename << "\n";
-    utils::dbg << "Network file: " << nw_filename << "\n";
-
-    // Load tasks
-    std::vector<Task> tasks;
     try {
-        tasks = Task::loadTasksFromJSONFile(tsk_filename);
+        DigitalTwin dt(tsk_filename, nw_filename);
+        dt.print();
     } catch (const std::exception& e) {
-        utils::printHelp(MANUAL, "Error loading tasks");
-        utils::dbg << "Exception: " << e.what() << "\n";
-    }
-
-    utils::dbg << "Loaded " << tasks.size() << " tasks.\n";
-    for (const auto& task : tasks) {
-        task.print();
-        std::cout << "---------------------\n";
+        utils::dbg << "Error: " << e.what() << "\n";
+        utils::printHelp(MANUAL);
     }
 
     return 0;

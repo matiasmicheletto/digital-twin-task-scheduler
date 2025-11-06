@@ -4,7 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-
+#include <vector>
 #include "json.hpp"
 #include "utils.h"
 
@@ -17,7 +17,6 @@ class Task {
     public:
         Task() = default;
 
-        static std::vector<Task> loadTasksFromJSONFile(const std::string& file_path);
         static Task fromJSON(const nlohmann::json& j);
         void print() const;
 
@@ -44,6 +43,7 @@ class Task {
         int D; // Deadline
         int M; // Memory requirement
         int a; // Activation time
+        bool hasSuccessors = false; // Fast check for successors
         std::vector<std::string> successors; // IDs of successor tasks
         int start_time = 0; // Start time
         int finish_time = 0; // Finish time
