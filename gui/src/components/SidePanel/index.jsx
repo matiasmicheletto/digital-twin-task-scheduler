@@ -38,6 +38,8 @@ const SidePanel = props => {
         disconnectVertices
     } = props;
 
+    console.log(edges);
+
     const handleAddVertex = (vertex) => { // Add or edit a vertex
         if(vertex){
             setEditingVertex({ ...vertex });
@@ -123,9 +125,16 @@ const SidePanel = props => {
                             </IconButton>
                         </Stack>
                     }>
-                    <ListItemText 
-                        primary={e.label}
-                        secondary={e.delay ? `Delay: ${e.delay}` : "" }/>
+                    { mode === GRAPH_MODES.NETWORK ?
+                        <ListItemText 
+                            primary={e.label}
+                            secondary={e.delay ? `Delay: ${e.delay}` : "" }/>
+                        
+                        :
+                        <ListItemText 
+                            primary={`${vertices.find(v => v.id === e.from.id)?.label} → ${vertices.find(v => v.id === e.to.id)?.label}`} />
+                        
+                    }
                     </ListItem>
                 ))}
             </List>
