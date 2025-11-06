@@ -133,7 +133,6 @@ const SidePanel = props => {
                         :
                         <ListItemText 
                             primary={`${vertices.find(v => v.id === e.from.id)?.label} → ${vertices.find(v => v.id === e.to.id)?.label}`} />
-                        
                     }
                     </ListItem>
                 ))}

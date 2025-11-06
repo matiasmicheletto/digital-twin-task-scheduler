@@ -1,16 +1,19 @@
 #pragma once
-#ifndef GLOBAL_HPP
-#define GLOBAL_HPP
+#ifndef UTILS_HPP
+#define UTILS_HPP
 
 #include <iostream>
 #include <fstream>
 #include <cmath>
 #include <unistd.h>
-#include <limits.h>
 #include <sstream>
+#include <limits.h>
 #include <iomanip>
 #include <string>
 #include <random>
+#include <type_traits>
+
+#include "json.hpp"
 
 // Same as __DBL_MAX__ from <cfloat> but compatible with C++17
 #define DBL_MAX std::numeric_limits<double>::max()
@@ -23,7 +26,7 @@
 
 
 
-namespace global { // Utility functions
+namespace utils { // Utility functions
 
 enum PRINT_TYPE { PLAIN_TEXT, JSON };
 
@@ -34,7 +37,7 @@ std::string getExecutableDir();
 std::string generate_uuid();
 
 // Print help message from file
-inline constexpr const char defaultMessage[] = "Error in command line arguments. See manual or documentation.";
+inline constexpr const char defaultMessage[] = "";
 void printHelp(const char* file, const char* message = defaultMessage); 
 
 // Random number generator
@@ -51,6 +54,9 @@ inline NullBuffer null_buffer;
 inline std::ostream null_stream(&null_buffer);
 inline std::ostream& dbg = null_stream;
 
+template<typename T>
+T require_type(const nlohmann::json&, const std::string&);
+
 } // namespace global
 
-#endif // GLOBAL_HPP
+#endif // UTILS_HPP

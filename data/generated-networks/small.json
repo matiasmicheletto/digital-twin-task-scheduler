@@ -1,0 +1,122 @@
+{
+  "nodes": [
+    {
+      "id": "714367a7",
+      "type": "MIST",
+      "label": "Node 1",
+      "tasks": {},
+      "memory": 1,
+      "u": 0,
+      "links": [
+        {
+          "id": "714367a7_9fd19fc2",
+          "label": "Node 1 → Node 3",
+          "sourceId": "714367a7",
+          "targetId": "9fd19fc2",
+          "delay": 1,
+          "bidirectional": false
+        }
+      ],
+      "position": {
+        "x": 181.25,
+        "y": -124.75
+      }
+    },
+    {
+      "id": "af7dcc2b",
+      "type": "MIST",
+      "label": "Node 2",
+      "tasks": {},
+      "memory": 1,
+      "u": 0,
+      "links": [
+        {
+          "id": "af7dcc2b_9fd19fc2",
+          "label": "Node 2 → Node 3",
+          "sourceId": "af7dcc2b",
+          "targetId": "9fd19fc2",
+          "delay": 1,
+          "bidirectional": false
+        }
+      ],
+      "position": {
+        "x": 205.25,
+        "y": 7.75
+      }
+    },
+    {
+      "id": "9fd19fc2",
+      "type": "EDGE",
+      "label": "Node 3",
+      "tasks": {},
+      "memory": 1,
+      "u": 0,
+      "links": [
+        {
+          "id": "9fd19fc2_4e854d65",
+          "label": "Node 3 → Node 4",
+          "sourceId": "9fd19fc2",
+          "targetId": "4e854d65",
+          "delay": 1,
+          "bidirectional": true
+        }
+      ],
+      "position": {
+        "x": 369.25,
+        "y": -83
+      }
+    },
+    {
+      "id": "4e854d65",
+      "type": "CLOUD",
+      "label": "Node 4",
+      "tasks": {},
+      "memory": 1,
+      "u": 0,
+      "links": [
+        {
+          "id": "9fd19fc2_4e854d65",
+          "label": "Node 4 → Node 3",
+          "sourceId": "4e854d65",
+          "targetId": "9fd19fc2",
+          "delay": 1,
+          "bidirectional": true
+        }
+      ],
+      "position": {
+        "x": 456.25,
+        "y": 82
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "714367a7_9fd19fc2",
+      "label": "Node 1 → Node 3",
+      "from": "714367a7",
+      "to": "9fd19fc2",
+      "delay": 1,
+      "bidirectional": false
+    },
+    {
+      "id": "af7dcc2b_9fd19fc2",
+      "label": "Node 2 → Node 3",
+      "from": "af7dcc2b",
+      "to": "9fd19fc2",
+      "delay": 1,
+      "bidirectional": false
+    },
+    {
+      "id": "9fd19fc2_4e854d65",
+      "label": "Node 3 → Node 4",
+      "from": "9fd19fc2",
+      "to": "4e854d65",
+      "delay": 1,
+      "bidirectional": true
+    }
+  ],
+  "viewportDimensions": {
+    "width": 660,
+    "height": 1675
+  }
+}
