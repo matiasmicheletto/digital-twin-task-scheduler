@@ -1,7 +1,7 @@
 #ifndef SERVER_H
 #define SERVER_H
 
-#include <vector>
+#include <deque>
 #include "json.hpp"
 #include "task.h"
 #include "utils.h"
@@ -25,11 +25,14 @@ public:
     int getMemory() const { return memory; }
     int getUtilization() const { return utilization; }
     int getLastSlot() const { return last_slot; }
-    const std::vector<Task>& getAssignedTasks() const { return assigned_tasks; }
+    const std::deque<Task>& getAssignedTasks() const { return assigned_tasks; }
 
-    void assignTask(const Task& task) {
+    void pushBackTask(const Task& task) {
         assigned_tasks.push_back(task);
-        // Update last_slot or other server parameters as needed
+    }
+
+    void pushFrontTask(const Task& task) {
+        assigned_tasks.push_front(task);
     }
 
 private:
@@ -37,8 +40,8 @@ private:
     ServerType type;
     int memory; // Total memory
     int utilization; // 0-1
-    int last_slot;
-    std::vector<Task> assigned_tasks;
+    int last_slot; // Last slot occupied by a task
+    std::deque<Task> assigned_tasks;
 };
 
 #endif // SERVER_H

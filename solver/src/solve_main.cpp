@@ -53,6 +53,11 @@ int main(int argc, char **argv) {
     
     try {
         DigitalTwin dt(tsk_filename, nw_filename);
+        const Candidate candidate{ // Example
+            .server_indices = {0, 1, 2, 0, 1, 2, 3},
+            .priorities = {1.0, 0.5, 0.8, 1.0, 0.2, 0.33, 1.4}
+        };
+        dt.schedule(candidate);
         dt.print();
     } catch (const std::exception& e) {
         utils::dbg << "Error: " << e.what() << "\n";

@@ -34,6 +34,11 @@ class Task {
         int getA() const { return a; }
         int getStartTime() const { return start_time; }
         int getFinishTime() const { return finish_time; }
+        
+        bool getHasSuccessors() const { return hasSuccessors; }
+        
+        void addPredecessor(const std::string& pred_id) { predecessors.push_back(pred_id); }
+        const std::vector<std::string>& getPredecessors() const { return predecessors; }
 
     private:
         std::string id;
@@ -45,6 +50,7 @@ class Task {
         int a; // Activation time
         bool hasSuccessors = false; // Fast check for successors
         std::vector<std::string> successors; // IDs of successor tasks
+        std::vector<std::string> predecessors; // IDs of predecessor tasks
         int start_time = 0; // Start time
         int finish_time = 0; // Finish time
 };

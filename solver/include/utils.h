@@ -17,6 +17,7 @@
 
 // Same as __DBL_MAX__ from <cfloat> but compatible with C++17
 #define DBL_MAX std::numeric_limits<double>::max()
+#define DBL_MIN std::numeric_limits<double>::lowest()
 
 /**
  * 
@@ -57,6 +58,8 @@ inline std::ostream& dbg = null_stream;
 template<typename T>
 T require_type(const nlohmann::json&, const std::string&);
 
-} // namespace global
+inline bool areEqual(double a, double b) { return std::fabs(a - b) < 1e-9; }
+
+} // namespace utils
 
 #endif // UTILS_HPP
