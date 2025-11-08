@@ -7,7 +7,7 @@ import pipeline from './presets/pipeline.json' with { type: "json" };
 import highUtilization from './presets/high-utilization.json' with { type: "json" };
 
 /**
- * Problem Generator for Real-Time Task Scheduling
+ * Tasks Generator for Real-Time Task Scheduling
  * Creates task graphs with configurable parameters and topologies
  */
 export default class TaskGenerator {
