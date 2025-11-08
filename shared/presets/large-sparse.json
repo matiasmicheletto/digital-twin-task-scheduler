@@ -1,4 +1,5 @@
 {
+    "name": "Large sparse (100 tasks)",
     "numTasks": 100,
     "graphType": "random",
     "density": 0.1,

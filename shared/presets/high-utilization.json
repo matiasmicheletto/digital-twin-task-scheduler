@@ -1,4 +1,5 @@
 {
+    "name": "High utilization (25 tasks)",
     "numTasks": 25,
     "graphType": "layered",
     "layers": 5,

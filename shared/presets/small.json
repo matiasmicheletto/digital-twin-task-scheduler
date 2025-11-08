@@ -1,4 +1,5 @@
 {
+    "name": "Small (5 tasks)",
     "numTasks": 5,
     "graphType": "chain",
     "mistTaskRatio": 0.2,

@@ -4,8 +4,7 @@ import Network, { Node, NODE_TYPES } from './network.js';
  * Network Generator for IoT/Mist/Edge/Cloud Topologies
  * Creates network graphs with configurable parameters and topologies
  */
-export default // Base Network Generator Class
-class NetworkGenerator {
+export default class NetworkGenerator { // Base Network Generator Class
     constructor(config = {}) {
         this.config = {
             mistCount: 2,
@@ -62,6 +61,7 @@ class NetworkGenerator {
             const node = new Node(`Mist ${i + 1}`, NODE_TYPES.MIST);
             node.position = this.calculatePosition(i, mistCount, 0.2, viewportWidth, viewportHeight);
             node.u = this.randomUtilization();
+            node.memory = this.randomMemory();
             nodes.push(node);
         }
         return nodes;
@@ -75,6 +75,7 @@ class NetworkGenerator {
             const node = new Node(`Edge ${i + 1}`, NODE_TYPES.EDGE);
             node.position = this.calculatePosition(i, edgeCount, 0.5, viewportWidth, viewportHeight);
             node.u = this.randomUtilization();
+            node.memory = this.randomMemory();
             nodes.push(node);
         }
         return nodes;
@@ -85,6 +86,7 @@ class NetworkGenerator {
         const node = new Node('Cloud', NODE_TYPES.CLOUD);
         node.position = { x: Math.floor(viewportWidth * 0.8), y: Math.floor(viewportHeight * 0.5) };
         node.u = this.randomUtilization();
+        node.memory = this.randomMemory();
         return node;
     }
 
@@ -103,6 +105,11 @@ class NetworkGenerator {
     randomUtilization() {
         // Generate random utilization between 0 and 1
         return Math.random();
+    }
+
+    randomMemory() {
+        // Generate random memory capacity between 1 and 10
+        return Math.floor(Math.random() * 10) + 1;
     }
 
     connectMistToEdge(network, mistNodes, edgeNodes) {
@@ -148,6 +155,7 @@ class NetworkGenerator {
             });
         });
 
+        /*
         return {
             nodes,
             connections,
@@ -156,6 +164,10 @@ class NetworkGenerator {
                 height: this.config.viewportHeight
             }
         };
+        */
+        const ntwrk = new Network();
+        ntwrk.fromGraph({vertices: nodes});
+        return ntwrk;
     }
 }
 
@@ -357,6 +369,92 @@ class ClusterTopologyGenerator extends NetworkGenerator {
         }
     }
 }
+
+// Export preset configurations
+export const PRESETS = {
+    tiny: {
+        name: 'Tiny',
+        generator: 'STAR',
+        mistCount: 2,
+        edgeCount: 1,
+        includeCloud: true,
+        connectionDensity: 1.0
+    },
+    small: {
+        name: 'Small',
+        generator: 'RANDOM',
+        mistCount: 4,
+        edgeCount: 2,
+        includeCloud: true,
+        connectionDensity: 0.5
+    },
+    medium: {
+        name: 'Medium',
+        generator: 'HIERARCHICAL',
+        mistCount: 8,
+        edgeCount: 4,
+        includeCloud: true,
+        connectionDensity: 0.6
+    },
+    large: {
+        name: 'Large',
+        generator: 'CLUSTER',
+        mistCount: 16,
+        edgeCount: 8,
+        includeCloud: true,
+        connectionDensity: 0.5,
+        clusterCount: 3
+    },
+    sparse: {
+        name: 'Sparse',
+        generator: 'RANDOM',
+        mistCount: 10,
+        edgeCount: 5,
+        includeCloud: true,
+        connectionDensity: 0.2
+    },
+    dense: {
+        name: 'Dense',
+        generator: 'RANDOM',
+        mistCount: 10,
+        edgeCount: 5,
+        includeCloud: true,
+        connectionDensity: 0.8
+    },
+    starSmall: {
+        name: 'Star Small',
+        generator: 'STAR',
+        mistCount: 6,
+        edgeCount: 2,
+        includeCloud: true,
+        connectionDensity: 1.0
+    },
+    hierarchicalLarge: {
+        name: 'Hierarchical Large',
+        generator: 'HIERARCHICAL',
+        mistCount: 20,
+        edgeCount: 10,
+        includeCloud: true,
+        connectionDensity: 0.7
+    },
+    clusterMedium: {
+        name: 'Cluster Medium',
+        generator: 'CLUSTER',
+        mistCount: 12,
+        edgeCount: 6,
+        includeCloud: true,
+        connectionDensity: 0.5,
+        clusterCount: 2
+    },
+    noCloud: {
+        name: 'No Cloud',
+        generator: 'RANDOM',
+        mistCount: 6,
+        edgeCount: 4,
+        includeCloud: false,
+        connectionDensity: 0.6
+    }
+};
 
 // Export generators
 export const GENERATORS = {

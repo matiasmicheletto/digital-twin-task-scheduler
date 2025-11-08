@@ -1,4 +1,5 @@
 {
+    "name": "Large dense (50 tasks)",
     "numTasks": 50,
     "graphType": "random",
     "density": 0.4,

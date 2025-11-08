@@ -38,8 +38,6 @@ const SidePanel = props => {
         disconnectVertices
     } = props;
 
-    console.log(edges);
-
     const handleAddVertex = (vertex) => { // Add or edit a vertex
         if(vertex){
             setEditingVertex({ ...vertex });

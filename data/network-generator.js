@@ -14,86 +14,12 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { GENERATORS } from '../shared/networkGenerator.js';
+import { GENERATORS, PRESETS as DEFAULT_PRESETS } from '../shared/networkGenerator.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Preset configurations
-const PRESETS = {
-    tiny: {
-        generator: 'STAR',
-        mistCount: 2,
-        edgeCount: 1,
-        includeCloud: true,
-        connectionDensity: 1.0
-    },
-    small: {
-        generator: 'RANDOM',
-        mistCount: 4,
-        edgeCount: 2,
-        includeCloud: true,
-        connectionDensity: 0.5
-    },
-    medium: {
-        generator: 'HIERARCHICAL',
-        mistCount: 8,
-        edgeCount: 4,
-        includeCloud: true,
-        connectionDensity: 0.6
-    },
-    large: {
-        generator: 'CLUSTER',
-        mistCount: 16,
-        edgeCount: 8,
-        includeCloud: true,
-        connectionDensity: 0.5,
-        clusterCount: 3
-    },
-    sparse: {
-        generator: 'RANDOM',
-        mistCount: 10,
-        edgeCount: 5,
-        includeCloud: true,
-        connectionDensity: 0.2
-    },
-    dense: {
-        generator: 'RANDOM',
-        mistCount: 10,
-        edgeCount: 5,
-        includeCloud: true,
-        connectionDensity: 0.8
-    },
-    starSmall: {
-        generator: 'STAR',
-        mistCount: 6,
-        edgeCount: 2,
-        includeCloud: true,
-        connectionDensity: 1.0
-    },
-    hierarchicalLarge: {
-        generator: 'HIERARCHICAL',
-        mistCount: 20,
-        edgeCount: 10,
-        includeCloud: true,
-        connectionDensity: 0.7
-    },
-    clusterMedium: {
-        generator: 'CLUSTER',
-        mistCount: 12,
-        edgeCount: 6,
-        includeCloud: true,
-        connectionDensity: 0.5,
-        clusterCount: 2
-    },
-    noCloud: {
-        generator: 'RANDOM',
-        mistCount: 6,
-        edgeCount: 4,
-        includeCloud: false,
-        connectionDensity: 0.6
-    }
-};
+let PRESETS = DEFAULT_PRESETS;
 
 /**
  * Parse command line arguments

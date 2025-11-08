@@ -12,6 +12,7 @@ import useToast from "../../hooks/useToast";
 import { containerStyle } from "../../themes/common";
 import useGraph, { GRAPH_MODES } from "../../hooks/useGraph";
 import TaskGenerator from "../../../../shared/taskGenerator.js";
+import { GENERATORS } from "../../../../shared/networkGenerator.js";
 import GraphLayout from "../../../../shared/graphLayout.js";
 import { NODE_TYPES } from "../../../../shared/network.js";
 import { taskEditDialogConfig, nodeEditDialogConfig, edgeEditDialogConfig } from "./dialogFormConfigs.js";
@@ -299,6 +300,28 @@ const View = () => {
     graphToModel(graph);
   };
 
+  const handleGenerateNetwork = config => {
+    deleteGraph();
+    const generator = new GENERATORS[config.generator](config); // Random network generator
+    const network = generator.generate(); // Generate random network
+    // Apply graph layout to organize vertices
+    const svgRect = svgRef.current?.getBoundingClientRect();
+    const viewportDimensions = svgRect ? { 
+      width: svgRect.width, 
+      height: svgRect.height 
+    } : null;
+    const layout = new GraphLayout({
+      width: viewportDimensions?.width || 1200,
+      height: viewportDimensions?.height || 800,
+      horizontalSpacing: 150,
+      verticalSpacing: 100
+    });
+    const graph = network.toGraph();
+    layout.applyLayout(graph);
+    // Add generated vertices to current network
+    graphToModel(graph);
+  }
+
   const handleExport = () => {
     const svgRect = svgRef.current?.getBoundingClientRect();
     const viewportDimensions = svgRect ? { 
@@ -350,6 +373,7 @@ const View = () => {
             handleResetView={handleResetView}
             handleDeleteVertices={handleDeleteVertices}
             handleGenerateSchedule={handleGenerateSchedule}
+            handleGenerateNetwork={handleGenerateNetwork}
             handleExport={handleExport}
             handleImport={handleImport}/>
 

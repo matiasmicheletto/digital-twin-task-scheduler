@@ -19,7 +19,8 @@ import {
     Download,
     Shuffle
 } from "@mui/icons-material";
-import { PRESETS } from "../../../../shared/taskGenerator.js";
+import { PRESETS as SCHEDULE_PRESETS } from "../../../../shared/taskGenerator.js";
+import { PRESETS as NETWORK_PRESETS } from "../../../../shared/networkGenerator.js";
 import { GRAPH_MODES } from "../../hooks/useGraph/index.js";
 
 const AppBar = props => {
@@ -32,6 +33,7 @@ const AppBar = props => {
         handleResetView,
         handleDeleteVertices,
         handleGenerateSchedule,
+        handleGenerateNetwork,
         handleExport,
         handleImport
     } = props;
@@ -47,11 +49,11 @@ const AppBar = props => {
         setExportMenuAnchorEl(null);
     };
 
-    const openGenerateTasksMenu = e => {
+    const openGenerateMenu = e => {
         setGenerateTasksMenuAnchorEl(e.currentTarget);
     };
 
-    const closeGenerateTasksMenu = () => {
+    const closeGenerateMenu = () => {
         setGenerateTasksMenuAnchorEl(null);
     };
 
@@ -72,27 +74,60 @@ const AppBar = props => {
                     {mode === GRAPH_MODES.SCHEDULE && 
                         <>
                             <Tooltip title="Generate Random Tasks">
-                                <IconButton onClick={openGenerateTasksMenu}>
+                                <IconButton onClick={openGenerateMenu}>
                                     <Shuffle/>
                                 </IconButton>
                             </Tooltip>
                             <Menu
                                 anchorEl={generateTasksMenuAnchorEl}
                                 open={Boolean(generateTasksMenuAnchorEl)}
-                                onClose={closeGenerateTasksMenu}>
-                                <MenuItem onClick={() => {handleGenerateSchedule(PRESETS.small); closeGenerateTasksMenu();}}>Small (5 tasks)</MenuItem>
-                                <MenuItem onClick={() => {handleGenerateSchedule(PRESETS.medium); closeGenerateTasksMenu();}}>Medium (20 tasks)</MenuItem>
-                                <MenuItem onClick={() => {handleGenerateSchedule(PRESETS.largeSparse); closeGenerateTasksMenu();}}>Large sparse (100 tasks)</MenuItem>
-                                <MenuItem onClick={() => {handleGenerateSchedule(PRESETS.largeDense); closeGenerateTasksMenu();}}>Large dense (50 tasks)</MenuItem>
-                                <MenuItem onClick={() => {handleGenerateSchedule(PRESETS.pipeline); closeGenerateTasksMenu();}}>Pipeline (30 tasks)</MenuItem>
-                                <MenuItem onClick={() => {handleGenerateSchedule(PRESETS.highUtilization); closeGenerateTasksMenu();}}>High utilization (25 tasks)</MenuItem>                        
+                                onClose={closeGenerateMenu}>
+                                {
+                                    Object.entries(SCHEDULE_PRESETS).map(([key, preset]) => (
+                                        <MenuItem 
+                                            key={key}
+                                            onClick={() => {
+                                                handleGenerateSchedule(preset);
+                                                closeGenerateMenu();
+                                            }}>
+                                            {preset.name}
+                                        </MenuItem>
+                                    ))
+                                }
+                            </Menu>
+                        </>
+                    }
+
+                    {mode === GRAPH_MODES.NETWORK &&
+                        <>
+                            <Tooltip title="Generate Random Network">
+                                <IconButton onClick={openGenerateMenu}>
+                                    <Shuffle/>
+                                </IconButton>
+                            </Tooltip>
+                            <Menu
+                                anchorEl={generateTasksMenuAnchorEl}
+                                open={Boolean(generateTasksMenuAnchorEl)}
+                                onClose={closeGenerateMenu}>
+                                {
+                                    Object.entries(NETWORK_PRESETS).map(([key, preset]) => (
+                                        <MenuItem 
+                                            key={key}
+                                            onClick={() => {
+                                                handleGenerateNetwork(preset);
+                                                closeGenerateMenu();
+                                            }}>
+                                            {preset.name}
+                                        </MenuItem>
+                                    ))    
+                                }
                             </Menu>
                         </>
                     }
 
                     <Tooltip title="Zoom In">
                         <IconButton onClick={handleZoomIn}>
-                        <ZoomIn/>
+                            <ZoomIn/>
                         </IconButton>
                     </Tooltip>
                     <Tooltip title="Zoom Out">
@@ -102,7 +137,7 @@ const AppBar = props => {
                     </Tooltip>
                     <Tooltip title="Reset View">
                         <IconButton onClick={handleResetView}>
-                        <RestartAlt/>
+                            <RestartAlt/>
                         </IconButton>
                     </Tooltip>
                     <Tooltip title="Delete All Tasks">

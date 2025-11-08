@@ -1,4 +1,5 @@
 {
+    "name": "Medium (20 tasks)",
     "numTasks": 20,
     "graphType": "layered",
     "layers": 4,

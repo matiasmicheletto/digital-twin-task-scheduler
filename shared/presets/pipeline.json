@@ -1,4 +1,5 @@
 {
+    "name": "Pipeline (30 tasks)",
     "numTasks": 30,
     "graphType": "fork-join",
     "forkJoinGroups": 5,
