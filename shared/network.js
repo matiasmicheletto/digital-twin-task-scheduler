@@ -28,29 +28,17 @@ export const NODE_TYPE_LABELS = {
 };
 
 export class Node {
-    constructor(label, type = NODE_TYPES.UNDEFINED, position) {
+    constructor(label, type = NODE_TYPES.UNDEFINED, memory, u, position) {
         this.id = generateUUID8(); // Unique task identifier
         this.type = type
         this.label = label || id;
-        this.tasks = new Map();
-        this.memory = 1; // Default memory capacity
-        this.u = 0; // Utilization
+        this.memory = memory; // Default memory capacity
+        this.u = u; // Utilization
         this.links = []; // Outgoing links
         this.position = position || { // For visualization
             x: 400 + Math.random() * 200,
             y: 300 + Math.random() * 200
         };
-    }
-
-    addTask(task) {
-        if(!(task instanceof Task)) {
-            throw new Error("Invalid task object");
-        }
-        this.tasks.set(task.id, task);
-    }
-
-    removeTask(taskId) {
-        this.tasks.delete(taskId);
     }
 
     addLink(link) {
@@ -75,7 +63,7 @@ export class Node {
     }
 
     static fromObject(obj) {
-        const node = new Node(obj.label, obj.type, obj.position);
+        const node = new Node(obj.label, obj.type, obj.memory, obj.u, obj.position);
         if(obj.id) // If object has id, use it to preserve identity
             node.id = obj.id;
         if(obj.links) // Same for links
@@ -94,6 +82,7 @@ export default class Network {
     }
 
     addNode(node) {
+
         if(!(node instanceof Node)) {
             throw new Error("Invalid node object");
         }

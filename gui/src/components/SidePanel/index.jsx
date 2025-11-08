@@ -70,38 +70,39 @@ const SidePanel = props => {
             <Box sx={{ flexGrow: 1, overflow: "auto", minHeight: 0 }}>
             <List dense>
                 {vertices.map(n => (
-                <React.Fragment key={n.id}>
-                    <ListItem
-                    selected={selectedVertex === n.id}
-                    sx={{ 
-                        cursor: "pointer", 
-                        backgroundColor: selectedVertex === n.id ? "#000" : (connectingFrom === n.id ? "#666" : "inherit") }}
-                    secondaryAction={
-                        <Stack direction="row" spacing={1}>
-                            <IconButton edge="end" onClick={e => handleStartConnecting(e, n)} size="small">
-                                <Link fontSize="small" />
-                            </IconButton>
-                            <IconButton edge="end" onClick={() => {handleAddVertex(n);}} size="small">
-                                <Edit fontSize="small" />
-                            </IconButton>
-                            <IconButton edge="end" onClick={() => removeVertex(n.id)} size="small">
-                                <Delete fontSize="small" />
-                            </IconButton>
-                        </Stack>
-                    }>
-                    {mode === GRAPH_MODES.SCHEDULE && 
-                        <ListItemText 
-                            primary={`${n.label} - ${n.mist ? "Mist" : "Edge/Cloud"}`} 
-                            secondary={`C:${n.C} T:${n.T} D:${n.D} a:${n.a} M:${n.M}`} />
-                    }
-                    {mode === GRAPH_MODES.NETWORK && 
-                        <ListItemText 
-                            primary={`${n.label} - ${n.type}`} 
-                            secondary={`Memory: ${n.memory} U: ${n.u}`} />
-                    }
-                    </ListItem>
-                    <Divider />
-                </React.Fragment>
+                    <React.Fragment key={n.id}>
+                        <ListItem
+                            selected={selectedVertex === n.id}
+                            sx={{ 
+                                cursor: "pointer", 
+                                backgroundColor: selectedVertex === n.id ? "#000" : (connectingFrom === n.id ? "#666" : "inherit") 
+                            }}
+                            secondaryAction={
+                                <Stack direction="row" spacing={1}>
+                                    <IconButton edge="end" onClick={e => handleStartConnecting(e, n)} size="small">
+                                        <Link fontSize="small" />
+                                    </IconButton>
+                                    <IconButton edge="end" onClick={() => {handleAddVertex(n);}} size="small">
+                                        <Edit fontSize="small" />
+                                    </IconButton>
+                                    <IconButton edge="end" onClick={() => removeVertex(n.id)} size="small">
+                                        <Delete fontSize="small" />
+                                    </IconButton>
+                                </Stack>
+                            }>
+                            {mode === GRAPH_MODES.SCHEDULE && 
+                                <ListItemText 
+                                    primary={`${n.label} - ${n.mist ? "Mist" : "Edge/Cloud"}`} 
+                                    secondary={`C:${n.C} T:${n.T} D:${n.D} a:${n.a} M:${n.M}`} />
+                            }
+                            {mode === GRAPH_MODES.NETWORK && 
+                                <ListItemText 
+                                    primary={`${n.label} - ${n.type}`} 
+                                    secondary={`Memory: ${n.memory} U: ${n.u?.toFixed(2)}`} />
+                            }
+                        </ListItem>
+                        <Divider />
+                    </React.Fragment>
                 ))}
             </List>
 
@@ -110,8 +111,8 @@ const SidePanel = props => {
             </Typography>
 
             <List dense>
-                {edges.map(e => (
-                    <ListItem key={e.id} secondaryAction={
+                {edges.map((e, index) => (
+                    <ListItem key={index} secondaryAction={
                         <Stack direction="row" spacing={1}>
                             {mode === GRAPH_MODES.NETWORK &&
                                 <IconButton edge="end" onClick={() => {handleEditEdge(e);}} size="small">
