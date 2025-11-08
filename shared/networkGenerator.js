@@ -4,13 +4,16 @@ import Network, { Node, NODE_TYPES } from './network.js';
  * Network Generator for IoT/Mist/Edge/Cloud Topologies
  * Creates network graphs with configurable parameters and topologies
  */
-export default class NetworkGenerator {
+export default // Base Network Generator Class
+class NetworkGenerator {
     constructor(config = {}) {
         this.config = {
             mistCount: 2,
             edgeCount: 1,
             includeCloud: true,
             connectionDensity: 0.5, // 0-1, affects edge-to-edge connections
+            viewportWidth: 800,
+            viewportHeight: 600,
             ...config
         };
         this.validateConfig();
@@ -53,11 +56,12 @@ export default class NetworkGenerator {
 
     generateMistNodes() {
         const nodes = [];
-        const { mistCount } = this.config;
+        const { mistCount, viewportWidth, viewportHeight } = this.config;
         
         for (let i = 0; i < mistCount; i++) {
             const node = new Node(`Mist ${i + 1}`, NODE_TYPES.MIST);
-            node.position = this.calculatePosition(i, mistCount, 0.2);
+            node.position = this.calculatePosition(i, mistCount, 0.2, viewportWidth, viewportHeight);
+            node.u = this.randomUtilization();
             nodes.push(node);
         }
         return nodes;
@@ -65,26 +69,40 @@ export default class NetworkGenerator {
 
     generateEdgeNodes() {
         const nodes = [];
-        const { edgeCount } = this.config;
+        const { edgeCount, viewportWidth, viewportHeight } = this.config;
         
         for (let i = 0; i < edgeCount; i++) {
             const node = new Node(`Edge ${i + 1}`, NODE_TYPES.EDGE);
-            node.position = this.calculatePosition(i, edgeCount, 0.5);
+            node.position = this.calculatePosition(i, edgeCount, 0.5, viewportWidth, viewportHeight);
+            node.u = this.randomUtilization();
             nodes.push(node);
         }
         return nodes;
     }
 
     generateCloudNode() {
+        const { viewportWidth, viewportHeight } = this.config;
         const node = new Node('Cloud', NODE_TYPES.CLOUD);
+        node.position = { x: Math.floor(viewportWidth * 0.8), y: Math.floor(viewportHeight * 0.5) };
+        node.u = this.randomUtilization();
         return node;
     }
 
     calculatePosition(index, total, xRatio, width, height) {
         // Distribute nodes vertically with some horizontal offset
-        const y = (index + 1) * height / (total + 1);
-        const x = xRatio * width + (Math.random() - 0.5) * 50;
+        const y = Math.floor((index + 1) * height / (total + 1));
+        const x = Math.floor(xRatio * width + (Math.random() - 0.5) * 50);
         return { x, y };
+    }
+
+    randomDelay() {
+        // Generate random delay between 1 and 10
+        return Math.floor(Math.random() * 10) + 1;
+    }
+
+    randomUtilization() {
+        // Generate random utilization between 0 and 1
+        return Math.random();
     }
 
     connectMistToEdge(network, mistNodes, edgeNodes) {
@@ -130,7 +148,14 @@ export default class NetworkGenerator {
             });
         });
 
-        return { nodes, connections };
+        return {
+            nodes,
+            connections,
+            viewportDimensions: {
+                width: this.config.viewportWidth,
+                height: this.config.viewportHeight
+            }
+        };
     }
 }
 
@@ -139,7 +164,7 @@ class StarTopologyGenerator extends NetworkGenerator {
     connectMistToEdge(network, mistNodes, edgeNodes) {
         mistNodes.forEach(mist => {
             edgeNodes.forEach(edge => {
-                network.connectNodes(mist.id, edge.id);
+                network.connectNodes(mist.id, edge.id, this.randomDelay());
             });
         });
     }
@@ -150,7 +175,7 @@ class StarTopologyGenerator extends NetworkGenerator {
 
     connectEdgeToCloud(network, edgeNodes, cloudNode) {
         edgeNodes.forEach(edge => {
-            network.connectNodes(edge.id, cloudNode.id);
+            network.connectNodes(edge.id, cloudNode.id, this.randomDelay());
         });
     }
 }
@@ -161,13 +186,13 @@ class RandomTopologyGenerator extends NetworkGenerator {
         // Each Mist connects to at least one Edge
         mistNodes.forEach(mist => {
             const targetEdge = edgeNodes[Math.floor(Math.random() * edgeNodes.length)];
-            network.connectNodes(mist.id, targetEdge.id);
+            network.connectNodes(mist.id, targetEdge.id, this.randomDelay());
             
             // Additional random connections based on density
             edgeNodes.forEach(edge => {
                 if (edge.id !== targetEdge.id && Math.random() < this.config.connectionDensity) {
                     try {
-                        network.connectNodes(mist.id, edge.id);
+                        network.connectNodes(mist.id, edge.id, this.randomDelay());
                     } catch (e) {
                         // Connection already exists
                     }
@@ -181,7 +206,7 @@ class RandomTopologyGenerator extends NetworkGenerator {
         for (let i = 0; i < edgeNodes.length; i++) {
             for (let j = i + 1; j < edgeNodes.length; j++) {
                 if (Math.random() < this.config.connectionDensity) {
-                    network.connectNodes(edgeNodes[i].id, edgeNodes[j].id);
+                    network.connectNodes(edgeNodes[i].id, edgeNodes[j].id, this.randomDelay());
                 }
             }
         }
@@ -201,7 +226,7 @@ class RandomTopologyGenerator extends NetworkGenerator {
         });
         
         connections.forEach(edge => {
-            network.connectNodes(edge.id, cloudNode.id);
+            network.connectNodes(edge.id, cloudNode.id, this.randomDelay());
         });
     }
 }
@@ -214,7 +239,7 @@ class HierarchicalTopologyGenerator extends NetworkGenerator {
         
         mistNodes.forEach((mist, idx) => {
             const edgeIdx = Math.floor(idx / mistPerEdge) % edgeNodes.length;
-            network.connectNodes(mist.id, edgeNodes[edgeIdx].id);
+            network.connectNodes(mist.id, edgeNodes[edgeIdx].id, this.randomDelay());
         });
     }
 
@@ -224,13 +249,13 @@ class HierarchicalTopologyGenerator extends NetworkGenerator {
         
         // Always create a chain
         for (let i = 0; i < edgeNodes.length - 1; i++) {
-            network.connectNodes(edgeNodes[i].id, edgeNodes[i + 1].id);
+            network.connectNodes(edgeNodes[i].id, edgeNodes[i + 1].id, this.randomDelay());
         }
         
         // Add additional connections based on density
         if (this.config.connectionDensity > 0.5 && edgeNodes.length > 2) {
             // Close the ring
-            network.connectNodes(edgeNodes[edgeNodes.length - 1].id, edgeNodes[0].id);
+            network.connectNodes(edgeNodes[edgeNodes.length - 1].id, edgeNodes[0].id, this.randomDelay());
         }
         
         // Add skip connections for high density
@@ -238,7 +263,7 @@ class HierarchicalTopologyGenerator extends NetworkGenerator {
             for (let i = 0; i < edgeNodes.length - 2; i++) {
                 if (Math.random() < (this.config.connectionDensity - 0.5) * 2) {
                     try {
-                        network.connectNodes(edgeNodes[i].id, edgeNodes[i + 2].id);
+                        network.connectNodes(edgeNodes[i].id, edgeNodes[i + 2].id, this.randomDelay());
                     } catch (e) {
                         // Skip if connection fails
                     }
@@ -253,7 +278,7 @@ class HierarchicalTopologyGenerator extends NetworkGenerator {
         
         for (let i = 0; i < gatewayCount; i++) {
             const idx = Math.floor((i * edgeNodes.length) / gatewayCount);
-            network.connectNodes(edgeNodes[idx].id, cloudNode.id);
+            network.connectNodes(edgeNodes[idx].id, cloudNode.id, this.randomDelay());
         }
     }
 }
@@ -279,7 +304,7 @@ class ClusterTopologyGenerator extends NetworkGenerator {
             // Connect to at least one Edge in the cluster
             const targetEdge = edgeNodes[clusterStart + (idx % clusterSize)];
             if (targetEdge) {
-                network.connectNodes(mist.id, targetEdge.id);
+                network.connectNodes(mist.id, targetEdge.id, this.randomDelay());
             }
         });
     }
@@ -295,7 +320,7 @@ class ClusterTopologyGenerator extends NetworkGenerator {
             for (let i = start; i < end; i++) {
                 for (let j = i + 1; j < end; j++) {
                     if (Math.random() < 0.7) { // Dense within cluster
-                        network.connectNodes(edgeNodes[i].id, edgeNodes[j].id);
+                        network.connectNodes(edgeNodes[i].id, edgeNodes[j].id, this.randomDelay());
                     }
                 }
             }
@@ -310,7 +335,7 @@ class ClusterTopologyGenerator extends NetworkGenerator {
                     
                     if (idx1 < edgeNodes.length && idx2 < edgeNodes.length) {
                         try {
-                            network.connectNodes(edgeNodes[idx1].id, edgeNodes[idx2].id);
+                            network.connectNodes(edgeNodes[idx1].id, edgeNodes[idx2].id, this.randomDelay());
                         } catch (e) {
                             // Connection might already exist
                         }
@@ -327,7 +352,7 @@ class ClusterTopologyGenerator extends NetworkGenerator {
         for (let c = 0; c < this.config.clusterCount; c++) {
             const gatewayIdx = c * clusterSize;
             if (gatewayIdx < edgeNodes.length) {
-                network.connectNodes(edgeNodes[gatewayIdx].id, cloudNode.id);
+                network.connectNodes(edgeNodes[gatewayIdx].id, cloudNode.id, this.randomDelay());
             }
         }
     }
@@ -347,7 +372,9 @@ const generator = new RandomTopologyGenerator({
     mistCount: 5,
     edgeCount: 3,
     includeCloud: true,
-    connectionDensity: 0.6
+    connectionDensity: 0.6,
+    viewportWidth: 800,
+    viewportHeight: 600
 });
 
 const networkData = generator.generate();
