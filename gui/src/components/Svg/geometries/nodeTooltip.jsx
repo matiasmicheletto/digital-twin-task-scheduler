@@ -27,7 +27,7 @@ const NodeTooltip = ({ node, position }) => (
         <ParamText x={position.x+20} y={position.y + 40} text={`Name: ${node.label}`} />
         <ParamText x={position.x+20} y={position.y + 60} text={`Type: ${NODE_TYPE_LABELS[node.type]}`} />
         <ParamText x={position.x+20} y={position.y + 80} text={`Mem: ${node.memory}`} />
-        <ParamText x={position.x+20} y={position.y + 100} text={`U: ${node.u}`} />
+        <ParamText x={position.x+20} y={position.y + 100} text={`U: ${node.u?.toFixed(2)}`} />
     </g>
 );
 

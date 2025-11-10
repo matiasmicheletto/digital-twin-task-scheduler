@@ -26,6 +26,7 @@ class Task {
 
         // Getters
         std::string getId() const { return id; }
+        std::string getLabel() const { return label; }
         TaskType getType() const { return type; }
         int getC() const { return C; }
         int getT() const { return T; }
@@ -43,6 +44,7 @@ class Task {
     private:
         std::string id;
         TaskType type;
+        std::string label;
         int C; // Computation time
         int T; // Period
         int D; // Deadline

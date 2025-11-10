@@ -4,6 +4,7 @@ Task Task::fromJSON(const nlohmann::json& j) {
     Task task;
 
     task.id = utils::require_type<std::string>(j, "id");
+    task.label = utils::require_type<std::string>(j, "label");
     bool mist = utils::require_type<bool>(j, "mist");
     task.type = mist ? TaskType::Mist : TaskType::Regular;
     task.C = utils::require_type<int>(j, "C");
@@ -22,6 +23,7 @@ Task Task::fromJSON(const nlohmann::json& j) {
 
 void Task::print() const {
     std::cout << "Task ID: " << id << "\n";
+    std::cout << "Label: " << label << "\n";
     std::cout << "Type: " << (type == TaskType::Mist ? "MIST" : "REGULAR") << "\n";
     std::cout << "Computation time (C): " << C << "\n";
     std::cout << "Period (T): " << T << "\n";

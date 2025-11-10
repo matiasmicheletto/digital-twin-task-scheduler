@@ -183,6 +183,7 @@ void DigitalTwin::schedule(Candidate candidate) {
     }
 }
 
+
 void DigitalTwin::printText() const {
     std::cout << "Digital Twin Information:\n";
     
@@ -211,12 +212,38 @@ void DigitalTwin::printText() const {
     }
 
     std::cout << "\n" << "####################\n";
+    std::cout << "Delay Matrix:\n";
+    
+    // Print column headers
+    std::cout << std::setw(12) << " ";  // Space for row headers
+    for (size_t j = 0; j < servers.size(); ++j) {
+        //std::cout << std::setw(8) << servers[j].getId().substr(0,4);
+        std::cout << std::setw(8) << servers[j].getLabel();
+    }
+    std::cout << "\n";
+    
+    // Print matrix with row headers
+    for (size_t i = 0; i < delay_matrix.size(); ++i) {
+        //std::cout << std::setw(12) << servers[i].getId().substr(0,4);  // Row header
+        std::cout << std::setw(12) << servers[i].getLabel();  // Row header
+        for (size_t j = 0; j < delay_matrix[i].size(); ++j) {
+            if (delay_matrix[i][j] == INT_MAX) {
+                std::cout << std::setw(8) << "INF";
+            } else {
+                std::cout << std::setw(8) << delay_matrix[i][j];
+            }
+        }
+        std::cout << "\n";
+    }
+
+    std::cout << "\n" << "####################\n";
     std::cout << "Schedule:\n";
     for (const auto& server : servers) {
-        std::cout << "Server ID: " << server.getId() << "\n";
+        std::cout << "Server: " << server.getLabel() << " (" << server.getId() << ")\n";
         std::cout << "Assigned Tasks: ";
         for (const auto& task : server.getAssignedTasks()) {
-            std::cout << task.getId() << " ";
+            //std::cout << task.getId() << " ";
+            std::cout << task.getLabel() << " ";
         }
         std::cout << "\n---------------------\n";
     }
@@ -245,6 +272,7 @@ void DigitalTwin::printJSON() const {
     for (const auto& server : servers) {
         nlohmann::json js;
         js["id"] = server.getId();
+        js["label"] = server.getLabel();
         js["type"] = (server.getType() == ServerType::Mist) ? "Mist" :
                      (server.getType() == ServerType::Edge) ? "Edge" : "Cloud";
         js["memory"] = server.getMemory();
@@ -267,6 +295,25 @@ void DigitalTwin::printJSON() const {
         jc["bidirectional"] = conn.bidirectional;
         j["connections"].push_back(jc);
     }
+
+    // Delay matrix with server IDs as labels
+    j["delay_matrix"] = nlohmann::json::object();
+    j["delay_matrix"]["server_ids"] = nlohmann::json::array();
+    for (const auto& server : servers) {
+        j["delay_matrix"]["server_ids"].push_back(server.getId().substr(0,4)); // Shortened ID for readability
+    }
+    j["delay_matrix"]["matrix"] = nlohmann::json::array();
+    for (const auto& row : delay_matrix) {
+        nlohmann::json jr = nlohmann::json::array();
+        for (const auto& val : row) {
+            if (val == INT_MAX) {
+                jr.push_back("INF");
+            } else {
+                jr.push_back(val);
+            }
+        }
+        j["delay_matrix"]["matrix"].push_back(jr);
+    }   
 
     j["schedule"] = nlohmann::json::array();
     for (const auto& server : servers) {

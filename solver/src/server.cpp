@@ -8,7 +8,7 @@ Server Server::fromJSON(const nlohmann::json& j) {
     server.last_slot = 0;
 
     server.id = utils::require_type<std::string>(j, "id");
-    server.memory = utils::require_type<int>(j, "memory");
+    server.label = utils::require_type<std::string>(j, "label");
 
     if(j.contains("type")) {
         std::string typeStr = utils::require_type<std::string>(j, "type");
@@ -23,11 +23,14 @@ Server Server::fromJSON(const nlohmann::json& j) {
         }
     }
 
+    server.memory = utils::require_type<int>(j, "memory");
+
     return server;
 }
 
 void Server::print() const {
     std::cout << "Server ID: " << id << "\n";
+    std::cout << "Label: " << label << "\n";
     std::cout << "Type: ";
     switch (type) {
         case ServerType::Mist:

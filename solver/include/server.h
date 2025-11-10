@@ -22,6 +22,7 @@ public:
 
     std::string getId() const { return id; }
     ServerType getType() const { return type; }
+    std::string getLabel() const { return label; }
     int getMemory() const { return memory; }
     int getUtilization() const { return utilization; }
     int getLastSlot() const { return last_slot; }
@@ -38,6 +39,7 @@ public:
 private:
     std::string id;
     ServerType type;
+    std::string label;
     int memory; // Total memory
     int utilization; // 0-1
     int last_slot; // Last slot occupied by a task

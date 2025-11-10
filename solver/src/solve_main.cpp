@@ -12,6 +12,7 @@ int main(int argc, char **argv) {
 
     std::string tsk_filename; // Tasks file (json)
     std::string nw_filename; // Network file (json)
+    utils::PRINT_TYPE output_format = utils::PRINT_TYPE::PLAIN_TEXT;
 
     for(int i = 0; i < argc; i++) {  
         if(argc == 1) {
@@ -44,11 +45,24 @@ int main(int argc, char **argv) {
             }
         }
 
+        if(strcmp(argv[i], "-o") == 0 || strcmp(argv[i], "--output") == 0) {
+            if(i+1 < argc) {
+                const char* format = argv[i+1];
+                if(strcmp(format, "text") == 0) {
+                    output_format = utils::PRINT_TYPE::PLAIN_TEXT;
+                } else if (strcmp(format, "json") == 0) {
+                    output_format = utils::PRINT_TYPE::JSON;
+                } else {
+                    utils::printHelp(MANUAL, "Error in argument -o (--output). Supported formats are: text, json");
+                }
+            }else{
+                utils::printHelp(MANUAL, "Error in argument -o (--output). An output format must be provided");
+            }   
+        }
+
         if(strcmp(argv[i], "--dbg") == 0) {
             utils::dbg.rdbuf(std::cout.rdbuf()); // Enable debug output to std::cout
         }
-
-        
     }    
     
     try {
@@ -58,7 +72,7 @@ int main(int argc, char **argv) {
             .priorities = {1.0, 0.5, 0.8, 1.0, 0.2, 0.33, 1.4}
         };
         dt.schedule(candidate);
-        dt.print();
+        dt.print(output_format);
     } catch (const std::exception& e) {
         utils::dbg << "Error: " << e.what() << "\n";
         utils::printHelp(MANUAL);
