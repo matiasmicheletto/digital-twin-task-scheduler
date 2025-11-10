@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <iomanip>
+#include <algorithm>
 #include "utils.h"
 #include "json.hpp"
 #include "task.h"
@@ -28,18 +29,22 @@ class DigitalTwin {
     public:
         DigitalTwin(std::string tasks_file, std::string network_file);
         
-        void schedule(Candidate candidate);
+        bool schedule(const Candidate& candidate);
+        inline bool isScheduled() const { return scheduled; }
 
         inline size_t getTaskCount() const { return tasks.size(); }
         inline size_t getServerCount() const { return servers.size(); }
         
         void print(utils::PRINT_TYPE format = utils::PRINT_TYPE::PLAIN_TEXT) const;
+        void exportScheduleToCSV() const;
 
     private:
         std::vector<Task> tasks;
         std::vector<Server> servers;
         std::vector<Connection> connections;
         std::vector<std::vector<int>> delay_matrix;
+
+        bool scheduled = false;
 
         void loadTasksFromJSONFile(const std::string& file_path);
         void loadNetworkFromJSONFile(const std::string& file_path);

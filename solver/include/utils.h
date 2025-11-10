@@ -29,7 +29,7 @@
 
 namespace utils { // Utility functions
 
-enum PRINT_TYPE { PLAIN_TEXT, JSON };
+enum PRINT_TYPE { PLAIN_TEXT, JSON, SCHEDULE_CSV };
 
 // Get directory of the executable (to load the manual file if not specified)
 std::string getExecutableDir();

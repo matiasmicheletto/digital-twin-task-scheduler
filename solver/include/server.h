@@ -20,21 +20,21 @@ public:
     static Server fromJSON(const nlohmann::json& j);
     void print() const;
 
+    int internal_id; // Internal ID used for scheduling algorithms
+
     std::string getId() const { return id; }
     ServerType getType() const { return type; }
     std::string getLabel() const { return label; }
     int getMemory() const { return memory; }
     int getUtilization() const { return utilization; }
     int getLastSlot() const { return last_slot; }
+    
     const std::deque<Task>& getAssignedTasks() const { return assigned_tasks; }
+    std::deque<Task>& getAssignedTasks() { return assigned_tasks; }
+    inline void clearTasks() { assigned_tasks.clear(); }
 
-    void pushBackTask(const Task& task) {
-        assigned_tasks.push_back(task);
-    }
-
-    void pushFrontTask(const Task& task) {
-        assigned_tasks.push_front(task);
-    }
+    inline void pushBackTask(const Task& task) { assigned_tasks.push_back(task); }
+    inline void pushFrontTask(const Task& task) { assigned_tasks.push_front(task); }
 
 private:
     std::string id;

@@ -52,6 +52,8 @@ int main(int argc, char **argv) {
                     output_format = utils::PRINT_TYPE::PLAIN_TEXT;
                 } else if (strcmp(format, "json") == 0) {
                     output_format = utils::PRINT_TYPE::JSON;
+                } else if (strcmp(format, "csv") == 0) {
+                    output_format = utils::PRINT_TYPE::SCHEDULE_CSV;
                 } else {
                     utils::printHelp(MANUAL, "Error in argument -o (--output). Supported formats are: text, json");
                 }
@@ -75,7 +77,6 @@ int main(int argc, char **argv) {
         dt.print(output_format);
     } catch (const std::exception& e) {
         utils::dbg << "Error: " << e.what() << "\n";
-        utils::printHelp(MANUAL);
     }
 
     return 0;

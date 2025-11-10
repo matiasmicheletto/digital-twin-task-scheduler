@@ -25,6 +25,8 @@ Server Server::fromJSON(const nlohmann::json& j) {
 
     server.memory = utils::require_type<int>(j, "memory");
 
+    server.internal_id = -1; // Default value
+
     return server;
 }
 

@@ -54,11 +54,13 @@ void DigitalTwin::loadTasksFromJSONFile(const std::string& file_path) {
         throw std::runtime_error("JSON file does not contain a valid 'tasks' array");
     }
 
-    
     tasks.reserve(j.at("tasks").size());
-
+    int task_index = 0;
     for (const auto& jt : j.at("tasks")) {
-        tasks.push_back(Task::fromJSON(jt));
+        Task task = Task::fromJSON(jt);
+        task.internal_id = task_index;
+        task_index++;
+        tasks.push_back(task);
     }
 
     // Compute predecessors from precedences
@@ -77,6 +79,8 @@ void DigitalTwin::loadTasksFromJSONFile(const std::string& file_path) {
             }
         }
     }
+
+    scheduled = false;
 }
 
 void DigitalTwin::loadNetworkFromJSONFile(const std::string& file_path) {
@@ -100,9 +104,12 @@ void DigitalTwin::loadNetworkFromJSONFile(const std::string& file_path) {
     }
 
     servers.reserve(j.at("nodes").size());
-
+    int server_index = 0;
     for (const auto& jn : j.at("nodes")) {
-        servers.push_back(Server::fromJSON(jn));
+        Server server = Server::fromJSON(jn);
+        server.internal_id = server_index;
+        server_index++;
+        servers.push_back(server);
     }
 
     if (!j.contains("connections") || !j.at("connections").is_array()) {
@@ -138,49 +145,153 @@ void DigitalTwin::loadNetworkFromJSONFile(const std::string& file_path) {
         
         connections.push_back(conn);
     }
+
+    scheduled = false;
 }
 
-void DigitalTwin::schedule(Candidate candidate) {
-    // Schedules tasks onto servers based on the candidate solution
+bool DigitalTwin::schedule(const Candidate& candidate)
+{
+    // -------------------------------------------------------------
+    // STEP 0 — Reset servers
+    // -------------------------------------------------------------
+    for (auto& server : servers)
+        server.clearTasks();
+    
+    const size_t num_tasks = tasks.size();
+    const size_t num_servers = servers.size();
+    bool feasible = true;
 
-    for (size_t server_idx = 0; server_idx < servers.size(); ++server_idx) {
+    // -------------------------------------------------------------
+    // STEP 1 — Assign tasks to servers and sort by priority
+    // -------------------------------------------------------------
+    std::vector<std::vector<int>> tasks_per_server(num_servers);
 
-        // Collect tasks for this server
-        std::vector<int> tasks_on_server;
-        for (size_t task_idx = 0; task_idx < candidate.server_indices.size(); ++task_idx)
-            if (candidate.server_indices[task_idx] == (int)server_idx)
-                tasks_on_server.push_back(task_idx);
-
-        if (tasks_on_server.empty())
-            continue;
-
-        // Compute min and max in one pass
-        double min_pr = DBL_MAX;
-        double max_pr = DBL_MIN;
-        
-        for (int t : tasks_on_server) {
-            double p = candidate.priorities[t];
-            min_pr = std::min(min_pr, p);
-            max_pr = std::max(max_pr, p);
+    for (size_t t = 0; t < num_tasks; ++t) {
+        int s = candidate.server_indices[t];
+        if (s < 0 || s >= (int)num_servers) {
+            utils::dbg << "Invalid server index " << s << " for task " << t << "\n";
+            return false;
         }
+        tasks_per_server[s].push_back(t);
+    }
 
-        // Insert tasks in the server
-        for (int t : tasks_on_server) {
-            double p = candidate.priorities[t];
-            const Task& task = tasks[t];
+    // Sort tasks on each server by ascending priority
+    for (size_t s = 0; s < num_servers; ++s) {
+        auto& vec = tasks_per_server[s];
+        std::sort(vec.begin(), vec.end(),
+            [&](int a, int b) {
+                return candidate.priorities[a] < candidate.priorities[b];
+            });
+        for (int t : vec)
+            servers[s].pushBackTask(tasks[t]);
+    }
 
-            if (utils::areEqual(p,max_pr)) {
-                servers[server_idx].pushFrontTask(task);
-            }
-            else if (utils::areEqual(p,min_pr)) {
-                servers[server_idx].pushBackTask(task);
-            }
-            else {
-                // Middle priority → default behavior
-                servers[server_idx].pushBackTask(task);
-            }
+    // -------------------------------------------------------------
+    // STEP 2 — Build fast lookup: internal_id → (Task*, server_index)
+    // -------------------------------------------------------------
+    std::vector<Task*> id_to_task(num_tasks, nullptr);
+    std::vector<size_t> id_to_server(num_tasks);
+
+    for (size_t s = 0; s < servers.size(); ++s) {
+        for (Task& task : servers[s].getAssignedTasks()) {
+            int internal_id = task.internal_id;
+            id_to_task[internal_id] = &task;
+            id_to_server[internal_id] = s;
         }
     }
+
+    // -------------------------------------------------------------
+    // STEP 3 — Compute start and finish times (non-preemptive)
+    // -------------------------------------------------------------
+    for (size_t s = 0; s < num_servers; ++s) {
+
+        auto& assigned = servers[s].getAssignedTasks();
+        int current_time = 0;
+
+        for (Task& task : assigned) {
+
+            // Compute earliest start time from predecessors
+            int earliest_start = 0;
+
+            for (int pred_internal_id : task.getPredecessorInternalIds()) {
+
+                // Predecessor must exist in the mapping
+                if (pred_internal_id < 0 || pred_internal_id >= (int)num_tasks || 
+                    id_to_task[pred_internal_id] == nullptr) {
+                    utils::dbg << "Predecessor task internal_id " << pred_internal_id 
+                               << " not found for task " << task.getId() << "\n";
+                    feasible = false;
+                    break;
+                }
+
+                Task* pred = id_to_task[pred_internal_id];
+                size_t from_s = id_to_server[pred_internal_id];
+                size_t to_s   = s;
+
+                int comm_delay = delay_matrix[from_s][to_s];
+
+                earliest_start = std::max(
+                    earliest_start,
+                    pred->getFinishTime() + comm_delay
+                );
+            }
+
+            if (!feasible) break;
+
+            // Compute non-preemptive start considering the server timeline
+            int start_time  = std::max(current_time, earliest_start);
+            int finish_time = start_time + task.getC();
+
+            task.setStartTime(start_time);
+            task.setFinishTime(finish_time);
+
+            current_time = finish_time;
+        }
+
+        if (!feasible) break;
+    }
+
+    // -------------------------------------------------------------
+    // STEP 4 — Check constraints: memory, utilization, deadlines
+    // -------------------------------------------------------------
+    for (size_t s = 0; s < num_servers; ++s) {
+
+        auto& assigned = servers[s].getAssignedTasks();
+
+        int total_memory = 0;
+        double total_util = 0.0;
+
+        for (const Task& task : assigned) {
+
+            total_memory += task.getM();
+            total_util   += task.getU();
+
+            // deadline feasibility
+            if (task.getFinishTime() > task.getD()){
+                feasible = false;
+            }
+        }
+
+        if (total_memory > servers[s].getMemory()){
+            utils::dbg << "Memory exceeded on server " << servers[s].getId() << ": "
+                       << total_memory << " > " << servers[s].getMemory() << "\n";
+            feasible = false;
+        }
+
+        if (total_util > 1.0){
+            utils::dbg << "Utilization exceeded on server " << servers[s].getId() << ": "
+                       << total_util << " > 1.0\n";
+            feasible = false;
+        }
+
+        if (!feasible){
+            utils::dbg << "Constraints violated on server " << servers[s].getId() << "\n";
+            break;
+        }
+    }
+
+    scheduled = feasible;
+    return feasible;
 }
 
 
@@ -213,7 +324,6 @@ void DigitalTwin::printText() const {
 
     std::cout << "\n" << "####################\n";
     std::cout << "Delay Matrix:\n";
-    
     // Print column headers
     std::cout << std::setw(12) << " ";  // Space for row headers
     for (size_t j = 0; j < servers.size(); ++j) {
@@ -221,7 +331,6 @@ void DigitalTwin::printText() const {
         std::cout << std::setw(8) << servers[j].getLabel();
     }
     std::cout << "\n";
-    
     // Print matrix with row headers
     for (size_t i = 0; i < delay_matrix.size(); ++i) {
         //std::cout << std::setw(12) << servers[i].getId().substr(0,4);  // Row header
@@ -236,16 +345,23 @@ void DigitalTwin::printText() const {
         std::cout << "\n";
     }
 
-    std::cout << "\n" << "####################\n";
-    std::cout << "Schedule:\n";
-    for (const auto& server : servers) {
-        std::cout << "Server: " << server.getLabel() << " (" << server.getId() << ")\n";
-        std::cout << "Assigned Tasks: ";
-        for (const auto& task : server.getAssignedTasks()) {
-            //std::cout << task.getId() << " ";
-            std::cout << task.getLabel() << " ";
+    if(scheduled){
+        std::cout << "\n" << "####################\n";
+        std::cout << "Tasks allocation:\n";
+        for (const auto& server : servers) {
+            std::cout << "Server: " << server.getLabel() << " (" << server.getId() << ")\n";
+            std::cout << "Assigned Tasks: ";
+            for (const auto& task : server.getAssignedTasks()) {
+                //std::cout << task.getId() << " ";
+                std::cout << task.getLabel() << " ";
+            }
+            std::cout << "\n---------------------\n";
         }
-        std::cout << "\n---------------------\n";
+
+        std::cout << "\n" << "####################\n";
+        std::cout << "Schedule timeline" << ":\n";
+        
+
     }
 }
 
@@ -262,6 +378,7 @@ void DigitalTwin::printJSON() const {
         jt["D"] = task.getD();
         jt["M"] = task.getM();
         jt["a"] = task.getA();
+        jt["u"] = task.getU();
         jt["start_time"] = task.getStartTime();
         jt["finish_time"] = task.getFinishTime();
         jt["predecessors"] = task.getPredecessors();
@@ -315,26 +432,52 @@ void DigitalTwin::printJSON() const {
         j["delay_matrix"]["matrix"].push_back(jr);
     }   
 
-    j["schedule"] = nlohmann::json::array();
-    for (const auto& server : servers) {
-        nlohmann::json js;
-        js["server_id"] = server.getId();
-        js["assigned_tasks"] = nlohmann::json::array();
-        for (const auto& task : server.getAssignedTasks()) {
-            js["assigned_tasks"].push_back(task.getId());
+    if(scheduled){
+        j["task_allocation"] = nlohmann::json::array();
+        for (const auto& server : servers) {
+            nlohmann::json js;
+            js["server_id"] = server.getId();
+            js["assigned_tasks"] = nlohmann::json::array();
+            for (const auto& task : server.getAssignedTasks()) {
+                js["assigned_tasks"].push_back(task.getId());
+            }
+            j["task_allocation"].push_back(js);
         }
-        j["schedule"].push_back(js);
     }
 
     std::cout << j.dump(4) << std::endl; // Pretty print with 4 spaces indent
 }
 
+void DigitalTwin::exportScheduleToCSV() const {
+    if (!scheduled) {
+        throw std::runtime_error("Schedule not computed yet. Cannot export.");
+    }
+
+    std::cout << "task,server,start,finish\n";
+
+    for (const auto& server : servers) {
+        const auto& tasks = server.getAssignedTasks();
+        for (const auto& task : tasks) {
+            std::cout << task.getId() << ","
+                << server.getId() << ","
+                << task.getStartTime() << ","
+                << task.getFinishTime() << "\n";
+        }
+    }
+}
+
 void DigitalTwin::print(utils::PRINT_TYPE format) const {
-    if (format == utils::PRINT_TYPE::PLAIN_TEXT) {
-        printText();
-    } else if (format == utils::PRINT_TYPE::JSON) {
-        printJSON();
-    } else {
-        throw std::runtime_error("Unknown print format");
+    switch(format) {
+        case utils::PRINT_TYPE::PLAIN_TEXT:
+            printText();
+            break;
+        case utils::PRINT_TYPE::JSON: 
+            printJSON();
+            break;
+        case utils::PRINT_TYPE::SCHEDULE_CSV:
+            exportScheduleToCSV();
+            break;
+        default: 
+            throw std::runtime_error("Unknown print format");
     }
 }

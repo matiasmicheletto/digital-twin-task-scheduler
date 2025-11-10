@@ -12,11 +12,14 @@ Task Task::fromJSON(const nlohmann::json& j) {
     task.D = utils::require_type<int>(j, "D");
     task.M = utils::require_type<int>(j, "M");
     task.a = utils::require_type<int>(j, "a");
+    task.u = static_cast<double>(task.C) / static_cast<double>(task.T);
 
     if(j.contains("successors"))
         task.successors = utils::require_type<std::vector<std::string>>(j, "successors");
 
     task.hasSuccessors = task.successors.size() > 0;
+
+    task.internal_id = -1; // Default value
 
     return task;
 }
@@ -26,10 +29,12 @@ void Task::print() const {
     std::cout << "Label: " << label << "\n";
     std::cout << "Type: " << (type == TaskType::Mist ? "MIST" : "REGULAR") << "\n";
     std::cout << "Computation time (C): " << C << "\n";
+    std::cout << "Activation time (a): " << a << "\n";
     std::cout << "Period (T): " << T << "\n";
     std::cout << "Deadline (D): " << D << "\n";
     std::cout << "Memory requirement (M): " << M << "\n";
-    std::cout << "Activation time (a): " << a << "\n";
+    std::cout << "Utilization (u): " << u << "\n";
+    
     std::cout << "Has successors: " << (hasSuccessors ? "Yes" : "No") << "\n";
     if (hasSuccessors) {
         std::cout << "Successors: ";
