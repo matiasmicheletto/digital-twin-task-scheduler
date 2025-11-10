@@ -182,21 +182,26 @@ bool DigitalTwin::schedule(const Candidate& candidate)
             [&](int a, int b) {
                 return candidate.priorities[a] < candidate.priorities[b];
             });
+        // Push the sorted tasks
         for (int t : vec)
             servers[s].pushBackTask(tasks[t]);
     }
 
     // -------------------------------------------------------------
-    // STEP 2 — Build fast lookup: internal_id → (Task*, server_index)
+    // STEP 2 — Build fast lookup using internal_id
     // -------------------------------------------------------------
+    // Maps internal_id -> pointer to task IN THE SERVER's deque
     std::vector<Task*> id_to_task(num_tasks, nullptr);
-    std::vector<size_t> id_to_server(num_tasks);
+    std::vector<size_t> id_to_server(num_tasks, 0);
 
     for (size_t s = 0; s < servers.size(); ++s) {
-        for (Task& task : servers[s].getAssignedTasks()) {
+        auto& assigned = servers[s].getAssignedTasks();
+        for (Task& task : assigned) {
             int internal_id = task.internal_id;
-            id_to_task[internal_id] = &task;
-            id_to_server[internal_id] = s;
+            if (internal_id >= 0 && internal_id < (int)num_tasks) {
+                id_to_task[internal_id] = &task;
+                id_to_server[internal_id] = s;
+            }
         }
     }
 
@@ -256,7 +261,7 @@ bool DigitalTwin::schedule(const Candidate& candidate)
     // -------------------------------------------------------------
     for (size_t s = 0; s < num_servers; ++s) {
 
-        auto& assigned = servers[s].getAssignedTasks();
+        const auto& assigned = servers[s].getAssignedTasks();
 
         int total_memory = 0;
         double total_util = 0.0;
@@ -293,7 +298,6 @@ bool DigitalTwin::schedule(const Candidate& candidate)
     scheduled = feasible;
     return feasible;
 }
-
 
 void DigitalTwin::printText() const {
     std::cout << "Digital Twin Information:\n";
@@ -357,11 +361,6 @@ void DigitalTwin::printText() const {
             }
             std::cout << "\n---------------------\n";
         }
-
-        std::cout << "\n" << "####################\n";
-        std::cout << "Schedule timeline" << ":\n";
-        
-
     }
 }
 
@@ -458,8 +457,8 @@ void DigitalTwin::exportScheduleToCSV() const {
     for (const auto& server : servers) {
         const auto& tasks = server.getAssignedTasks();
         for (const auto& task : tasks) {
-            std::cout << task.getId() << ","
-                << server.getId() << ","
+            std::cout << task.getLabel() << ","
+                << server.getLabel() << ","
                 << task.getStartTime() << ","
                 << task.getFinishTime() << "\n";
         }

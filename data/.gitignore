@@ -1,3 +1,5 @@
 custom-presets/
 generated-tasks/
 generated-networks/
+schedules/
+venv/
