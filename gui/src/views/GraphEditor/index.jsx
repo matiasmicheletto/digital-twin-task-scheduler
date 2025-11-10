@@ -19,6 +19,7 @@ import { taskEditDialogConfig, nodeEditDialogConfig, edgeEditDialogConfig } from
 import { 
   importJSON, 
   exportJSON,
+  exportTXT,
   saveToLocalStorage,
   loadFromLocalStorage,
   getRandomScreenPosition 
@@ -60,7 +61,8 @@ const View = () => {
     setEdgeProp,
     fromObject,
     graphToModel,
-    modelToGraph
+    modelToGraph,
+    modelsToDat
   } = useGraph(mode);
 
   const toast = useToast();
@@ -322,23 +324,28 @@ const View = () => {
     graphToModel(graph);
   }
 
-  const handleExport = () => {
-    const svgRect = svgRef.current?.getBoundingClientRect();
-    const viewportDimensions = svgRect ? { 
-      width: svgRect.width, 
-      height: svgRect.height 
-    } : null;
-    const graph = {...modelToGraph()};
-    const data = mode === GRAPH_MODES.SCHEDULE ? {
-      tasks: graph.vertices,
-      precedences: graph.edges,
-      viewportDimensions
-    } : {
-      nodes: graph.vertices,
-      connections: graph.edges,
-      viewportDimensions
-    };
-    exportJSON(data);
+  const handleExport = format => {
+    if(format === "JSON"){
+      const svgRect = svgRef.current?.getBoundingClientRect();
+      const viewportDimensions = svgRect ? { 
+        width: svgRect.width, 
+        height: svgRect.height 
+      } : null;
+      const graph = {...modelToGraph()};
+      const data = mode === GRAPH_MODES.SCHEDULE ? {
+        tasks: graph.vertices,
+        precedences: graph.edges,
+        viewportDimensions
+      } : {
+        nodes: graph.vertices,
+        connections: graph.edges,
+        viewportDimensions
+      };
+      exportJSON(data);
+    }
+    if(format === "DAT"){
+      exportTXT(modelsToDat());
+    }
   };
 
   const handleImport = file => {

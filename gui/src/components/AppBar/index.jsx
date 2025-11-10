@@ -170,8 +170,11 @@ const AppBar = props => {
                             <Upload fontSize="small" sx={{ mr: 1 }} /> Import JSON
                             </label>
                         </MenuItem>
-                        <MenuItem onClick={() => {closeExportMenu(); handleExport();}}>
+                        <MenuItem onClick={() => {closeExportMenu(); handleExport("JSON");}}>
                             <Download fontSize="small" sx={{ mr: 1 }} /> Export JSON
+                        </MenuItem>
+                        <MenuItem onClick={() => {closeExportMenu(); handleExport("DAT");}}>
+                            <Download fontSize="small" sx={{ mr: 1 }} /> Export DAT
                         </MenuItem>
                     </Menu>
                 </Stack>

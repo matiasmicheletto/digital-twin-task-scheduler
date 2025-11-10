@@ -1,99 +1,59 @@
 # Digital Twin Task Scheduler
 
-A simulator to test and optimize task allocation in the context of a blackboard pattern based digital twin.
-
-## Tech Stack
-
-- **⚡ Vite** - Next generation frontend tooling with lightning-fast HMR
-- **⚛️ React 19** - Latest React with modern features
-- **🎨 Material-UI v7** - Beautiful, accessible, and responsive UI components
-- **🎭 Emotion** - Powerful CSS-in-JS styling
+This project implements a task scheduling system for digital twin environments. It provides functionalities to model tasks and servers, and to schedule tasks efficiently across available servers.
 
 ## Features
+- Generate tasks and network configurations via a graphical interface.
+- Automatic generation of large datasets of instances.
+- C++ solver for scheduling tasks based on various algorithms.
+- Data visualization and analysis tools.
 
-✨ **Modern Development Experience**
-- Fast refresh with Vite HMR
-- ES modules support
-- Optimized production builds
+## Stack
+- **Frontend**: JavaScript, Vite, React
+- **Backend**: C++17, Node.js
+- **Data Visualization**: Python, Matplotlib
 
-🎨 **Beautiful UI**
-- Material-UI components with built-in accessibility
-- Dark/Light theme toggle
-- Responsive design that works on all devices
+## Installation
+To build the project, ensure you have a C++ compiler and CMake installed. 
 
-🔒 **Security First**
-- No known vulnerabilities in dependencies
-- Regular security audits
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js (version 18 or higher recommended)
-- npm or yarn
-
-### Installation
-
+1. Clone the repository:
 ```bash
-# Clone the repository
 git clone https://github.com/matiasmicheletto/digital-twin-task-scheduler.git
-
-# Navigate to the project directory
 cd digital-twin-task-scheduler
+```
 
-# Install dependencies
+2. Generate instances using the graphical interface:
+```bash
+cd gui
 npm install
-```
-
-### Development
-
-```bash
-# Start the development server
-npm run dev
-```
-
-The application will be available at `http://localhost:5173`
-
-### Build
-
-```bash
-# Build for production
 npm run build
+npm start
+cd ..
+```
+Open your browser and navigate to `http://localhost:5173` to access the GUI. Or use the pre-built version in the `dist` folder.
 
-# Preview production build
-npm run preview
+3. Generate large datasets of instances automatically (See scripts help manuals for custom presets):
+```bash
+cd data
+npm install
+node instance-generator.js presets
+node network-generator.js --batch presets
+cd ..
 ```
 
-The production build will be generated in the `dist` directory.
-
-## Project Structure
-
-```
-digital-twin-task-scheduler/
-├── public/            # Static assets
-│   └── vite.svg      # Vite logo
-├── src/              # Source files
-│   ├── App.css       # App component styles
-│   ├── App.jsx       # Main App component
-│   ├── index.css     # Global styles
-│   └── main.jsx      # Application entry point
-├── .gitignore        # Git ignore rules
-├── index.html        # HTML entry point
-├── package.json      # Project dependencies
-├── vite.config.js    # Vite configuration
-└── README.md         # This file
+4. Run solver:
+```bash
+cd solver
+make
+cd bin
+./solve -t tasks.json -n network.json
 ```
 
-## Available Scripts
-
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build locally
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-
-ISC
+5. Visualize schedule. Run solver with `-o csv` to generate `schedule.csv`, then:
+```bash
+cd data
+virtualenv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python gantt.py schedule.csv
+```
