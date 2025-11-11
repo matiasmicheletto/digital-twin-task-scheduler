@@ -7,9 +7,10 @@ export const getRandomScreenPosition = () => {
     };
 };
 
-export const exportJSON = data => {
-    const blob = new Blob([JSON.stringify(data, null, 2)], {
-        type: "application/json"
+export const exportFile = (data, json=false) => {
+    const text = json ? JSON.stringify(data, null, 2) : data;
+    const blob = new Blob([text], {
+        type: json ? "application/json" : "text/plain"
     });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -19,13 +20,13 @@ export const exportJSON = data => {
     URL.revokeObjectURL(url);
 };
 
-export const importJSON = file => {
+export const importFile = (file, json=false) => {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = (ev) => {
             try {
-                const data = JSON.parse(ev.target.result);
-                resolve(data);
+                const data = ev.target.result;
+                resolve(json ? JSON.parse(data) : data);
             } catch (err) {
                 alert("Failed to import: " + err.message);
                 reject(err);
@@ -33,20 +34,6 @@ export const importJSON = file => {
         };
         reader.readAsText(file);
     });
-};
-
-export const exportTXT = data => {
-    console.log("Exporting .dat file...");
-    console.log(data);
-    const blob = new Blob([data], {
-        type: "text/plain"
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "model.dat";
-    a.click();
-    URL.revokeObjectURL(url);
 };
 
 export const saveToLocalStorage = (key, data) => {

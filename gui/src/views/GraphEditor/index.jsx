@@ -17,9 +17,8 @@ import GraphLayout from "../../../../shared/graphLayout.js";
 import { NODE_TYPES } from "../../../../shared/network.js";
 import { taskEditDialogConfig, nodeEditDialogConfig, edgeEditDialogConfig } from "./dialogFormConfigs.js";
 import { 
-  importJSON, 
-  exportJSON,
-  exportTXT,
+  importFile, 
+  exportFile,
   saveToLocalStorage,
   loadFromLocalStorage,
   getRandomScreenPosition 
@@ -62,7 +61,8 @@ const View = () => {
     fromObject,
     graphToModel,
     modelToGraph,
-    modelsToDat
+    modelsToDat,
+    datToModels
   } = useGraph(mode);
 
   const toast = useToast();
@@ -322,10 +322,10 @@ const View = () => {
     layout.applyLayout(graph);
     // Add generated vertices to current network
     graphToModel(graph);
-  }
+  };
 
   const handleExport = format => {
-    if(format === "JSON"){
+    if(format === "JSON"){ // Network and Schedule are exported sepparaterly
       const svgRect = svgRef.current?.getBoundingClientRect();
       const viewportDimensions = svgRect ? { 
         width: svgRect.width, 
@@ -341,32 +341,35 @@ const View = () => {
         connections: graph.edges,
         viewportDimensions
       };
-      exportJSON(data);
+      exportFile(data, true); // Export in json format
     }
-    if(format === "DAT"){
-      exportTXT(modelsToDat());
+    if(format === "DAT"){ // Combined network and schedule for .dat export
+      exportFile(modelsToDat(), false); // Export in plain text format
     }
   };
 
-  const handleImport = file => {
-    importJSON(file).then(data => {
-      const model = mode === GRAPH_MODES.SCHEDULE ? {
-        vertices: data.tasks,
-        edges: data.precedences,
-        viewportDimensions: data.viewportDimensions
-      } : {
-        vertices: data.nodes,
-        edges: data.connections,
-        viewportDimensions: data.viewportDimensions
-      };
-      try{
-        graphToModel(model);
-        handleResetView();
-        toast(`Imported ${mode === GRAPH_MODES.SCHEDULE ? "schedule" : "network"} successfully`, "success");
-      } catch (error) {
-        toast(error.message, "error");
-      }
-    });
+  const handleImport = (file, format) => {
+    importFile(file, format === "JSON")
+      .then(data => {
+        const graph = format === "JSON" ? data : datToModels(data);
+        const modelGraph = mode === GRAPH_MODES.SCHEDULE ? {
+          vertices: graph.tasks,
+          edges: graph.precedences,
+          viewportDimensions: graph.viewportDimensions
+        } : {
+          vertices: graph.nodes,
+          edges: graph.connections,
+          viewportDimensions: graph.viewportDimensions
+        };
+        try{
+          graphToModel(modelGraph);
+          handleResetView();
+          toast(`Imported ${mode === GRAPH_MODES.SCHEDULE ? "schedule" : "network"} successfully`, "success");
+        } catch (error) {
+          toast(error.message, "error");
+        }
+        
+      });
   };
 
   return (

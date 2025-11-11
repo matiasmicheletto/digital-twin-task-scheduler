@@ -57,6 +57,8 @@ const AppBar = props => {
         setGenerateTasksMenuAnchorEl(null);
     };
 
+    const tag = mode === GRAPH_MODES.NETWORK ? " (Network)" : " (Schedule)";
+
     return (
         <MuiAppBar position="static" color="default" elevation={1}>
             <Toolbar variant="dense">
@@ -157,24 +159,41 @@ const AppBar = props => {
                         onClose={closeExportMenu}>
                         <MenuItem>
                             <label style={{ cursor: "pointer", width: "100%" }}>
-                            <input
-                                type="file"
-                                accept="application/json"
-                                style={{ display: "none" }}
-                                onChange={ev => {
-                                    const f = ev.target.files?.[0];
-                                    if (f) 
-                                    handleImport(f);
-                                    closeExportMenu();
-                                }}/>
-                            <Upload fontSize="small" sx={{ mr: 1 }} /> Import JSON
+                                <input
+                                    type="file"
+                                    accept="application/json"
+                                    style={{ display: "none" }}
+                                    onChange={ev => {
+                                        const f = ev.target.files?.[0];
+                                        if (f) 
+                                        handleImport(f, "JSON");
+                                        closeExportMenu();
+                                    }}/>
+                                <Upload fontSize="small" sx={{ mr: 1 }} /> 
+                                Import JSON {tag}
+                            </label>
+                        </MenuItem>
+                        <MenuItem>
+                            <label style={{ cursor: "pointer", width: "100%" }}>
+                                <input
+                                    type="file"
+                                    accept=".dat" 
+                                    style={{ display: "none" }}
+                                    onChange={ev => {
+                                        const f = ev.target.files?.[0];
+                                        if (f) 
+                                        handleImport(f, "DAT");
+                                        closeExportMenu();
+                                    }}/>
+                                <Upload fontSize="small" sx={{ mr: 1 }} /> 
+                                Import DAT {tag}
                             </label>
                         </MenuItem>
                         <MenuItem onClick={() => {closeExportMenu(); handleExport("JSON");}}>
-                            <Download fontSize="small" sx={{ mr: 1 }} /> Export JSON
+                            <Download fontSize="small" sx={{ mr: 1 }} /> Export JSON {tag}
                         </MenuItem>
                         <MenuItem onClick={() => {closeExportMenu(); handleExport("DAT");}}>
-                            <Download fontSize="small" sx={{ mr: 1 }} /> Export DAT
+                            <Download fontSize="small" sx={{ mr: 1 }} /> Export DAT (All)
                         </MenuItem>
                     </Menu>
                 </Stack>

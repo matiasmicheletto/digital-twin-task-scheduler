@@ -2,7 +2,7 @@ import { useScheduleContext } from "../../context/Model";
 import { useNetworkContext } from "../../context/Model";
 import { Task } from "../../../../shared/schedule";
 import { Node } from "../../../../shared/network";
-import modelToDat from "../../../../shared/modelToDat.js";
+import {modelToDat, datToModel} from "../../../../shared/datConversions.js";
 
 export const GRAPH_MODES = {
     SCHEDULE: "SCHEDULE", // Graph of tasks
@@ -18,7 +18,15 @@ const useGraph = mode => {
             ...schedule.scheduleToGraph(),
             ...network.networkToGraph()
         });
-    }
+    };
+
+    const datToSchedule = data => {
+        return datToModel(data).schedule;
+    };
+
+    const datToNetwork = data => {
+        return datToModel(data).network;
+    };
 
     const wrappers = {
         [GRAPH_MODES.SCHEDULE]: {
@@ -35,7 +43,9 @@ const useGraph = mode => {
             fromObject: Task.fromObject,
             graphToModel: schedule.scheduleFromGraph,
             modelToGraph: schedule.scheduleToGraph,
-            modelsToDat: toDat
+            // Following affect both schedule and network
+            modelsToDat: toDat,
+            datToModels: datToSchedule
         },
         [GRAPH_MODES.NETWORK]: {
             model: network,
@@ -51,7 +61,9 @@ const useGraph = mode => {
             fromObject: Node.fromObject,
             graphToModel: network.networkFromGraph,
             modelToGraph: network.networkToGraph,
-            modelsToDat: toDat
+            // Following affect both schedule and network
+            modelsToDat: toDat,
+            datToModels: datToNetwork
         }
     };
 
