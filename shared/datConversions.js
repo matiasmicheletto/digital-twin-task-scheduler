@@ -1,6 +1,7 @@
 import { generateUUID8 } from "./utils.js";
 
 export const modelToDat = (model) => {
+
     const lines = [];
 
     // Create reverse maps for IDs
@@ -64,7 +65,7 @@ export const modelToDat = (model) => {
     console.log("Generated DAT:");
     console.log(text);
 
-    return "";
+    return text;
 };
 
 export const datToModel = (datString) => {

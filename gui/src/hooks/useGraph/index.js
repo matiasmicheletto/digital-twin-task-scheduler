@@ -14,9 +14,13 @@ const useGraph = mode => {
     const network = useNetworkContext();
 
     const toDat = () => {
+        const scheduleGraph = schedule.scheduleToGraph();
+        const networkGraph = network.networkToGraph();
         return modelToDat({
-            ...schedule.scheduleToGraph(),
-            ...network.networkToGraph()
+            nodes: networkGraph.vertices,
+            tasks: scheduleGraph.vertices,
+            precedences: scheduleGraph.edges,
+            connections: networkGraph.edges
         });
     };
 

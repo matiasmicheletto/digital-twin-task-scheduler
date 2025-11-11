@@ -15,7 +15,7 @@ export const exportFile = (data, json=false) => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "graph.json";
+    a.download = "download" + (json ? ".json" : ".dat");
     a.click();
     URL.revokeObjectURL(url);
 };
