@@ -124,7 +124,7 @@ export default class TaskGenerator {
             const a = this.generateActivationTime(i);
             const M = this.generateMemory(C);
             
-            tasks.push(new Task(label, mist, C, T, D, a, M));
+            tasks.push(new Task(label, mist, C, T, D, a, M, null, null));
         }
         
         return tasks;

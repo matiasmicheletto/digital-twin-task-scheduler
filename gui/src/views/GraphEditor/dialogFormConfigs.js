@@ -16,6 +16,12 @@ export const taskEditDialogConfig = {
             type: "text"
         },
         {
+            attrName: "processorId",
+            label: "Processor",
+            type: "select",
+            options: []
+        },
+        {
             attrName: "C",
             label: "Execution Time",
             type: "number"

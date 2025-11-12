@@ -54,6 +54,7 @@ const View = () => {
   const [mode, setMode] = useState(GRAPH_MODES.SCHEDULE);
 
   const {
+    network,
     addVertex,
     removeVertex,
     connectVertices,
@@ -97,6 +98,18 @@ const View = () => {
   // For tasks/nodes and edges information display
   const vertices = getVertices();
   const edges = getEdges();
+
+  // Add list of available nodes to assign task processorId
+  if(mode === GRAPH_MODES.SCHEDULE){
+    // Update processorId options in task edit dialog
+    editDialogContent
+      .fields
+      .find(f => f.attrName === "processorId")
+      .options = [
+        { value: null, text: "Unassigned" },
+        ...network.getNodes().map(v => ({ value: v.id, text: v.label }))
+      ];
+  }
 
   useEffect(() => { // Auto-save to localStorage
     const autoSaveData = () => {

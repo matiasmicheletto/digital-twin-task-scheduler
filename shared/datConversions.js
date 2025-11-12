@@ -19,9 +19,9 @@ export const modelToDat = (model) => {
     // Write tasks
     lines.push(model.tasks.length.toString());
     model.tasks.forEach((task, index) => {
-        const numericId = index + 1;
+        const numericId = index;
         taskUuidToId[task.id] = numericId;
-        const allocatedNode = task.mist ? '1' : '0'; // Simplified allocation
+        const allocatedNode = task.processorId ? '1' : '0'; // Simplified allocation
         lines.push(`${numericId}\t${task.C}\t${task.T}\t${task.D}\t${task.a}\t${task.M}\t${allocatedNode}`);
     });
 

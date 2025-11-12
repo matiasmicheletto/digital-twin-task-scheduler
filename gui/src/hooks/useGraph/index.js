@@ -35,6 +35,8 @@ const useGraph = mode => {
     const wrappers = {
         [GRAPH_MODES.SCHEDULE]: {
             model: schedule,
+            network: network,
+            schedule: schedule,
             addVertex: schedule.addTask,
             removeVertex: schedule.removeTask,
             deleteGraph: schedule.deleteSchedule,
@@ -53,6 +55,8 @@ const useGraph = mode => {
         },
         [GRAPH_MODES.NETWORK]: {
             model: network,
+            network: network,
+            schedule: schedule,
             addVertex: network.addNode,
             removeVertex: network.removeNode,
             deleteGraph: network.deleteNetwork,

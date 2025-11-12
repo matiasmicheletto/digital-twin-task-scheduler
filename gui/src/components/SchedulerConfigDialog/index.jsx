@@ -23,6 +23,8 @@ import {
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
+const accordionStyle = {backgroundColor: "transparent"};
+
 const SchedulerEditDialog = props => {
     const {
         dialogOpen,
@@ -168,13 +170,12 @@ const SchedulerEditDialog = props => {
             open={dialogOpen} 
             onClose={() => setDialogOpen(false)}
             maxWidth="md"
-            fullWidth
-        >
+            fullWidth>
             <DialogTitle>Task Graph Generator Configuration</DialogTitle>
             <DialogContent>
                 <Stack spacing={2} sx={{ mt: 1 }}>
                     {/* Graph Structure Section */}
-                    <Accordion defaultExpanded>
+                    <Accordion sx={accordionStyle}>
                         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                             <Typography variant="h6">Graph Structure</Typography>
                         </AccordionSummary>
@@ -258,19 +259,12 @@ const SchedulerEditDialog = props => {
                                     helperText="Proportion of tasks with fixed allocation"
                                 />
                                 
-                                <TextField
-                                    label="Task Prefix"
-                                    value={config.taskPrefix}
-                                    onChange={(e) => handleChange('taskPrefix', e.target.value)}
-                                    fullWidth
-                                    helperText="Prefix for task IDs (e.g., 'T' creates T1, T2...)"
-                                />
                             </Stack>
                         </AccordionDetails>
                     </Accordion>
 
                     {/* Execution Time (C) Section */}
-                    <Accordion>
+                    <Accordion sx={accordionStyle}>
                         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                             <Typography variant="h6">Execution Time (C)</Typography>
                         </AccordionSummary>
@@ -372,7 +366,7 @@ const SchedulerEditDialog = props => {
                     </Accordion>
 
                     {/* Period (T) Section */}
-                    <Accordion>
+                    <Accordion sx={accordionStyle}>
                         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                             <Typography variant="h6">Period (T)</Typography>
                         </AccordionSummary>
@@ -424,7 +418,7 @@ const SchedulerEditDialog = props => {
                     </Accordion>
 
                     {/* Deadline (D) Section */}
-                    <Accordion>
+                    <Accordion sx={accordionStyle}>
                         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                             <Typography variant="h6">Deadline (D)</Typography>
                         </AccordionSummary>
@@ -468,7 +462,7 @@ const SchedulerEditDialog = props => {
                     </Accordion>
 
                     {/* Activation Time (a) Section */}
-                    <Accordion>
+                    <Accordion sx={accordionStyle}>
                         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                             <Typography variant="h6">Activation Time (a)</Typography>
                         </AccordionSummary>
@@ -521,7 +515,7 @@ const SchedulerEditDialog = props => {
                     </Accordion>
 
                     {/* Memory (M) Section */}
-                    <Accordion>
+                    <Accordion sx={accordionStyle}>
                         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                             <Typography variant="h6">Memory (M)</Typography>
                         </AccordionSummary>
@@ -574,7 +568,7 @@ const SchedulerEditDialog = props => {
                     </Accordion>
 
                     {/* Utilization Control Section */}
-                    <Accordion>
+                    <Accordion sx={accordionStyle}>
                         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                             <Typography variant="h6">Utilization Control</Typography>
                         </AccordionSummary>

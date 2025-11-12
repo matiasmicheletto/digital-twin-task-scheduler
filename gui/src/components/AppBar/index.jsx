@@ -33,7 +33,6 @@ const AppBar = props => {
         handleResetView,
         handleDeleteVertices,
         handleGenerateSchedule,
-        handleCustomSchedule,
         handleGenerateNetwork,
         handleExport,
         handleImport
@@ -102,7 +101,7 @@ const AppBar = props => {
                                         handleGenerateSchedule(null);
                                         closeGenerateMenu();
                                     }}>
-                                    Custom Tasks
+                                    <b>Custom...</b>
                                 </MenuItem>
                             </Menu>
                         </>

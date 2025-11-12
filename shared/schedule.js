@@ -2,7 +2,7 @@ import { generateUUID8 } from './utils.js';
 const TASK_ATTRIBUTES = ['id', 'mist', 'label', 'C', 'T', 'D', 'a', 'M', 'successors', 'position'];
 
 export class Task {
-    constructor(label, mist, C, T, D, a, M, position) {
+    constructor(label, mist, C, T, D, a, M, position, processorId) {
         this.id = generateUUID8(); // Unique task identifier
         this.type = "TASK"; // For visualization purposes
         this.label = label; // Task name
@@ -17,6 +17,7 @@ export class Task {
             x: 400 + Math.random() * 200,
             y: 300 + Math.random() * 200
         };
+        this.processorId = processorId; // Assigned processor ID (null if unassigned)
     }
 
     static getAttributeNames() {
@@ -38,7 +39,7 @@ export class Task {
     }
 
     static fromObject(obj) {
-        const task = new Task(obj.label, obj.mist, obj.C, obj.T, obj.D, obj.a, obj.M, obj.position);
+        const task = new Task(obj.label, obj.mist, obj.C, obj.T, obj.D, obj.a, obj.M, obj.position, obj.processorId);
         if(obj.id) // If object has id, use it to preserve identity
             task.id = obj.id;
         if(obj.successors) // Same for successors
