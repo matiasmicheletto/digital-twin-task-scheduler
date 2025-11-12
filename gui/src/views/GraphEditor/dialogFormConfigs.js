@@ -2,6 +2,7 @@ import { NODE_TYPES, NODE_TYPE_LABELS } from "../../../../shared/network";
 
 export const taskEditDialogConfig = {
     title: "Edit Task",
+    type: "TASK",
     fields: [
         {
             attrName: "id",
@@ -50,6 +51,7 @@ export const taskEditDialogConfig = {
 
 export const nodeEditDialogConfig = {
     title: "Edit Node",
+    type: "NODE",
     fields: [
         {
             attrName: "id",
@@ -86,6 +88,7 @@ export const nodeEditDialogConfig = {
 
 export const edgeEditDialogConfig = {
     title: "Edit Link",
+    type: "EDGE",
     fields: [
         {
             attrName: "id",

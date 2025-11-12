@@ -1,5 +1,6 @@
 import Schedule, { Task } from '../shared/schedule.js';
 import small from './presets/small.json' with { type: "json" };
+import constantPeriod from './presets/constant-period.json' with { type: "json" };
 import medium from './presets/medium.json' with { type: "json" };
 import largeSparse from './presets/large-sparse.json' with { type: "json" };
 import largeDense from './presets/large-dense.json' with { type: "json" };
@@ -489,6 +490,7 @@ export default class TaskGenerator {
  */
 export const PRESETS = {
     small: small,
+    constantPeriod: constantPeriod,
     medium: medium,
     largeSparse: largeSparse,
     largeDense: largeDense,

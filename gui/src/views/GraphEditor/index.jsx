@@ -6,6 +6,7 @@ import {
 import MainView from "../../components/MainView";
 import SvgCanvas from "../../components/Svg";
 import EditDialog from "../../components/EditDialog";
+import SchedulerConfigDialog from "../../components/SchedulerConfigDialog";
 import AppBar from "../../components/AppBar";
 import SidePanel from "../../components/SidePanel";
 import useToast from "../../hooks/useToast";
@@ -15,7 +16,11 @@ import TaskGenerator from "../../../../shared/taskGenerator.js";
 import { GENERATORS } from "../../../../shared/networkGenerator.js";
 import GraphLayout from "../../../../shared/graphLayout.js";
 import { NODE_TYPES } from "../../../../shared/network.js";
-import { taskEditDialogConfig, nodeEditDialogConfig, edgeEditDialogConfig } from "./dialogFormConfigs.js";
+import { 
+  taskEditDialogConfig, 
+  nodeEditDialogConfig, 
+  edgeEditDialogConfig
+} from "./dialogFormConfigs.js";
 import { 
   importFile, 
   exportFile,
@@ -78,13 +83,18 @@ const View = () => {
   const [draggingVertex, setDraggingVertex] = useState(null);
   const [connectingFrom, setConnectingFrom] = useState(null);
   const [selectedVertex, setSelectedVertex] = useState(null);
+
+  // Dialogs
+  const [editDialogOpen, setEditDialogOpen] = useState(false); // Edit vertex/edge dialog
+  const [schedulerConfigDialogOpen, setSchedulerConfigDialogOpen] = useState(false); // Edit scheduler config dialog
   
-  // Task parameteres editing dialog
-  const [dialogOpen, setDialogOpen] = useState(false);
+  // To know which element is being edited in the dialog
   const [editingVertex, setEditingVertex] = useState(null);
   const [editingEdge, setEditingEdge] = useState(null);
-  const dialogConfig = editingEdge? edgeEditDialogConfig : (mode === GRAPH_MODES.SCHEDULE ? taskEditDialogConfig : nodeEditDialogConfig);
 
+  const editDialogContent = editingEdge? edgeEditDialogConfig : (mode === GRAPH_MODES.SCHEDULE ? taskEditDialogConfig : nodeEditDialogConfig);
+
+  // For tasks/nodes and edges information display
   const vertices = getVertices();
   const edges = getEdges();
 
@@ -169,7 +179,7 @@ const View = () => {
       try {
         const vrtx = fromObject(editingVertex);
         addVertex(vrtx); // Overwrites if id exists
-        setDialogOpen(false);
+        setEditDialogOpen(false);
         setEditingVertex(null);
         handleResetView();
         toast("Task saved successfully", "success");
@@ -180,7 +190,7 @@ const View = () => {
     if (editingEdge) {
       try {
         setEdgeProp(editingEdge.id, 'delay', editingEdge.delay);
-        setDialogOpen(false);
+        setEditDialogOpen(false);
         setEditingEdge(null);
         toast("Link saved successfully", "success");
       } catch (error) {
@@ -206,7 +216,7 @@ const View = () => {
       label: edge.label,
       delay: edge.delay
     });
-    setDialogOpen(true);
+    setEditDialogOpen(true);
   }
 
   const handleVertexContextMenu = (e, vertexId) => {
@@ -281,25 +291,29 @@ const View = () => {
   };
 
   const handleGenerateSchedule = config => {
-    deleteGraph();
-    const generator = new TaskGenerator(config); // Random task set generator
-    const schedule = generator.generate(); // Generate random schedule
-    // Apply graph layout to organize vertices
-    const svgRect = svgRef.current?.getBoundingClientRect();
-    const viewportDimensions = svgRect ? { 
-      width: svgRect.width, 
-      height: svgRect.height 
-    } : null;
-    const layout = new GraphLayout({
-      width: viewportDimensions?.width || 1200,
-      height: viewportDimensions?.height || 800,
-      horizontalSpacing: 150,
-      verticalSpacing: 100
-    });
-    const graph = schedule.toGraph();
-    layout.applyLayout(graph);
-    // Add generated vertices to current schedule
-    graphToModel(graph);
+    if(config){
+      deleteGraph();
+      const generator = new TaskGenerator(config); // Random task set generator
+      const schedule = generator.generate(); // Generate random schedule
+      // Apply graph layout to organize vertices
+      const svgRect = svgRef.current?.getBoundingClientRect();
+      const viewportDimensions = svgRect ? { 
+        width: svgRect.width, 
+        height: svgRect.height 
+      } : null;
+      const layout = new GraphLayout({
+        width: viewportDimensions?.width || 1200,
+        height: viewportDimensions?.height || 800,
+        horizontalSpacing: 150,
+        verticalSpacing: 100
+      });
+      const graph = schedule.toGraph();
+      layout.applyLayout(graph);
+      // Add generated vertices to current schedule
+      graphToModel(graph);
+    }else{
+      setSchedulerConfigDialogOpen(true);
+    }
   };
 
   const handleGenerateNetwork = config => {
@@ -398,7 +412,7 @@ const View = () => {
               handleStartConnecting={handleStartConnecting}
               setEditingVertex={setEditingVertex}
               setEditingEdge={setEditingEdge}
-              setDialogOpen={setDialogOpen}
+              setEditDialogOpen={setEditDialogOpen}
               removeVertex={removeVertex}
               disconnectVertices={disconnectVertices} />
 
@@ -422,13 +436,17 @@ const View = () => {
           </Box> 
 
           <EditDialog
-              dialogConfig={dialogConfig}
-              dialogOpen={dialogOpen}
-              setDialogOpen={setDialogOpen}
+              editDialogContent={editDialogContent}
+              dialogOpen={editDialogOpen}
+              setDialogOpen={setEditDialogOpen}
               editingElement={editingVertex || editingEdge}
               setEditingElement={handleSetEditingElement}
-              handleSave={handleSaveElement}
-          />
+              handleSave={handleSaveElement} />
+
+          <SchedulerConfigDialog
+            dialogOpen={schedulerConfigDialogOpen}
+            setDialogOpen={setSchedulerConfigDialogOpen}
+            generateSchedule={handleGenerateSchedule} />
       </Paper>
     </MainView>
   );

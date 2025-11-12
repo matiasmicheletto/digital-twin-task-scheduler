@@ -1,0 +1,15 @@
+{
+    "name": "Constant Period (T=40)",
+    "numTasks": 10,
+    "graphType": "layered",
+    "layers": 4,
+    "mistTaskRatio": 0.2,
+    "C": { "strategy": "uniform", "min": 1, "max": 10 },
+    "T": { 
+      "strategy": "harmonic", 
+      "values": [40]
+    },
+    "D": { "strategy": "implicit" },
+    "a": { "strategy": "zero" },
+    "M": { "strategy": "uniform", "min": 1, "max": 5 }
+  }

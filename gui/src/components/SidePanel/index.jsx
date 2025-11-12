@@ -33,7 +33,7 @@ const SidePanel = props => {
         handleStartConnecting,
         setEditingVertex,
         setEditingEdge,
-        setDialogOpen,
+        setEditDialogOpen,
         removeVertex,
         disconnectVertices
     } = props;
@@ -45,13 +45,13 @@ const SidePanel = props => {
             setEditingVertex(defaultVertex);
         }
         setEditingEdge(null);
-        setDialogOpen(true);
+        setEditDialogOpen(true);
     };
 
     const handleEditEdge = (edge) => {
         setEditingEdge({ ...edge });
         setEditingVertex(null);
-        setDialogOpen(true);
+        setEditDialogOpen(true);
     };
 
     return (

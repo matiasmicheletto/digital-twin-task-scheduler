@@ -19,7 +19,7 @@ import {
 const EditDialog = props => {
 
     const {
-        dialogConfig,
+        editDialogContent,
         dialogOpen,
         setDialogOpen,
         editingElement,
@@ -33,10 +33,10 @@ const EditDialog = props => {
 
     return (
         <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="xs" fullWidth>
-            <DialogTitle>{dialogConfig.title}</DialogTitle>
+            <DialogTitle>{editDialogContent.title}</DialogTitle>
             <DialogContent>
                 <Stack spacing={2} sx={{ mt: 1 }}>
-                    {dialogConfig.fields.map(field => (
+                    {editDialogContent.fields.map(field => (
                         <React.Fragment key={field.attrName}>
                             {field.type === "text" && 
                                 <TextField
