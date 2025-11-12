@@ -39,6 +39,7 @@ export class Node {
             x: 400 + Math.random() * 200,
             y: 300 + Math.random() * 200
         };
+        this.allocatedTasks = []; // Tasks allocated to this node
     }
 
     addLink(link) {
@@ -60,6 +61,23 @@ export class Node {
         }else{
             throw new Error(`Invalid link attribute: ${attr}`);
         }
+    }
+
+    allocateTask(taskId) {
+                
+        if(this.type === NODE_TYPES.MIST && this.allocatedTasks.length >= 1) {
+            throw new Error("Mist nodes can only have one task allocated at a time");
+        }
+
+        this.allocatedTasks.push(taskId);
+    }
+
+    deallocateTask(taskId) {
+        this.allocatedTasks = this.allocatedTasks.filter(tid => tid !== taskId);
+    }
+
+    clearAllocatedTasks() {
+        this.allocatedTasks = [];
     }
 
     static fromObject(obj) {
@@ -150,6 +168,38 @@ export default class Network {
         const sourceNode = this.nodes.get(sourceId);
         if(sourceNode) {
             sourceNode.removeLink(targetId);
+        }
+    }
+
+    allocateTaskToNode(taskId, nodeId) {
+        const node = this.nodes.get(nodeId);
+    
+        if(!node) {
+            throw new Error(`Node with id ${nodeId} does not exist`);
+        }
+
+        node.allocateTask(taskId); // Will throw error if allocation fails
+    }
+
+    deallocateTaskFromNode(taskId, nodeId) {
+        const node = this.nodes.get(nodeId);
+        if(!node) {
+            throw new Error(`Node with id ${nodeId} does not exist`);
+        }
+        node.deallocateTask(taskId);
+    }
+
+    clearAllocatedTasks(nodeId) {
+        const node = this.nodes.get(nodeId);
+        if(!node) {
+            throw new Error(`Node with id ${nodeId} does not exist`);
+        }
+        node.clearAllocatedTasks();
+    }
+
+    clearAllAllocatedTasks() {
+        for(let node of this.nodes.values()) {
+            node.clearAllocatedTasks();
         }
     }
 

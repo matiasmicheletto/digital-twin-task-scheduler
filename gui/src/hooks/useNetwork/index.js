@@ -53,6 +53,21 @@ const useNetwork = () => {
         forceUpdate();
     }, []);
 
+    const allocateTaskToNode = useCallback((taskId, nodeId) => {
+        networkRef.current.allocateTaskToNode(taskId, nodeId);
+        forceUpdate();
+    }, []);
+
+    const deallocateTaskFromNode = useCallback((taskId, nodeId) => {
+        networkRef.current.deallocateTaskFromNode(taskId, nodeId);
+        forceUpdate();
+    }, []);
+
+    const clearAllAllocatedTasks = useCallback(() => {
+        networkRef.current.clearAllAllocatedTasks();
+        forceUpdate();
+    }, []);
+
     const networkToGraph = useCallback(() => {
         return networkRef.current.toGraph();
     }, []);
@@ -73,6 +88,9 @@ const useNetwork = () => {
         getNodes,
         getConnections,
         setConnectionProp,
+        allocateTaskToNode,
+        deallocateTaskFromNode,
+        clearAllAllocatedTasks,
         networkToGraph,
         networkFromGraph
     };

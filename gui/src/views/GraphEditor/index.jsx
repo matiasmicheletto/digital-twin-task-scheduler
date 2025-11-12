@@ -180,6 +180,29 @@ const View = () => {
 
   const handleSetEditingElement = updatedElement => { // Update editing element state
     if (editingVertex) {
+      if(mode === GRAPH_MODES.SCHEDULE){
+        if(updatedElement.processorId) {
+          const assignedNode = network.getNode(updatedElement.processorId);
+          if(!assignedNode) {
+            toast("Assigned processor does not exist in the network", "error");
+            return;
+          }
+          if(assignedNode.type === NODE_TYPES.MIST && assignedNode.allocatedTasks.length >= 1) {
+            toast("Mist nodes can only have one task allocated at a time", "error");
+            return;
+          }
+          // Deallocate from previous node if processorId changed
+          const previousElement = getVertex(updatedElement.id);
+          if(previousElement.processorId && previousElement.processorId !== updatedElement.processorId) {
+            const previousNode = network.getNode(previousElement.processorId);
+            if(previousNode) {
+              previousNode.deallocateTask(updatedElement.id);
+            }
+          }
+          // Allocate to new node
+          assignedNode.allocateTask(updatedElement.id);
+        }
+      }
       setEditingVertex(updatedElement);
     }
     if (editingEdge) {
