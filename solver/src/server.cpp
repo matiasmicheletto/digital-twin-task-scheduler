@@ -4,7 +4,6 @@ Server Server::fromJSON(const nlohmann::json& j) {
     Server server;
     
     // Initial values
-    server.utilization = 0.0;
     server.last_slot = 0;
 
     server.id = utils::require_type<std::string>(j, "id");
@@ -24,6 +23,7 @@ Server Server::fromJSON(const nlohmann::json& j) {
     }
 
     server.memory = utils::require_type<int>(j, "memory");
+    server.utilization = utils::require_type<double>(j, "u");
 
     server.internal_id = -1; // Default value
 

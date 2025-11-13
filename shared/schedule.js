@@ -166,8 +166,7 @@ export default class Schedule {
                 precedences.push({ 
                     id: `${task.id}_${succId}`, 
                     from: task.id, 
-                    to: succId,
-                    bidirectional: false 
+                    to: succId
                 });
             }
         }

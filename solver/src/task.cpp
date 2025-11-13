@@ -13,13 +13,26 @@ Task Task::fromJSON(const nlohmann::json& j) {
     task.M = utils::require_type<int>(j, "M");
     task.a = utils::require_type<int>(j, "a");
     task.u = static_cast<double>(task.C) / static_cast<double>(task.T);
+    
+    // Handle processorId that can be string or null
+    if (j.contains("processorId") && !j["processorId"].is_null()) {
+        task.allocatedTo = utils::require_type<std::string>(j, "processorId");
+    } else {
+        task.allocatedTo = ""; // or some default value indicating unallocated
+    }
 
     if(j.contains("successors"))
         task.successors = utils::require_type<std::vector<std::string>>(j, "successors");
 
-    task.hasSuccessors = task.successors.size() > 0;
+    task.start_time = 0;
+    task.finish_time = task.start_time + task.C;
 
-    task.internal_id = -1; // Default value
+    // Following attributes will be set by DigitalTwin during tasks system loading
+    task.internal_id = -1;
+    task.successors.clear();
+    task.predecessors.clear();
+    task.successor_internal_ids.clear();
+    task.predecessor_internal_ids.clear();
 
     return task;
 }
@@ -35,6 +48,7 @@ void Task::print() const {
     std::cout << "Memory requirement (M): " << M << "\n";
     std::cout << "Utilization (u): " << u << "\n";
     
+    bool hasSuccessors = successors.size() > 0;
     std::cout << "Has successors: " << (hasSuccessors ? "Yes" : "No") << "\n";
     if (hasSuccessors) {
         std::cout << "Successors: ";

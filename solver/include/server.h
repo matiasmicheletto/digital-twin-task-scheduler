@@ -22,15 +22,15 @@ public:
 
     int internal_id; // Internal ID used for scheduling algorithms
 
-    std::string getId() const { return id; }
-    ServerType getType() const { return type; }
-    std::string getLabel() const { return label; }
-    int getMemory() const { return memory; }
-    int getUtilization() const { return utilization; }
-    int getLastSlot() const { return last_slot; }
+    inline std::string getId() const { return id; }
+    inline ServerType getType() const { return type; }
+    inline std::string getLabel() const { return label; }
+    inline int getMemory() const { return memory; }
+    inline double getUtilization() const { return utilization; }
+    inline int getLastSlot() const { return last_slot; }
     
-    const std::deque<Task>& getAssignedTasks() const { return assigned_tasks; }
-    std::deque<Task>& getAssignedTasks() { return assigned_tasks; }
+    inline const std::deque<Task>& getAssignedTasks() const { return assigned_tasks; }
+    inline std::deque<Task>& getAssignedTasks() { return assigned_tasks; }
     inline void clearTasks() { assigned_tasks.clear(); }
 
     inline void pushBackTask(const Task& task) { assigned_tasks.push_back(task); }
@@ -41,7 +41,7 @@ private:
     ServerType type;
     std::string label;
     int memory; // Total memory
-    int utilization; // 0-1
+    double utilization; // 0-1
     int last_slot; // Last slot occupied by a task
     std::deque<Task> assigned_tasks;
 };

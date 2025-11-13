@@ -144,6 +144,7 @@ T require_type(const nlohmann::json& obj, const std::string& key) {
 template int require_type<int>(const nlohmann::json&, const std::string&);
 template bool require_type<bool>(const nlohmann::json&, const std::string&);
 template std::string require_type<std::string>(const nlohmann::json&, const std::string&);
+template double require_type<double>(const nlohmann::json&, const std::string&);
 template std::vector<std::string> require_type<std::vector<std::string>>(const nlohmann::json&, const std::string&);
 
 } // namespace utils

@@ -54,7 +54,8 @@ void DigitalTwin::loadTasksFromJSONFile(const std::string& file_path) {
         throw std::runtime_error("JSON file does not contain a valid 'tasks' array");
     }
 
-    tasks.reserve(j.at("tasks").size());
+    size_t num_tasks = j.at("tasks").size();
+    tasks.reserve(num_tasks);
     int task_index = 0;
     for (const auto& jt : j.at("tasks")) {
         Task task = Task::fromJSON(jt);
@@ -69,14 +70,29 @@ void DigitalTwin::loadTasksFromJSONFile(const std::string& file_path) {
             std::string from_id = utils::require_type<std::string>(jp, "from");
             std::string to_id = utils::require_type<std::string>(jp, "to");
 
+            // Add predecessor
             auto to_it = std::find_if(tasks.begin(), tasks.end(), [&](const Task& t) {
                 return t.getId() == to_id;
             });
             if (to_it != tasks.end()) {
-                to_it->addPredecessor(from_id);
+                int predecessor_internal_id = to_it->internal_id;
+                to_it->addPredecessor(from_id, predecessor_internal_id);
+
             } else {
                 throw std::runtime_error("Invalid to_id in precedence: " + to_id);
             }
+            
+            // Add successor 
+            auto from_it = std::find_if(tasks.begin(), tasks.end(), [&](const Task& t) {
+                return t.getId() == from_id;
+            });
+            if (from_it != tasks.end()) {
+                int successor_internal_id = from_it->internal_id;
+                from_it->addSuccessor(to_id, successor_internal_id);
+            } else {
+                throw std::runtime_error("Invalid from_id in precedence: " + from_id);
+            }
+
         }
     }
 
@@ -188,7 +204,7 @@ bool DigitalTwin::schedule(const Candidate& candidate)
     }
 
     // -------------------------------------------------------------
-    // STEP 2 — Build fast lookup using internal_id
+    // STEP 2 — Build fast lookup using internal_id of tasks
     // -------------------------------------------------------------
     // Maps internal_id -> pointer to task IN THE SERVER's deque
     std::vector<Task*> id_to_task(num_tasks, nullptr);
@@ -208,52 +224,45 @@ bool DigitalTwin::schedule(const Candidate& candidate)
     // -------------------------------------------------------------
     // STEP 3 — Compute start and finish times (non-preemptive)
     // -------------------------------------------------------------
-    for (size_t s = 0; s < num_servers; ++s) {
+    bool updated = true;
+    while (updated) {
+        updated = false;
+        for (size_t s = 0; s < num_servers; ++s) {
+            int current_time = 0;
+            for (Task& task : servers[s].getAssignedTasks()) {
+                int earliest_start = current_time; // Based on server availability
 
-        auto& assigned = servers[s].getAssignedTasks();
-        int current_time = 0;
-
-        for (Task& task : assigned) {
-
-            // Compute earliest start time from predecessors
-            int earliest_start = 0;
-
-            for (int pred_internal_id : task.getPredecessorInternalIds()) {
-
-                // Predecessor must exist in the mapping
-                if (pred_internal_id < 0 || pred_internal_id >= (int)num_tasks || 
-                    id_to_task[pred_internal_id] == nullptr) {
-                    utils::dbg << "Predecessor task internal_id " << pred_internal_id 
-                               << " not found for task " << task.getId() << "\n";
-                    feasible = false;
-                    break;
+                // Check predecessors
+                for (size_t i = 0; i < task.getPredecessors().size(); ++i) {
+                    int pred_internal_id = task.getPredecessorInternalIds()[i];
+                    if (pred_internal_id < 0 || pred_internal_id >= (int)num_tasks ||
+                        id_to_task[pred_internal_id] == nullptr) {
+                        utils::dbg << "Predecessor task internal_id " << pred_internal_id 
+                                   << " not found for task " << task.getId() << "\n";
+                        feasible = false;
+                        continue;
+                    }
+                    Task* pred_task = id_to_task[pred_internal_id];
+                    size_t pred_server_index = id_to_server[pred_internal_id];
+                    
+                    int pred_finish = pred_task->getFinishTime();
+                    
+                    int comm_delay = delay_matrix[pred_server_index][s];
+                    int ready_time = pred_finish + comm_delay;
+                    
+                    if (ready_time > earliest_start) {
+                        earliest_start = ready_time;
+                    }
                 }
 
-                Task* pred = id_to_task[pred_internal_id];
-                size_t from_s = id_to_server[pred_internal_id];
-                size_t to_s   = s;
+                if (task.getStartTime() != earliest_start) {
+                    task.setStartTime(earliest_start);
+                    updated = true;
+                }
 
-                int comm_delay = delay_matrix[from_s][to_s];
-
-                earliest_start = std::max(
-                    earliest_start,
-                    pred->getFinishTime() + comm_delay
-                );
+                current_time = task.getFinishTime();
             }
-
-            if (!feasible) break;
-
-            // Compute non-preemptive start considering the server timeline
-            int start_time  = std::max(current_time, earliest_start);
-            int finish_time = start_time + task.getC();
-
-            task.setStartTime(start_time);
-            task.setFinishTime(finish_time);
-
-            current_time = finish_time;
         }
-
-        if (!feasible) break;
     }
 
     // -------------------------------------------------------------
@@ -283,7 +292,7 @@ bool DigitalTwin::schedule(const Candidate& candidate)
             feasible = false;
         }
 
-        if (total_util > 1.0){
+        if (total_util > servers[s].getUtilization()){
             utils::dbg << "Utilization exceeded on server " << servers[s].getId() << ": "
                        << total_util << " > 1.0\n";
             feasible = false;

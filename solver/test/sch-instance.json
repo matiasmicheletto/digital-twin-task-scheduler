@@ -153,32 +153,27 @@
     {
       "id": "1b42f210_3aa47963",
       "from": "1b42f210",
-      "to": "3aa47963",
-      "bidirectional": false
+      "to": "3aa47963"
     },
     {
       "id": "3aa47963_9259435b",
       "from": "3aa47963",
-      "to": "9259435b",
-      "bidirectional": false
+      "to": "9259435b"
     },
     {
       "id": "9259435b_f85b43d9",
       "from": "9259435b",
-      "to": "f85b43d9",
-      "bidirectional": false
+      "to": "f85b43d9"
     },
     {
       "id": "c7b0719e_2b0892bc",
       "from": "c7b0719e",
-      "to": "2b0892bc",
-      "bidirectional": false
+      "to": "2b0892bc"
     },
     {
       "id": "2b0892bc_0c83bce8",
       "from": "2b0892bc",
-      "to": "0c83bce8",
-      "bidirectional": false
+      "to": "0c83bce8"
     }
   ]
 }
