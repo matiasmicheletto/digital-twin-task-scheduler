@@ -92,8 +92,8 @@ const SidePanel = props => {
                             }>
                             {mode === GRAPH_MODES.SCHEDULE && 
                                 <ListItemText 
-                                    primary={`${n.label} - ${n.mist ? "Mist" : "Edge/Cloud"}`} 
-                                    secondary={`C:${n.C} T:${n.T} D:${n.D} a:${n.a} M:${n.M}`} />
+                                    primary={`${n.label} - ${n.mist ? "Mist" : "Edge/Cloud"} - ${n.processorId ? "alloc." : ""}`} 
+                                    secondary={`C:${n.C} T:${n.T} D:${n.D} a:${n.a} M:${n.M}`}/>
                             }
                             {mode === GRAPH_MODES.NETWORK && 
                                 <ListItemText 

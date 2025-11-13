@@ -16,6 +16,15 @@ import {
 } from "@mui/material";
 
 
+const switchStyle = {
+    '& .MuiSwitch-switchBase.Mui-checked': {
+        color: '#2196f3', // blue when checked
+    },
+    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+        backgroundColor: '#2196f3', // blue track when checked
+    }
+};
+
 const EditDialog = props => {
 
     const {
@@ -76,14 +85,7 @@ const EditDialog = props => {
                                     <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
                                         <span style={{ fontSize: "14px" }}>{field.labelFalse}</span>
                                             <Switch
-                                                sx={{
-                                                    '& .MuiSwitch-switchBase.Mui-checked': {
-                                                    color: '#2196f3', // blue when checked
-                                                    },
-                                                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                                                    backgroundColor: '#2196f3', // blue track when checked
-                                                    },
-                                                }}
+                                                sx={switchStyle}
                                                 checked={editingElement ? editingElement[field.attrName] : false}
                                                 onChange={e => setAttr(field.attrName, e.target.checked)}
                                             />
@@ -96,8 +98,18 @@ const EditDialog = props => {
                 </Stack>
             </DialogContent>
             <DialogActions>
-                <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
-                <Button onClick={handleSave} variant="contained">Save</Button>
+                <Button 
+                    color="secondary"
+                    variant="contained"
+                    onClick={() => setDialogOpen(false)}>
+                        Cancel
+                </Button>
+                <Button 
+                    variant="contained"
+                    sx={{backgroundColor: "#2196f3"}}
+                    onClick={handleSave}>
+                        Save
+                </Button>
             </DialogActions>
         </Dialog>
     );
