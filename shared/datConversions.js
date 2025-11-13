@@ -1,6 +1,61 @@
 import { generateUUID8 } from "./utils.js";
 
-export const modelToDat = (model) => {
+export const modelToDat = model => {
+
+    /*
+        Model format:
+        {
+            nodes: [
+                {
+                    id: uuid,
+                    memory: number,
+                    u: number
+                },
+                ...
+            ],
+            tasks: [
+                {
+                    id: uuid,
+                    C: number,
+                    T: number,
+                    D: number,
+                    a: number,
+                    M: number,
+                    processorId: uuid | null
+                },
+                ...
+            ],
+            precedences: [
+                {
+                    from: taskUuid,
+                    to: taskUuid
+                },
+                ...
+            ],
+            connections: [
+                {
+                    from: nodeUuid,
+                    to: nodeUuid,
+                    delay: number
+                },
+                ...
+            ]
+        }
+
+        Output format:
+        N
+        nodeId    memory    u
+        ...
+        M
+        taskId    C    T    D    a    M    allocatedNode
+        ...
+        P
+        fromTaskId    toTaskId    exists (1/0)
+        ...
+        S
+        fromNodeId    toNodeId    delay
+        ...
+    */
 
     const lines = [];
 
@@ -19,7 +74,7 @@ export const modelToDat = (model) => {
     // Write tasks
     lines.push(model.tasks.length.toString());
     model.tasks.forEach((task, index) => {
-        const numericId = index;
+        const numericId = index + 1;
         taskUuidToId[task.id] = numericId;
         const allocatedNode = task.processorId ? '1' : '0'; // Simplified allocation
         lines.push(`${numericId}\t${task.C}\t${task.T}\t${task.D}\t${task.a}\t${task.M}\t${allocatedNode}`);
@@ -62,8 +117,8 @@ export const modelToDat = (model) => {
 
     const text = lines.join('\n');
 
-    console.log("Generated DAT:");
-    console.log(text);
+    //console.log("Generated DAT:");
+    //console.log(text);
 
     return text;
 };
@@ -202,10 +257,9 @@ export const datToModel = (datString) => {
     };
 
     // return model;
+    // console.log(model);
 
-    console.log(model);
-
-    return {
+    return { // Not implemented yet
         nodes: [],
         connections: [],
         tasks: [],

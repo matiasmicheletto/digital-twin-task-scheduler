@@ -46,7 +46,6 @@ export class Node {
         if(!(link instanceof Link)) {
             throw new Error("Invalid link object");
         }
-
         this.links.push(link);
     }
 

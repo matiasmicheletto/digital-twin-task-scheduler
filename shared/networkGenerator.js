@@ -132,7 +132,7 @@ export default class NetworkGenerator { // Base Network Generator Class
             id: node.id,
             type: node.type,
             label: node.label,
-            tasks: {},
+            allocatedTasks: [],
             memory: node.memory,
             u: node.u,
             links: node.links,
