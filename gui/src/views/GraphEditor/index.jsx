@@ -180,7 +180,7 @@ const View = () => {
 
   const handleSetEditingElement = updatedElement => { // Update editing element state
     if (editingVertex) {
-      if(mode === GRAPH_MODES.SCHEDULE){
+      if(mode === GRAPH_MODES.SCHEDULE){ // If assigning task to a processor, check constraints
         if(updatedElement.processorId) {
           const assignedNode = network.getNode(updatedElement.processorId);
           if(!assignedNode) {

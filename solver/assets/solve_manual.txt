@@ -7,20 +7,84 @@ NAME
    solve - Computes the optimal allocation of tasks to network nodes
 
 SYNOPSIS  
-   solve -t [TASK_FILE] -n [NETWORK_FILE] -o [OUTPUT_FORMAT]
+   solve [OPTIONS] -t [TASK_FILE] -n [NETWORK_FILE] -o [OUTPUT_FORMAT]
 
 DESCRIPTION:  
-   
+   This program loads two json files describing a set of precedence related tasks and a network architecture. Tasks have different attributes as computing time, period, deadline, memory requirements, between others and have to be allocated to nodes to their execution. The network on the other side is composed by a set of nodes. There are three types of nodes corresponding to the three network layers: MIST, EDGE and CLOUD. The nodes are connected by links, these last ones have delays indicated in time slots, and it is the time it takes for a task to send its output to its successor if it is allocated in another node. 
+   The program computes the optimal allocation of tasks to nodes in order to minimize the total period of the system.  
 
 OPTIONS:  
    -h, --help     Display this help message.  
+   -v, --version  Displays software version.  
    -t, --tasks    File with the tasks the instance. Must be in json format.
    -n, --network  File with the network of the instance. Must be in json format.
-   -o, --output   (optional) Output format. Must be "json" or "text". Default value is "text".  
+   -o, --output   (optional) Output format. Must be "json", "text" or "csv". Default value is "text".  
 
 EXAMPLES:  
    solve -t tasks.json -n network.json -o json
-   
+
+INPUT FILES FORMAT
+Schedule file:
+   tasks:
+   {
+      "id": "11ed2bef", // Unique identifier
+      "type": "TASK", // Not used
+      "label": "Task 0", // Label for easy task identifying
+      "mist": false, // If this task will be allocated to a mist node, cannot have predecessors
+      "C": 1, // Execution time
+      "T": 80, // Period
+      "D": 80, // Deadline (usually equal to period, but configurable)
+      "a": 0, // Activation time
+      "M": 1, // Memory requirement
+      "successors": [ // List of the IDs of the successor tasks
+         "507adb48"
+      ],
+      "position": { // Used to draw the network.
+         "x": 490.86759826529646,
+         "y": 365.87258340285246
+   }
+   precedences:
+   {
+      "id": "11ed2bef_507adb48", // Unique identifier
+      "from": "11ed2bef", // ID of predecessor task
+      "to": "507adb48", // ID of succesor task
+   }
+
+Network file:
+   "nodes":
+   {
+      "id": "983cb790", // Unique identifier
+      "type": "MIST", // Type can be MIST, EDGE or CLOUD
+      "label": "Mist 3", // Label for easy node identifying
+      "tasks": [], // List of preallocated tasks
+      "memory": 5, // Available memory
+      "u": 0.7217552226492681, // Maximum utilization factor available
+      "links": [ // List of connections to other nodes, reduntant
+        {
+          "id": "983cb790_b1996e39", // Unique link identifier (usually idFrom_idTo)
+          "label": "Mist 3 → Edge 1", // Label for easy link identifying
+          "sourceId": "983cb790", // ID of the source node
+          "targetId": "b1996e39", // ID of the target node
+          "delay": 3, // Delay of the link in time slots
+          "bidirectional": false // If data can be sent back and forth or not
+        }
+      ],
+      "position": { // Used to draw the network
+        "x": 144,
+        "y": 163
+      }
+   }
+   "connections": 
+   {
+      "id": "9acd628d_af0ac5f7", // Unique identifier
+      "label": "Mist 1 → Edge 5", // Label for easy link identifying
+      "from": "9acd628d", // ID of the source node
+      "to": "af0ac5f7", // ID of the target node
+      "delay": 8, // Delay of the link in time slots
+      "bidirectional": false // If data can be sent back and forth or not
+   }
+
+
 AUTHORS  
    Code was written by Dr. Matias J. Micheletto from IIDEPyS-GSJ (UNPSJB-CONICET) and supervised by Dr. Rodrigo Santos from ICIC (UNS-CONICET).  
 
