@@ -1,0 +1,184 @@
+{
+  "metadata": {
+    "name": "Preset: custom-small",
+    "generatedAt": "2025-11-06T17:27:24.952Z",
+    "config": {
+      "numTasks": 7,
+      "graphType": "chain",
+      "mistTaskRatio": 0.25,
+      "C": {
+        "min": 1,
+        "max": 5
+      },
+      "T": {
+        "strategy": "harmonic",
+        "values": [
+          10,
+          20,
+          40
+        ]
+      }
+    },
+    "stats": {
+      "numTasks": 7,
+      "numPrecedences": 5,
+      "graphType": "chain"
+    }
+  },
+  "tasks": [
+    {
+      "id": "1b42f210",
+      "type": "TASK",
+      "label": "Task 0",
+      "mist": false,
+      "C": 3,
+      "T": 40,
+      "D": 40,
+      "a": 0,
+      "M": 1,
+      "successors": [
+        "3aa47963"
+      ],
+      "position": {
+        "x": 551.4612133817966,
+        "y": 484.37682676255895
+      }
+    },
+    {
+      "id": "3aa47963",
+      "type": "TASK",
+      "label": "Task 1",
+      "mist": false,
+      "C": 5,
+      "T": 20,
+      "D": 20,
+      "a": 0,
+      "M": 1,
+      "successors": [
+        "9259435b"
+      ],
+      "position": {
+        "x": 426.43274523598853,
+        "y": 463.8311264896946
+      }
+    },
+    {
+      "id": "9259435b",
+      "type": "TASK",
+      "label": "Task 2",
+      "mist": false,
+      "C": 1,
+      "T": 40,
+      "D": 40,
+      "a": 0,
+      "M": 5,
+      "successors": [
+        "f85b43d9"
+      ],
+      "position": {
+        "x": 478.58066804095915,
+        "y": 300.5924386652757
+      }
+    },
+    {
+      "id": "f85b43d9",
+      "type": "TASK",
+      "label": "Task 3",
+      "mist": false,
+      "C": 1,
+      "T": 20,
+      "D": 20,
+      "a": 0,
+      "M": 4,
+      "successors": [],
+      "position": {
+        "x": 579.2590417626113,
+        "y": 373.23935734586354
+      }
+    },
+    {
+      "id": "c7b0719e",
+      "type": "TASK",
+      "label": "Task 4",
+      "mist": true,
+      "C": 1,
+      "T": 40,
+      "D": 40,
+      "a": 0,
+      "M": 2,
+      "successors": [
+        "2b0892bc"
+      ],
+      "position": {
+        "x": 533.6839763577818,
+        "y": 367.19935221850824
+      }
+    },
+    {
+      "id": "2b0892bc",
+      "type": "TASK",
+      "label": "Task 5",
+      "mist": false,
+      "C": 1,
+      "T": 20,
+      "D": 20,
+      "a": 0,
+      "M": 5,
+      "successors": [
+        "0c83bce8"
+      ],
+      "position": {
+        "x": 515.7603968905177,
+        "y": 334.1630627735338
+      }
+    },
+    {
+      "id": "0c83bce8",
+      "type": "TASK",
+      "label": "Task 6",
+      "mist": false,
+      "C": 5,
+      "T": 40,
+      "D": 40,
+      "a": 0,
+      "M": 2,
+      "successors": [],
+      "position": {
+        "x": 502.8252521498663,
+        "y": 381.88378240297874
+      }
+    }
+  ],
+  "precedences": [
+    {
+      "id": "1b42f210_3aa47963",
+      "from": "1b42f210",
+      "to": "3aa47963",
+      "bidirectional": false
+    },
+    {
+      "id": "3aa47963_9259435b",
+      "from": "3aa47963",
+      "to": "9259435b",
+      "bidirectional": false
+    },
+    {
+      "id": "9259435b_f85b43d9",
+      "from": "9259435b",
+      "to": "f85b43d9",
+      "bidirectional": false
+    },
+    {
+      "id": "c7b0719e_2b0892bc",
+      "from": "c7b0719e",
+      "to": "2b0892bc",
+      "bidirectional": false
+    },
+    {
+      "id": "2b0892bc_0c83bce8",
+      "from": "2b0892bc",
+      "to": "0c83bce8",
+      "bidirectional": false
+    }
+  ]
+}
