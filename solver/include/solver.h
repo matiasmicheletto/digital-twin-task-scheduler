@@ -1,16 +1,16 @@
 #ifndef SOLVER_H
 #define SOLVER_H
 
-#include "digital_twin.h"
+#include "scheduler.h"
 
 class Solver {
 public:
-    Solver(DigitalTwin& dt) : digital_twin(dt) {}
+    Solver(Scheduler& sch) : scheduler(sch) {}
 
     void solve();
 
 private: 
-    DigitalTwin& digital_twin;
+    Scheduler& scheduler;
 };
 
 

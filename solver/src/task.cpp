@@ -27,7 +27,7 @@ Task Task::fromJSON(const nlohmann::json& j) {
     task.start_time = 0;
     task.finish_time = task.start_time + task.C;
 
-    // Following attributes will be set by DigitalTwin during tasks system loading
+    // Following attributes will be set by Scheduler during tasks system loading
     task.internal_id = -1;
     task.successors.clear();
     task.predecessors.clear();

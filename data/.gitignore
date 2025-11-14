@@ -2,5 +2,6 @@ custom-presets/
 generated-tasks/
 generated-networks/
 schedules/
-plain/
+input_dat/
+output_dat/
 venv/

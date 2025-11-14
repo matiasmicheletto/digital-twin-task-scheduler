@@ -1,6 +1,6 @@
-#include "digital_twin.h"
+#include "scheduler.h"
 
-void DigitalTwin::loadTasksFromJSONFile(const std::string& file_path) {
+void Scheduler::loadTasksFromJSONFile(const std::string& file_path) {
 
     std::ifstream file(file_path);
     if (!file.is_open()) {
@@ -66,7 +66,7 @@ void DigitalTwin::loadTasksFromJSONFile(const std::string& file_path) {
     scheduled = false;
 }
 
-void DigitalTwin::loadNetworkFromJSONFile(const std::string& file_path) {
+void Scheduler::loadNetworkFromJSONFile(const std::string& file_path) {
 
     std::ifstream file(file_path);
     if (!file.is_open()) {

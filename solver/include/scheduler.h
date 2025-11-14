@@ -1,5 +1,5 @@
-#ifndef DIGITAL_TWIN_H
-#define DIGITAL_TWIN_H
+#ifndef SCHEDULER_H
+#define SCHEDULER_H
 
 #include <vector>
 #include <string>
@@ -25,9 +25,9 @@ struct Candidate { // Structure to compute tasks allocation to servers
     std::vector<double> priorities;   // Priority of each task to define order of execution
 };
 
-class DigitalTwin {
+class Scheduler {
     public:
-        DigitalTwin(std::string tasks_file, std::string network_file);
+        Scheduler(std::string tasks_file, std::string network_file);
         
         bool schedule(const Candidate& candidate);
         inline bool isScheduled() const { return scheduled; }
@@ -54,4 +54,4 @@ class DigitalTwin {
         void printJSON() const;
 };
 
-#endif // DIGITAL_TWIN_H
+#endif // SCHEDULER_H

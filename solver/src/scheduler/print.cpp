@@ -1,7 +1,7 @@
-#include "digital_twin.h"
+#include "scheduler.h"
 
-void DigitalTwin::printText() const {
-    std::cout << "Digital Twin Information:\n";
+void Scheduler::printText() const {
+    std::cout << "Scheduler Information:\n";
     
     std::cout << "Tasks (" << tasks.size() << "):\n";
     for (const auto& task : tasks) {
@@ -65,7 +65,7 @@ void DigitalTwin::printText() const {
     }
 }
 
-void DigitalTwin::printJSON() const {
+void Scheduler::printJSON() const {
     nlohmann::json j;
 
     j["tasks"] = nlohmann::json::array();
@@ -148,7 +148,7 @@ void DigitalTwin::printJSON() const {
     std::cout << j.dump(4) << std::endl; // Pretty print with 4 spaces indent
 }
 
-void DigitalTwin::exportScheduleToCSV() const {
+void Scheduler::exportScheduleToCSV() const {
     if (!scheduled) {
         throw std::runtime_error("Schedule not computed yet. Cannot export.");
     }
@@ -166,7 +166,7 @@ void DigitalTwin::exportScheduleToCSV() const {
     }
 }
 
-void DigitalTwin::print(utils::PRINT_TYPE format) const {
+void Scheduler::print(utils::PRINT_TYPE format) const {
     switch(format) {
         case utils::PRINT_TYPE::PLAIN_TEXT:
             printText();

@@ -5,7 +5,7 @@
 
 #include "../include/json.hpp"
 #include "../include/utils.h"
-#include "../include/digital_twin.h"
+#include "../include/scheduler.h"
 #include "../include/solver.h"
 
 
@@ -69,10 +69,10 @@ int main(int argc, char **argv) {
     }    
     
     try {
-        DigitalTwin dt(tsk_filename, nw_filename);
-        Solver solver(dt);
+        Scheduler sch(tsk_filename, nw_filename);
+        Solver solver(sch);
         solver.solve();
-        dt.print(output_format);
+        sch.print(output_format);
         
     } catch (const std::exception& e) {
         utils::dbg << "Error: " << e.what() << "\n";
