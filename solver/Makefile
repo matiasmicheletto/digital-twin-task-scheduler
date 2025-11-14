@@ -13,7 +13,7 @@ MAIN_SOURCES = $(wildcard $(SRCDIR)/*_main.cpp)
 TARGETS      = $(patsubst $(SRCDIR)/%_main.cpp,$(BINDIR)/%,$(MAIN_SOURCES))
 
 # Common sources = everything except *_main.cpp
-COMMON_SOURCES = $(filter-out $(MAIN_SOURCES),$(wildcard $(SRCDIR)/*.cpp))
+COMMON_SOURCES = $(filter-out $(MAIN_SOURCES),$(shell find $(SRCDIR) -name '*.cpp'))
 COMMON_OBJECTS = $(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$(COMMON_SOURCES))
 
 HEADERS  = $(wildcard $(INCDIR)/*.hpp)
@@ -35,8 +35,10 @@ $(BINDIR)/%: $(COMMON_OBJECTS) $(OBJDIR)/%_main.o
 	@echo "$@ built successfully"
 
 # Compile rule for all .cpp files and move manual files to bin
-$(OBJDIR)/%.o: $(SRCDIR)/%.cpp $(HEADERS)
-	@mkdir -p $(@D)
+OBJFILES = $(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$(COMMON_SOURCES) $(MAIN_SOURCES))
+
+$(OBJDIR)/%.o: $(SRCDIR)/%.cpp
+	@mkdir -p $(dir $@)
 	@echo "Compiling $<..."
 	$(CPP) $(CFLAGS) $(INCLUDES) -c $< -o $@
 	@echo "$< compiled successfully"
