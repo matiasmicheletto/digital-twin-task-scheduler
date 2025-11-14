@@ -60,6 +60,7 @@ void Scheduler::loadTasksFromJSONFile(const std::string& file_path) {
 }
 
 void Scheduler::loadNetworkFromJSONFile(const std::string& file_path) {
+    // Must be executed after loading tasks to map allocated tasks to servers indices
 
     std::ifstream file(file_path);
     if (!file.is_open()) {
@@ -86,6 +87,20 @@ void Scheduler::loadNetworkFromJSONFile(const std::string& file_path) {
         server.internal_id = server_index;
         server_index++;
         servers.push_back(server);
+    }
+
+    // Find tasks preallocated to servers and map to server indices
+    for (auto& task : tasks) {
+        if (task.hasFixedAllocation()) {
+            std::string server_id = task.getFixedAllocationTo();
+            auto it = std::find_if(servers.begin(), servers.end(), [&](const Server& s) {
+                return s.getId() == server_id;
+            });
+            if (it == servers.end()) {
+                throw std::runtime_error("Task " + task.getId() + " has invalid fixed allocation to server: " + server_id);
+            }
+            task.fixedAllocationInternalId = it->internal_id;
+        }
     }
 
     if (!j.contains("connections") || !j.at("connections").is_array()) {

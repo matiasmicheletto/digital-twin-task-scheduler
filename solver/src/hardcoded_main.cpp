@@ -15,10 +15,10 @@ int main(int argc, char **argv) {
                << sch.getTaskCount() << " tasks and "
                << sch.getServerCount() << " servers.\n";
 
-    const Candidate candidate{
-            .server_indices = {0, 4, 5, 5, 2, 6, 4},
-            .priorities = {1.0, 0.5, 0.8, 1.0, 0.2, 0.33, 1.4}
-        };
+    // Hardcoded candidate assignment
+    Candidate candidate(sch.getTaskCount());
+    candidate.server_indices = {0, 4, 5, 5, 2, 6, 4};
+    candidate.priorities = {1.0, 0.5, 0.8, 1.0, 0.2, 0.33, 1.4};
 
     // Print candidate info
     utils::dbg << "Using hardcoded candidate:\n";

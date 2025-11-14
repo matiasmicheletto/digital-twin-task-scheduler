@@ -14,14 +14,15 @@ DESCRIPTION:
    The program computes the optimal allocation of tasks to nodes in order to minimize the total period of the system.  
 
 OPTIONS:  
-   -h, --help     Display this help message.  
-   -v, --version  Displays software version.  
-   -t, --tasks    File with the tasks the instance. Must be in json format.
-   -n, --network  File with the network of the instance. Must be in json format.
+   -t, --tasks    File with the tasks the instance. Must be in json format.  
+   -n, --network  File with the network of the instance. Must be in json format.  
+   -h, --help     (optional) Display this help message.  
+   -v, --version  (optional) Displays software version.  
+   -s, --solve    (optional) Execute solver. Else show instance description.  
    -o, --output   (optional) Output format. Must be "json", "text" or "csv". Default value is "text".  
 
-EXAMPLES:  
-   solve -t tasks.json -n network.json -o json
+EXAMPLE:  
+   solve -t tasks.json -n network.json -s -o json
 
 INPUT FILES FORMAT
 Schedule file:

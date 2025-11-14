@@ -34,8 +34,23 @@ void Scheduler::computeDelayMatrix() {
     }
 }
 
+struct PQItem {
+    double pr;
+    int idx;
+};
+
+struct Cmp {
+    bool operator()(const PQItem& a, const PQItem& b) const {
+        if (a.pr != b.pr) return a.pr < b.pr; // max-heap
+        return a.idx > b.idx; // deterministic tie-break by index (lower index first)
+    }
+};
 
 bool Scheduler::schedule(const Candidate& candidate) {
+    // Schedules tasks onto servers based on the candidate allocation and priorities
+    // Some tasks may be already allocated to specific servers (check task.fixedAllocationTo)
+    // Returns true if scheduling was successful, false otherwise (infeasible)
+
     const int N = (int)tasks.size();
     if ((int)candidate.server_indices.size() != N || (int)candidate.priorities.size() != N) {
         // invalid candidate size
@@ -51,13 +66,12 @@ bool Scheduler::schedule(const Candidate& candidate) {
     }
 
     // Ensure delay matrix is available
-    if (delay_matrix.empty()) computeDelayMatrix();
+    //if (delay_matrix.empty()) computeDelayMatrix();
     // Validate delay_matrix size vs servers
-    if ((int)delay_matrix.size() != (int)servers.size()) {
-        // unexpected state
-        utils::dbg << "Delay matrix size does not match number of servers.\n";
-        return false;
-    }
+    //if ((int)delay_matrix.size() != (int)servers.size()) {
+    //    utils::dbg << "Delay matrix size does not match number of servers.\n";
+    //    return false;
+    //}
 
     // 1) Compute indegree (number of predecessors) for each task
     std::vector<int> indeg(N, 0);
@@ -76,16 +90,6 @@ bool Scheduler::schedule(const Candidate& candidate) {
 
     // 2) Kahn's algorithm with priority tie-breaker:
     // We'll use a max-heap ordered by priority value (higher priority popped first).
-    struct PQItem {
-        double pr;
-        int idx;
-    };
-    struct Cmp {
-        bool operator()(const PQItem& a, const PQItem& b) const {
-            if (a.pr != b.pr) return a.pr < b.pr; // max-heap
-            return a.idx > b.idx; // deterministic tie-break by index (lower index first)
-        }
-    };
     std::priority_queue<PQItem, std::vector<PQItem>, Cmp> pq;
     for (int i = 0; i < N; ++i) {
         if (indeg[i] == 0) {
@@ -208,4 +212,16 @@ bool Scheduler::schedule(const Candidate& candidate) {
     // All tasks scheduled successfully
     scheduled = true;
     return true;
+}
+
+int Scheduler::getScheduleSpan() const {
+    if (!scheduled) {
+        utils::dbg << "Schedule not computed yet.\n";
+        return -1;
+    }
+    int span = 0;
+    for (const auto& t : tasks) {
+        span = std::max(span, t.getFinishTime());
+    }
+    return span;
 }

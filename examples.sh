@@ -1,0 +1,1 @@
+./bin/solve -t ../data/generated-tasks/preset-custom-small.json -n ../data/generated-networks/small.json -s -o csv > ../data/schedules/small.csv && python3 ../data/plot.py ../data/schedules/small.csv

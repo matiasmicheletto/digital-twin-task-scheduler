@@ -24,6 +24,10 @@ struct Connection { // Used to compute delay matrix
 struct Candidate { // Structure to compute tasks allocation to servers
     std::vector<int> server_indices; // Server assigned to each task
     std::vector<double> priorities;   // Priority of each task to define order of execution
+    Candidate(size_t task_count) {
+        server_indices.resize(task_count, -1);
+        priorities.resize(task_count, 0.0);
+    }
 };
 
 class Scheduler {
@@ -38,6 +42,8 @@ class Scheduler {
 
         inline const Task& getTask(size_t index) const { return tasks.at(index); }
         inline const Server& getServer(size_t index) const { return servers.at(index); }
+
+        int getScheduleSpan() const;
         
         void print(utils::PRINT_TYPE format = utils::PRINT_TYPE::PLAIN_TEXT) const;
         void exportScheduleToCSV() const;

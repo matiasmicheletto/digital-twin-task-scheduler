@@ -77,7 +77,7 @@ int main(int argc, char **argv) {
         Scheduler sch(tsk_filename, nw_filename);
         if(solve) {
             Solver solver(sch);
-            solver.solve();
+            solver.solve(SolverMethod::RANDOM_SEARCH);
         }
         sch.print(output_format);
         

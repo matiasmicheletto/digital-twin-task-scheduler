@@ -21,6 +21,7 @@ class Task {
         void print() const;
 
         int internal_id; // Internal ID used for scheduling algorithms
+        int fixedAllocationInternalId; // Internal ID of the server to which the task is allocated
 
         // Setters
         inline void setStartTime(int start) { start_time = start; finish_time = start_time + C; }
@@ -37,7 +38,8 @@ class Task {
         inline std::string getId() const { return id; }
         inline std::string getLabel() const { return label; }
         inline TaskType getType() const { return type; }
-        inline bool isAllocated() const { return !allocatedTo.empty(); }
+        inline bool hasFixedAllocation() const { return fixedAllocation; }
+        inline std::string getFixedAllocationTo() const { return fixedAllocationId; }
 
         inline int getC() const { return C; }
         inline int getT() const { return T; }
@@ -59,6 +61,9 @@ class Task {
         std::string id;
         TaskType type;
         std::string label;
+
+        bool fixedAllocation; // Whether the task has a fixed allocation
+        std::string fixedAllocationId; // ID of the server to which the task is allocated
         
         // Inmutable time variables measured in time slots
         int C; // Computation time
@@ -67,7 +72,6 @@ class Task {
         int a; // Activation time
         int start_time; // Start time
         int finish_time; // Finish time
-        std::string allocatedTo; // ID of the server to which the task is allocated
 
         // Resource requirements
         int M; // Memory
