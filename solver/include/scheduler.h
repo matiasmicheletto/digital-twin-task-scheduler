@@ -2,6 +2,7 @@
 #define SCHEDULER_H
 
 #include <vector>
+#include <queue>
 #include <string>
 #include <iomanip>
 #include <algorithm>
@@ -34,6 +35,9 @@ class Scheduler {
 
         inline size_t getTaskCount() const { return tasks.size(); }
         inline size_t getServerCount() const { return servers.size(); }
+
+        inline const Task& getTask(size_t index) const { return tasks.at(index); }
+        inline const Server& getServer(size_t index) const { return servers.at(index); }
         
         void print(utils::PRINT_TYPE format = utils::PRINT_TYPE::PLAIN_TEXT) const;
         void exportScheduleToCSV() const;
@@ -44,7 +48,7 @@ class Scheduler {
         std::vector<Connection> connections;
         std::vector<std::vector<int>> delay_matrix;
 
-        bool scheduled = false;
+        bool scheduled;
 
         void loadTasksFromJSONFile(const std::string& file_path);
         void loadNetworkFromJSONFile(const std::string& file_path);

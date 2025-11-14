@@ -101,17 +101,34 @@ export const modelToDat = model => {
     const numNodes = model.nodes.length;
     lines.push((numNodes * numNodes).toString());
 
-    for (let i = 1; i <= numNodes; i++) {
-        for (let j = 1; j <= numNodes; j++) {
-            const fromUuid = Object.keys(nodeUuidToId).find(key => nodeUuidToId[key] === i);
-            const toUuid = Object.keys(nodeUuidToId).find(key => nodeUuidToId[key] === j);
+    // Build delay matrix
+    const delayMatrix = Array.from({ length: numNodes }, () => Array(numNodes).fill(0));
+    model.connections.forEach(conn => {
+        const fromId = nodeUuidToId[conn.from];
+        const toId = nodeUuidToId[conn.to];
+        delayMatrix[fromId - 1][toId - 1] = conn.delay;
+    });
 
-            const connection = model.connections.find(
-                c => c.from === fromUuid && c.to === toUuid
-            );
+    // Floyd-Warshall algorithm for all-pairs shortest paths
+    for (let k = 0; k < numNodes; k++) {
+        for (let i = 0; i < numNodes; i++) {
+            for (let j = 0; j < numNodes; j++) {
+                if (delayMatrix[i][k] && delayMatrix[k][j]) {
+                    const newDelay = delayMatrix[i][k] + delayMatrix[k][j];
+                    if (delayMatrix[i][j] === 0 || newDelay < delayMatrix[i][j]) {
+                        delayMatrix[i][j] = newDelay;
+                    }
+                }
+            }
+        }
+    }
 
-            const delay = connection ? connection.delay : 0;
-            lines.push(`${i}\t${j}\t${delay}`);
+    for (let i = 0; i < numNodes; i++) {
+        for (let j = 0; j < numNodes; j++) {
+            const fromId = i + 1;
+            const toId = j + 1;
+            const delay = delayMatrix[i][j];
+            lines.push(`${fromId}\t${toId}\t${delay}`);
         }
     }
 
@@ -170,7 +187,7 @@ export const datToModel = (datString) => {
 
         tasks.push({
             id: taskId,
-            type: isMist ? "MIST" : "TASK",
+            type: "TASK",
             label: `Task ${id}`,
             mist: isMist,
             C: parseFloat(C),

@@ -19,9 +19,19 @@ void Scheduler::printText() const {
     std::cout << "\n" << "####################\n";
     std::cout << "Connections (" << connections.size() << "):\n";
     for (const auto& conn : connections) {
+        std::string fromServerLabel = "";
+        std::string toServerLabel = "";
+        for (const auto& server : servers) {
+            if (server.getId() == conn.from_server_id) {
+                fromServerLabel = server.getLabel();
+            }
+            if (server.getId() == conn.to_server_id) {
+                toServerLabel = server.getLabel();
+            }
+        }
         std::cout << "Connection ID: " << conn.id << "\n";
-        std::cout << "From Server ID: " << conn.from_server_id << "\n";
-        std::cout << "To Server ID: " << conn.to_server_id << "\n";
+        std::cout << "From Server ID: " << conn.from_server_id << " (" << fromServerLabel << ")\n";
+        std::cout << "To Server ID: " << conn.to_server_id << " (" << toServerLabel << ")\n";
         std::cout << "Delay: " << conn.delay << "\n";
         std::cout << "Bidirectional: " << (conn.bidirectional ? "Yes" : "No") << "\n";
         std::cout << "---------------------\n";

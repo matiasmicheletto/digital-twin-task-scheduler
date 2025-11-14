@@ -14,6 +14,7 @@ int main(int argc, char **argv) {
     std::string tsk_filename; // Tasks file (json)
     std::string nw_filename; // Network file (json)
     utils::PRINT_TYPE output_format = utils::PRINT_TYPE::PLAIN_TEXT;
+    bool solve = false;
 
     for(int i = 0; i < argc; i++) {  
         if(argc == 1) {
@@ -27,6 +28,10 @@ int main(int argc, char **argv) {
         
         if(strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0)
             utils::printHelp(MANUAL);
+
+        if(solve == false && (strcmp(argv[i], "-s") == 0 || strcmp(argv[i], "--solve") == 0)) {
+            solve = true;
+        }
 
         if(strcmp(argv[i], "-t") == 0 || strcmp(argv[i], "--tasks") == 0) {
             if(i+1 < argc) {
@@ -70,8 +75,10 @@ int main(int argc, char **argv) {
     
     try {
         Scheduler sch(tsk_filename, nw_filename);
-        Solver solver(sch);
-        solver.solve();
+        if(solve) {
+            Solver solver(sch);
+            solver.solve();
+        }
         sch.print(output_format);
         
     } catch (const std::exception& e) {

@@ -28,7 +28,7 @@ Schedule file:
    tasks:
    {
       "id": "11ed2bef", // Unique identifier
-      "type": "TASK", // Not used
+      "type": "TASK", // For visualization purposes only
       "label": "Task 0", // Label for easy task identifying
       "mist": false, // If this task will be allocated to a mist node, cannot have predecessors
       "C": 1, // Execution time
