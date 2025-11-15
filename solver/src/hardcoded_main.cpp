@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
     }   
 
     utils::dbg << "Scheduling with hardcoded candidate...\n";
-    bool feasible = sch.schedule(candidate);
+    sch.schedule(candidate);
 
     sch.print(utils::PRINT_TYPE::SCHEDULE_CSV);
 

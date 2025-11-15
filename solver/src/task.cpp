@@ -1,6 +1,7 @@
 #include "../include/task.h"
 
 Task Task::fromJSON(const nlohmann::json& j) {
+
     Task task;
 
     task.id = utils::require_type<std::string>(j, "id");
@@ -12,28 +13,46 @@ Task Task::fromJSON(const nlohmann::json& j) {
     task.D = utils::require_type<int>(j, "D");
     task.M = utils::require_type<int>(j, "M");
     task.a = utils::require_type<int>(j, "a");
-    task.u = static_cast<double>(task.C) / static_cast<double>(task.T);
     
+    // Calculate utilization, avoid division by zero
+    if (task.T <= 0) {
+        throw std::runtime_error("Task " + task.id + " has invalid period T: " + std::to_string(task.T) + " (must be > 0)");
+    }
+    task.u = static_cast<double>(task.C) / static_cast<double>(task.T);
+
     // Handle processorId that can be string or null
-    if (j.contains("processorId") && !j["processorId"].is_null()) {
+    task.fixedAllocation = j.contains("processorId") && !j["processorId"].is_null();
+    if (task.fixedAllocation) {
         task.fixedAllocationId = utils::require_type<std::string>(j, "processorId");
-        task.fixedAllocation = true;
         task.fixedAllocationInternalId = -1;
     } else {
         task.fixedAllocationId = ""; // or some default value indicating unallocated
-        task.fixedAllocation = false;
         task.fixedAllocationInternalId = -1;
     }
 
+    task.successors.clear();    
     if(j.contains("successors"))
         task.successors = utils::require_type<std::vector<std::string>>(j, "successors");
+
+    /*
+    utils::dbg << "Loaded Task ID: " << task.id << ": "
+            << "\n    Label: " << task.label 
+            << "\n    Type: " << (mist ? "MIST" : "REGULAR") 
+            << "\n    C: " << task.C 
+            << "\n    T: " << task.T 
+            << "\n    D: " << task.D 
+            << "\n    M: " << task.M 
+            << "\n    a: " << task.a 
+            << "\n    u: " << task.u
+            << "\n    Preallocated: " << (task.fixedAllocation ? "Yes, to " + task.fixedAllocationId : "No")
+            << "\n    Number of successors: " << task.successors.size() << "\n";
+    */
 
     task.start_time = 0;
     task.finish_time = task.start_time + task.C;
 
     // Following attributes will be set by Scheduler during tasks system loading
     task.internal_id = -1;
-    task.successors.clear();
     task.predecessors.clear();
     task.successor_internal_ids.clear();
     task.predecessor_internal_ids.clear();

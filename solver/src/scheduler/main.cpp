@@ -2,11 +2,11 @@
 
 Scheduler::Scheduler(std::string tasks_file, std::string network_file) {
     // Sets up the scheduler by loading tasks and network from JSON files
-    // Delay matrix is used to define start and finish times of tasks based on communication delays
     loadTasksFromJSONFile(tasks_file);
     loadNetworkFromJSONFile(network_file);
+    // Delay matrix is used to define start and finish times of tasks based on communication delays
     computeDelayMatrix();
-    scheduled = false;
+    scheduled = false; // Will turn true after successful scheduling
 }
 
 void Scheduler::computeDelayMatrix() {
@@ -59,6 +59,8 @@ bool Scheduler::schedule(const Candidate& candidate) {
     }
 
     // Build mapping from internal_id -> index in tasks vector
+
+    utils::dbg << "Starting scheduling of " << N << " tasks.\n";
     std::unordered_map<int,int> id2idx;
     id2idx.reserve(N);
     for (int i = 0; i < N; ++i) {
@@ -74,6 +76,7 @@ bool Scheduler::schedule(const Candidate& candidate) {
     //}
 
     // 1) Compute indegree (number of predecessors) for each task
+    utils::dbg << "Computing indegrees for tasks.\n";
     std::vector<int> indeg(N, 0);
     for (int i = 0; i < N; ++i) {
         const auto &pred_ids = tasks[i].getPredecessorInternalIds();
@@ -90,6 +93,7 @@ bool Scheduler::schedule(const Candidate& candidate) {
 
     // 2) Kahn's algorithm with priority tie-breaker:
     // We'll use a max-heap ordered by priority value (higher priority popped first).
+    utils::dbg << "Performing topological sort of tasks using Kahn's algorithm with priorities.\n";
     std::priority_queue<PQItem, std::vector<PQItem>, Cmp> pq;
     for (int i = 0; i < N; ++i) {
         if (indeg[i] == 0) {
@@ -97,6 +101,7 @@ bool Scheduler::schedule(const Candidate& candidate) {
         }
     }
 
+    utils::dbg << "Processing tasks in topological order.\n";
     std::vector<int> topo_order;
     topo_order.reserve(N);
     while (!pq.empty()) {
@@ -135,6 +140,7 @@ bool Scheduler::schedule(const Candidate& candidate) {
     for (auto &srv : servers) srv.clearTasks();
 
     // For each task in topological order compute earliest start
+    utils::dbg << "Assigning tasks to servers based on candidate allocation.\n";
     for (int idx : topo_order) {
         Task &t = tasks[idx];
 
@@ -210,6 +216,7 @@ bool Scheduler::schedule(const Candidate& candidate) {
     }
 
     // All tasks scheduled successfully
+    utils::dbg << "All tasks scheduled successfully.\n";
     scheduled = true;
     return true;
 }

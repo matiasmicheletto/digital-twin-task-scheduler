@@ -16,6 +16,7 @@ enum class TaskType {
 class Task {
     public:
         Task() = default;
+        ~Task() = default;
 
         static Task fromJSON(const nlohmann::json& j);
         void print() const;

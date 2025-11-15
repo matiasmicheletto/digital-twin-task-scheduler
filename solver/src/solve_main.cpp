@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
         if(strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0)
             utils::printHelp(MANUAL);
 
-        if(solve == false && (strcmp(argv[i], "-s") == 0 || strcmp(argv[i], "--solve") == 0)) {
+        if(strcmp(argv[i], "-s") == 0 || strcmp(argv[i], "--solve") == 0) {
             solve = true;
         }
 
@@ -72,6 +72,8 @@ int main(int argc, char **argv) {
             utils::dbg.rdbuf(std::cout.rdbuf()); // Enable debug output to std::cout
         }
     }    
+
+    utils::dbg << "Initializing Scheduler with tasks file: " << tsk_filename << " and network file: " << nw_filename << "\n";
     
     try {
         Scheduler sch(tsk_filename, nw_filename);

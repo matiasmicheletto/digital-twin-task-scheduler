@@ -25,10 +25,13 @@ void Scheduler::loadTasksFromJSONFile(const std::string& file_path) {
     tasks.reserve(num_tasks);
     int task_index = 0;
     for (const auto& jt : j.at("tasks")) {
-        Task task = Task::fromJSON(jt);
-        task.internal_id = task_index;
-        task_index++;
-        tasks.push_back(task);
+        try {
+            tasks.emplace_back(Task::fromJSON(jt));
+            tasks.back().internal_id = task_index;
+            task_index++;
+        } catch (const std::exception& e) {
+            throw std::runtime_error("Failed to load task " + std::to_string(task_index + 1) + ": " + std::string(e.what()));
+        }
     }
 
     // Compute predecessors from precedences
@@ -89,7 +92,10 @@ void Scheduler::loadNetworkFromJSONFile(const std::string& file_path) {
         servers.push_back(server);
     }
 
+    utils::dbg << "Loaded " << servers.size() << " servers from " << file_path << "\n";
+
     // Find tasks preallocated to servers and map to server indices
+    size_t fixedAllocationCount = 0;
     for (auto& task : tasks) {
         if (task.hasFixedAllocation()) {
             std::string server_id = task.getFixedAllocationTo();
@@ -100,8 +106,12 @@ void Scheduler::loadNetworkFromJSONFile(const std::string& file_path) {
                 throw std::runtime_error("Task " + task.getId() + " has invalid fixed allocation to server: " + server_id);
             }
             task.fixedAllocationInternalId = it->internal_id;
+            fixedAllocationCount++;
         }
     }
+
+    utils::dbg << "Mapped fixed allocations for " << fixedAllocationCount << " tasks.\n";
+
 
     if (!j.contains("connections") || !j.at("connections").is_array()) {
         throw std::runtime_error("JSON file does not contain a valid 'connections' array");
@@ -136,4 +146,6 @@ void Scheduler::loadNetworkFromJSONFile(const std::string& file_path) {
         
         connections.push_back(conn);
     }
+
+    utils::dbg << "Loaded " << connections.size() << " connections from " << file_path << "\n";
 }
