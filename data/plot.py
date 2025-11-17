@@ -5,11 +5,12 @@ import matplotlib.pyplot as plt
 
 def main():
     # Check arguments
-    if len(sys.argv) != 2:
-        print("Usage: python plot_gantt.py <schedule.csv>")
+    if len(sys.argv) < 2:
+        print("Usage: python plot_gantt.py <schedule.csv> [output.png]")
         sys.exit(1)
 
     input_file = sys.argv[1]
+    output_file = sys.argv[2] if len(sys.argv) >= 2 else None
 
     # Validate file
     if not os.path.isfile(input_file):
@@ -50,7 +51,12 @@ def main():
     ax.set_title("Task Schedule Gantt Chart")
 
     plt.tight_layout()
-    plt.show()
+    if output_file:
+        plt.savefig(output_file)
+        print(f"Saved Gantt chart to '{output_file}'")
+    else:
+        plt.show()
+    
 
 
 if __name__ == "__main__":

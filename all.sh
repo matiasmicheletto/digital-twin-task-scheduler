@@ -1,4 +1,4 @@
-#!bin/bash
+#!/bin/bash
 
 tasks_dir="data/generated-tasks"
 nets_dir="data/generated-networks"
@@ -17,11 +17,24 @@ for s in "$tasks_dir"/*.json; do
 
     out="$results_dir/${base_s}__${base_n}.csv"
 
-    .solver/bin/solve -s "$s" -n "$n" -s -o csv > "$out"
+    ./solver/bin/solve -t "$s" -n "$n" -s -o csv > "$out"
+
+    if [ $? -eq 0 ]; then
+      echo "Solved instance: tasks='$s', network='$n' -> result='$out'"
+    else
+      echo "Failed to solve instance: tasks='$s', network='$n'" >&2
+    fi
   done
 done
 
 # Generate charts from results
 source ./data/venv/bin/activate
-python3 data/make-charts.py --input-dir "$results_dir" --output-dir "$charts_dir"
+mkdir -p "$charts_dir"
+for r in "$results_dir"/*.csv; do
+  if [ ! -s "$r" ]; then # skip empty result files
+    continue
+  fi
+  out="$charts_dir/$(basename "$r" .csv)_gantt.png"
+  python3 ./data/plot.py "$r" "$out"
+done
 deactivate
