@@ -14,12 +14,10 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { GENERATORS, PRESETS as DEFAULT_PRESETS } from '../shared/networkGenerator.js';
+import { GENERATORS, PRESETS } from '../shared/networkGenerator.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-let PRESETS = DEFAULT_PRESETS;
 
 /**
  * Parse command line arguments
@@ -333,5 +331,3 @@ function main() {
 if (import.meta.url === `file://${process.argv[1]}`) {
     main();
 }
-
-export { generateNetwork, PRESETS };

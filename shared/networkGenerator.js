@@ -128,46 +128,38 @@ export default class NetworkGenerator { // Base Network Generator Class
     }
 
     formatOutput(network) {
-        const nodes = network.getNodes().map(node => ({
+        const vertices = network.getNodes().map(node => ({
             id: node.id,
-            type: node.type,
             label: node.label,
-            allocatedTasks: [],
+            type: node.type,
             memory: node.memory,
             u: node.u,
-            links: node.links,
-            position: node.position
+            position: node.position,
+            links: node.links.map(l => ({
+                id: l.id,
+                label: l.label,
+                sourceId: l.sourceId,
+                targetId: l.targetId,
+                delay: l.delay,
+                bidirectional: l.bidirectional
+            }))
         }));
 
-        const connections = [];
+        const edges = [];
         network.getNodes().forEach(node => {
             node.links.forEach(link => {
-                if (!connections.find(c => c.id === link.id)) {
-                    connections.push({
-                        id: link.id,
-                        label: link.label,
-                        from: link.sourceId,
-                        to: link.targetId,
-                        delay: link.delay,
-                        bidirectional: link.bidirectional
-                    });
-                }
+                edges.push({
+                    id: link.id,
+                    label: link.label,
+                    from: link.sourceId,
+                    to: link.targetId,
+                    delay: link.delay,
+                    bidirectional: link.bidirectional
+                });
             });
         });
 
-        /*
-        return {
-            nodes,
-            connections,
-            viewportDimensions: {
-                width: this.config.viewportWidth,
-                height: this.config.viewportHeight
-            }
-        };
-        */
-        const ntwrk = new Network();
-        ntwrk.fromGraph({vertices: nodes});
-        return ntwrk;
+        return { nodes: vertices, connections: edges };
     }
 }
 

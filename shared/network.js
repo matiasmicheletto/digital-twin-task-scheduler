@@ -1,4 +1,3 @@
-import { Task } from "./schedule.js";
 import { generateUUID8 } from "./utils.js";
 const LINK_ATTRIBUTES = ['id', 'sourceId', 'targetId', 'delay', 'bidirectional'];
 const NODE_ATTRIBUTES = ['id', 'label', 'type', 'memory', 'u', 'links', 'position'];
@@ -227,6 +226,19 @@ export default class Network {
         return connections;
     }
 
+    print() {
+        console.log("Network Nodes:");
+        for(let node of this.nodes.values()) {
+            console.log(`- Node ${node.id} (${node.label}, ${node.type}):`);
+            console.log(`  Memory: ${node.memory}, U: ${node.u}`);
+            console.log(`  Links:`);
+            for(let link of node.links) {
+                console.log(`    - Link ${link.id}: to Node ${link.targetId}, delay: ${link.delay}, bidirectional: ${link.bidirectional}`);
+            }
+            console.log(`  Allocated Tasks: ${node.allocatedTasks.join(", ")}`);
+        }
+    }
+
     setConnectionProp(linkId, attr, value) {
         console.log("3.- calling setEdgeProp");
         for(let node of this.nodes.values()) {
@@ -246,7 +258,7 @@ export default class Network {
         throw new Error(`Link with id ${linkId} not found`);
     }
 
-    toGraph() {
+    toGraph() { // for visualization: converts to {vertices: [], edges: []}
         const nodesArray = Array.from(this.nodes.values());
         const linksArray = [];
         for(let node of nodesArray) {
@@ -267,6 +279,10 @@ export default class Network {
     }
 
     fromGraph({vertices}) {
+
+        console.log("Importing network from graph...");
+        console.log(vertices);
+
         this.nodes.clear();
         for(let v of vertices) {
             // Parameters validation
