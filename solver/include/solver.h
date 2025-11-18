@@ -5,7 +5,8 @@
 
 enum class SolverMethod {
     RANDOM_SEARCH,
-    GENETIC_ALGORITHM
+    GENETIC_ALGORITHM,
+    SIMULATED_ANNEALING
 };
 
 class Solver {
@@ -18,6 +19,7 @@ private:
     Scheduler& scheduler;
     void randomSearchSolve();
     void geneticAlgorithmSolve();
+    void simulatedAnnealingSolve();
 };
 
 

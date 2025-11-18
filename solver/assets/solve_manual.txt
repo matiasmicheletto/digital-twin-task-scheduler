@@ -18,7 +18,7 @@ OPTIONS:
    -n, --network  File with the network of the instance. Must be in json format.  
    -h, --help     (optional) Display this help message.  
    -v, --version  (optional) Displays software version.  
-   -s, --solve    (optional) Execute solver. Else show instance description.  
+   -s, --solver   (optional) Choose solver. Options are "random", "genetic" or "annealing".
    -o, --output   (optional) Output format. Must be "json", "text" or "csv". Default value is "text".  
 
 EXAMPLE:  

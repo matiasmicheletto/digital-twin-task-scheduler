@@ -6,7 +6,9 @@ results_dir="data/schedules"
 charts_dir="data/charts"
 
 # Generate dataset
-./data/make-dataset.sh
+cd data
+./make-dataset.sh
+cd ..
 
 # Solve all instances and save results
 make --trace solver
@@ -15,12 +17,19 @@ for s in "$tasks_dir"/*.json; do
     base_s=$(basename "$s" .json)
     base_n=$(basename "$n" .json)
 
-    out="$results_dir/${base_s}__${base_n}.csv"
+    out_random="$results_dir/${base_s}__${base_n}_random.csv"
+    out_annealing="$results_dir/${base_s}__${base_n}_annealing.csv"
 
-    ./solver/bin/solve -t "$s" -n "$n" -s -o csv > "$out"
-
+    ./solver/bin/solve -t "$s" -n "$n" -s random -o csv > "$out_random"
     if [ $? -eq 0 ]; then
-      echo "Solved instance: tasks='$s', network='$n' -> result='$out'"
+      echo "Solved instance: tasks='$s', network='$n' -> result='$out_random'"
+    else
+      echo "Failed to solve instance: tasks='$s', network='$n'" >&2
+    fi
+
+    ./solver/bin/solve -t "$s" -n "$n" -s annealing -o csv > "$out_annealing"
+    if [ $? -eq 0 ]; then
+      echo "Solved instance: tasks='$s', network='$n' -> result='$out_annealing'"
     else
       echo "Failed to solve instance: tasks='$s', network='$n'" >&2
     fi

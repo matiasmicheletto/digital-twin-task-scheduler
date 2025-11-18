@@ -14,6 +14,7 @@ int main(int argc, char **argv) {
     std::string tsk_filename; // Tasks file (json)
     std::string nw_filename; // Network file (json)
     utils::PRINT_TYPE output_format = utils::PRINT_TYPE::PLAIN_TEXT;
+    SolverMethod method = SolverMethod::RANDOM_SEARCH;
     bool solve = false;
 
     for(int i = 0; i < argc; i++) {  
@@ -29,9 +30,25 @@ int main(int argc, char **argv) {
         if(strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0)
             utils::printHelp(MANUAL);
 
-        if(strcmp(argv[i], "-s") == 0 || strcmp(argv[i], "--solve") == 0) {
+        if(strcmp(argv[i], "-s") == 0 || strcmp(argv[i], "--solver") == 0) {
+            // Enable solving
             solve = true;
-        }
+            // Check for method
+            if(i+1 < argc) {
+                const char* mth = argv[i+1];
+                if(strcmp(mth, "random") == 0) {
+                    method = SolverMethod::RANDOM_SEARCH;
+                } else if (strcmp(mth, "genetic") == 0) {
+                    method = SolverMethod::GENETIC_ALGORITHM;
+                } else if (strcmp(mth, "annealing") == 0) {
+                    method = SolverMethod::SIMULATED_ANNEALING;
+                } else {
+                    utils::printHelp(MANUAL, "Error in argument -s (--solve). Supported methods are: random, genetic, annealing");
+                }
+            }else{
+                utils::printHelp(MANUAL, "Error in argument -s (--solve). A method must be provided");
+            }
+        }   
 
         if(strcmp(argv[i], "-t") == 0 || strcmp(argv[i], "--tasks") == 0) {
             if(i+1 < argc) {
@@ -77,10 +94,12 @@ int main(int argc, char **argv) {
     
     try {
         Scheduler sch(tsk_filename, nw_filename);
-        if(solve) {
+        
+        if(solve){
             Solver solver(sch);
-            solver.solve(SolverMethod::RANDOM_SEARCH);
+            solver.solve(method);
         }
+        
         sch.print(output_format);
         
     } catch (const std::exception& e) {
