@@ -1,0 +1,78 @@
+# instance.dat
+data;
+
+set TASKS := 1 2 3 4 5 6;
+set SERVERS := s1 s2;
+
+# Precedences: (h,i) pairs
+# Example: 1->3, 2->3, 3->4, 4->5, 2->6
+set PRE := (1,3) (2,3) (3,4) (4,5) (2,6);
+
+param: C :=
+1 2
+2 1
+3 3
+4 2
+5 1
+6 2
+;
+
+param: T :=
+1 10
+2 10
+3 10
+4 10
+5 10
+6 10
+;
+
+param: D :=
+1 10
+2 10
+3 10
+4 10
+5 10
+6 10
+;
+
+param: Mreq :=
+1 10
+2 5
+3 15
+4 8
+5 4
+6 6
+;
+
+param: util :=
+1 0.2
+2 0.1
+3 0.3
+4 0.15
+5 0.05
+6 0.2
+;
+
+param: U :=
+s1 1.0
+s2 0.6
+;
+
+param: MEM :=
+s1 40
+s2 20
+;
+
+# Communication delays (time slots)
+param Delta:
+      s1   s2 :=
+s1    0    2
+s2    2    0
+;
+
+param alpha := 1;
+param beta := 1;
+
+param BigM := 100;
+
+end;

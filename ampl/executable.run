@@ -1,0 +1,13 @@
+# executable.run
+
+model model.mod;
+data instance.dat;
+
+# Configure solver and run
+option solver gurobi;
+solve;
+
+# Show results
+display s, f;
+display L;
+display psi;
