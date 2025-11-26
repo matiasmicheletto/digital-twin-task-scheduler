@@ -10,7 +10,7 @@ cd data
 ./make-dataset.sh
 cd ..
 
-# Solve all instances and save results
+# Solve all instances with custom solver and save results
 make --trace solver
 for s in "$tasks_dir"/*.json; do
   for n in "$nets_dir"/*.json; do
@@ -35,6 +35,43 @@ for s in "$tasks_dir"/*.json; do
     fi
   done
 done
+
+
+# Solve all instances using AMPL solver
+runtime_file="runtimes.txt"
+touch "$runtime_file"
+
+for dat in data/generated-dat/*.dat; do
+    echo "Processing $dat..."
+
+    base=$(basename "$dat" .dat)
+    out="schedules-ampl/${base}.out"
+
+    start_ns=$(date +%s%N)
+
+    ampl <<EOF > "$out"
+model ampl/model.mod;
+data $dat;
+
+option solver gurobi;
+option gurobi_options "timelimit=180";
+
+solve;
+
+display s, f, L;
+EOF
+
+    end_ns=$(date +%s%N)
+    runtime_ms=$(( (end_ns - start_ns) / 1000000 ))
+    echo "ampl $base ${runtime_ms}ms" >> "$runtime_file"
+
+    echo "AMPL solved: $out"
+done
+
+
+
+
+
 
 # Generate charts from results
 source ./data/venv/bin/activate
