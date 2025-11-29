@@ -1,0 +1,7 @@
+{
+  "name": "Tiny network",
+  "topology": "star",
+  "mistCount": 2,
+  "edgeCount": 1,
+  "includeCloud": true
+}

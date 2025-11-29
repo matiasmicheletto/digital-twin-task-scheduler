@@ -1,0 +1,8 @@
+{
+  "name": "Dense random network",
+  "topology": "random",
+  "mistCount": 10,
+  "edgeCount": 5,
+  "connectionDensity": 0.8,
+  "includeCloud": true
+}

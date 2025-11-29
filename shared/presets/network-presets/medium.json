@@ -1,0 +1,7 @@
+{
+  "name": "Medium network",
+  "topology": "hierarchical",
+  "mistCount": 8,
+  "edgeCount": 4,
+  "includeCloud": true
+}

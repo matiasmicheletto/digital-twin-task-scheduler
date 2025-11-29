@@ -1,0 +1,8 @@
+{
+  "name": "Clustered network",
+  "topology": "cluster",
+  "mistCount": 12,
+  "edgeCount": 6,
+  "clusterCount": 2,
+  "includeCloud": true
+}

@@ -1,0 +1,8 @@
+{
+  "name": "Sparse random network",
+  "topology": "random",
+  "mistCount": 10,
+  "edgeCount": 5,
+  "connectionDensity": 0.2,
+  "includeCloud": true
+}

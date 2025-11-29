@@ -1,0 +1,8 @@
+{
+  "name": "Small network",
+  "topology": "random",
+  "mistCount": 4,
+  "edgeCount": 2,
+  "connectionDensity": 0.4,
+  "includeCloud": true
+}

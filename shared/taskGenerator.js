@@ -1,17 +1,36 @@
-import Schedule, { Task } from '../shared/schedule.js';
-import small from './presets/small.json' with { type: "json" };
-import constantPeriod from './presets/constant-period.json' with { type: "json" };
-import medium from './presets/medium.json' with { type: "json" };
-import largeSparse from './presets/large-sparse.json' with { type: "json" };
-import largeDense from './presets/large-dense.json' with { type: "json" };
-import pipeline from './presets/pipeline.json' with { type: "json" };
-import highUtilization from './presets/high-utilization.json' with { type: "json" };
-
 /**
  * Tasks Generator for Real-Time Task Scheduling
- * Creates task graphs with configurable parameters and topologies
+ * ==============================================
+ * This module generates a set of tasks with specified parameters and
+ * creates a directed acyclic graph (DAG) representing task precedences.
+ *
+ * Configuration Options:
+ * - numTasks: Total number of tasks to generate.
+ * - graphType: Type of task graph ('chain', 'tree', 'fork-join', 'random', 'layered', 'independent').
+ * - density: For random graphs, the density of connections (0-1).
+ * - mistTaskRatio: Proportion of tasks with fixed allocation (MIST tasks).
+ * - Parameter generation strategies for C (execution time), T (period), D (deadline), a (activation time), M (memory).
+ * - targetUtilization: If set, adjusts execution times to meet a target CPU utilization.
+ *
+ * Public Methods:
+ * - generate(): Generates and returns a Schedule object containing tasks and their precedences.
+ * ==============================================
+ * Example Usage:
+ * const generator = new TaskGenerator({ numTasks: 20, graphType: 'tree' });
+ * const schedule = generator.generate();
+ * ==============================================
  */
+
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import Schedule, { Task } from '../shared/schedule.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+export const PRESET_DIR = path.join(__dirname, 'presets/task-presets');
+
 export default class TaskGenerator {
+    
     constructor(config = {}) {
         this.config = {
             // Graph structure
@@ -485,40 +504,18 @@ export default class TaskGenerator {
     }
 }
 
-/**
- * Preset configurations for common test scenarios
- */
-export const PRESETS = {
-    small: small,
-    constantPeriod: constantPeriod,
-    medium: medium,
-    largeSparse: largeSparse,
-    largeDense: largeDense,
-    pipeline: pipeline,
-    highUtilization: highUtilization
-};
 
-/**
- * Example usage:
- * 
- * // Use a preset
- * const generator = new TaskGenerator(PRESETS.medium);
- * const schedule = generator.generate();
- * 
- * // Custom configuration
- * const customGenerator = new TaskGenerator({
- *     numTasks: 50,
- *     graphType: 'random',
- *     density: 0.3,
- *     targetUtilization: 0.75,
- *     C: { strategy: 'bimodal', modes: [
- *         { weight: 0.7, min: 1, max: 5 },
- *         { weight: 0.3, min: 8, max: 15 }
- *     ]},
- *     T: { strategy: 'harmonic', values: [10, 20, 40, 80, 160] }
- * });
- * const customSchedule = customGenerator.generate();
- * 
- * // Get graph representation
- * const { tasks, precedences } = schedule.toGraph();
- */
+export function loadPresets() {
+    const files = fs.readdirSync(PRESET_DIR).filter(f => f.endsWith('.json'));
+
+    return files.map(file => {
+        const preset = JSON.parse(
+            fs.readFileSync(path.join(PRESET_DIR, file), 'utf8')
+        );
+        return {
+            id: path.basename(file, '.json'),
+            ...preset
+        };
+    });
+}
+

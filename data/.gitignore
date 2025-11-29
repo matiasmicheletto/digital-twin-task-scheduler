@@ -1,7 +1,4 @@
-custom-presets/
-generated-tasks/
-generated-networks/
-generated-dat/
+instances/
 schedules/
 charts/
 venv/
