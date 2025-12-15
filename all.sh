@@ -1,8 +1,8 @@
 #!/bin/bash
 
-tasks_dir="data/generated-tasks"
-nets_dir="data/generated-networks"
-results_dir="data/schedules"
+tasks_dir="data/instances/tasks"
+nets_dir="data/instances/networks"
+results_dir="data/results/solver"
 charts_dir="data/charts"
 
 # Generate dataset
@@ -41,7 +41,7 @@ done
 runtime_file="runtimes.txt"
 touch "$runtime_file"
 
-for dat in data/generated-dat/*.dat; do
+for dat in data/instances/dat/*.dat; do
     echo "Processing $dat..."
 
     base=$(basename "$dat" .dat)
@@ -67,9 +67,6 @@ EOF
 
     echo "AMPL solved: $out"
 done
-
-
-
 
 
 

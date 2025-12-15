@@ -354,6 +354,7 @@ const View = () => {
 
   const handleGenerateNetwork = config => {
     deleteGraph();
+    console.log(config);
     const generator = new GENERATORS[config.generator](config); // Random network generator
     const network = generator.generate(); // Generate random network
     // Apply graph layout to organize vertices

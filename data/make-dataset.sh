@@ -1,8 +1,8 @@
 #!/bin/bash
 
-tasks_dir="generated-tasks"
-nets_dir="generated-networks"
-out_dir="generated-dat"
+tasks_dir="instances/tasks"
+nets_dir="instances/networks"
+out_dir="instances/dat"
 
 rm -r "$tasks_dir" "$nets_dir" "$out_dir"
 

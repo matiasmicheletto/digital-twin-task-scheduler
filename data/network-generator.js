@@ -14,8 +14,8 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import pkg from '../shared/networkGenerator.js';
-const { PRESETS, GENERATORS } = pkg;
+import {PRESETS, GENERATORS} from '../shared/networkGenerator.js';
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,6 +25,11 @@ const __dirname = path.dirname(__filename);
  */
 function parseArgs() {
     const args = process.argv.slice(2);
+
+    if( args.length === 0 ){
+        return null;
+    }
+
     const options = {
         preset: null,
         topology: null,
@@ -92,7 +97,7 @@ function parseArgs() {
                 break;
             case '--help':
             case '-h':
-                printHelp();
+                showHelp();
                 process.exit(0);
         }
     }
@@ -103,7 +108,8 @@ function parseArgs() {
 /**
  * Print help information
  */
-function printHelp() {
+function showHelp() {
+
     console.log(`
 Network Generator CLI
 
@@ -299,7 +305,11 @@ function main() {
     try {
         const options = parseArgs();
 
-        console.log('Network Instance Generator\n');
+        if( !options ){
+            showHelp();
+            process.exit(1);
+            return;
+        }
 
         // Batch mode
         if (options.batch === 'presets') {
@@ -318,7 +328,7 @@ function main() {
         // No valid mode specified
         else {
             console.error('Error: No generation mode specified.');
-            console.log('Use --preset, --topology, or --batch. See --help for details.\n');
+            showHelp();
             process.exit(1);
         }
 

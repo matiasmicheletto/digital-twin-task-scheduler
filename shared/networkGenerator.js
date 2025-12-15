@@ -1,5 +1,4 @@
 import Network, { Node, NODE_TYPES } from './network.js';
-import { twoDecimals } from './utils.js';
 import tiny from './presets/network-presets/tiny.json' with {type: 'json'};
 import small from './presets/network-presets/small.json' with {type: 'json'};
 import medium from './presets/network-presets/medium.json' with {type: 'json'};

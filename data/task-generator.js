@@ -18,7 +18,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import pkg from '../shared/taskGenerator.js';
-const { TaskGenerator } = pkg;
+import TaskGenerator from '../shared/taskGenerator.js';
 let PRESETS = pkg.PRESETS; // To make it mutable
 import GraphLayout from '../shared/graphLayout.js';
 

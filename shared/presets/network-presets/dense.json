@@ -1,6 +1,6 @@
 {
   "name": "Dense random network",
-  "topology": "RANDOM",
+  "generator": "RANDOM",
   "mistCount": 10,
   "edgeCount": 5,
   "connectionDensity": 0.8,
