@@ -1,8 +1,8 @@
 {
-    "name": "Tiny",
+    "name": "Star Small",
     "generator": "STAR",
-    "mistCount": 2,
-    "edgeCount": 1,
+    "mistCount": 6,
+    "edgeCount": 2,
     "includeCloud": true,
     "connectionDensity": 1.0
 }

@@ -66,8 +66,8 @@ export const modelToDat = model => {
     // Write nodes
     lines.push(model.nodes.length.toString());
     model.nodes.forEach((node, index) => {
-        const numericId = index + 1;
-        nodeUuidToId[node.id] = numericId;
+        const numericId = index;
+        nodeUuidToId[node.id] = numericId-1; // Note that nodeId starts from 0
         lines.push(`${numericId}\t${node.memory}\t${node.u}`);
     });
 
@@ -101,21 +101,34 @@ export const modelToDat = model => {
     const numNodes = model.nodes.length;
     lines.push((numNodes * numNodes).toString());
 
-    // Build delay matrix
-    const delayMatrix = Array.from({ length: numNodes }, () => Array(numNodes).fill(0));
+    // Build delay matrix with direct connections
+    const delayMatrix = Array.from({ length: numNodes }, () => Array(numNodes).fill(-1));
+
+    // Set diagonal to 0 (self-connection has no delay)
+    for (let i = 0; i < numNodes; i++) {
+        delayMatrix[i][i] = 0;
+    }
+
+    // Populate matrix with direct connection delays
     model.connections.forEach(conn => {
-        const fromId = nodeUuidToId[conn.from];
-        const toId = nodeUuidToId[conn.to];
-        delayMatrix[fromId - 1][toId - 1] = conn.delay;
+        const fromId = nodeUuidToId[conn.from.id];
+        const toId = nodeUuidToId[conn.to.id];
+        
+        if (fromId === undefined || toId === undefined) {
+            console.warn(`Invalid connection: node ${conn.from.id} or ${conn.to.id} not found`);
+            return;
+        }
+        
+        delayMatrix[fromId][toId] = conn.delay;
     });
 
     // Floyd-Warshall algorithm for all-pairs shortest paths
     for (let k = 0; k < numNodes; k++) {
         for (let i = 0; i < numNodes; i++) {
             for (let j = 0; j < numNodes; j++) {
-                if (delayMatrix[i][k] && delayMatrix[k][j]) {
+                if (delayMatrix[i][k] !== -1 && delayMatrix[k][j] !== -1) {
                     const newDelay = delayMatrix[i][k] + delayMatrix[k][j];
-                    if (delayMatrix[i][j] === 0 || newDelay < delayMatrix[i][j]) {
+                    if (delayMatrix[i][j] === -1 || newDelay < delayMatrix[i][j]) {
                         delayMatrix[i][j] = newDelay;
                     }
                 }

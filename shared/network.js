@@ -279,10 +279,6 @@ export default class Network {
     }
 
     fromGraph({vertices}) {
-
-        console.log("Importing network from graph...");
-        console.log(vertices);
-
         this.nodes.clear();
         for(let v of vertices) {
             // Parameters validation

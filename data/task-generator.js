@@ -17,7 +17,9 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import TaskGenerator, { PRESETS as DEFAULT_PRESETS } from '../shared/taskGenerator.js';
+import pkg from '../shared/taskGenerator.js';
+const { TaskGenerator } = pkg;
+let PRESETS = pkg.PRESETS; // To make it mutable
 import GraphLayout from '../shared/graphLayout.js';
 
 // For ES modules __dirname equivalent
@@ -25,7 +27,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Load presets from JSON file if it exists
-let PRESETS = DEFAULT_PRESETS;
 const PRESETS_FILE = './presets.json';
 
 
@@ -392,6 +393,13 @@ Preset Configurations:
  */
 function main() {
     const { mode, options } = parseArgs();
+
+    // Validate arguments
+    if( !options ){
+        console.error('Error: Invalid arguments');
+        showHelp();
+        process.exit(1);
+    }
     
     // Apply options
     if (options['output-dir']) {

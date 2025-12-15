@@ -1,0 +1,8 @@
+{
+    "name": "Hierarchical Large",
+    "generator": "HIERARCHICAL",
+    "mistCount": 20,
+    "edgeCount": 10,
+    "includeCloud": true,
+    "connectionDensity": 0.7
+}

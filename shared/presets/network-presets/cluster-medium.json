@@ -1,0 +1,9 @@
+{
+    "name": "Cluster Medium",
+    "generator": "CLUSTER",
+    "mistCount": 12,
+    "edgeCount": 6,
+    "includeCloud": true,
+    "connectionDensity": 0.5,
+    "clusterCount": 2
+}

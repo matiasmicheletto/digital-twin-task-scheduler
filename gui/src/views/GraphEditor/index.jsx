@@ -368,7 +368,10 @@ const View = () => {
       horizontalSpacing: 150,
       verticalSpacing: 100
     });
-    const graph = network.toGraph();
+    const graph = {
+      vertices: network.nodes,
+      edges: network.connections
+    };
     layout.applyLayout(graph);
     // Add generated vertices to current network
     graphToModel(graph);

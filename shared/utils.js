@@ -11,3 +11,7 @@ export const generateUUID32 = () => {
 export const generateUUID8 = () => {
     return generateUUID32().slice(0, 8);
 };
+
+export const twoDecimals = num => {
+    return Math.round(num * 100) / 100;
+};

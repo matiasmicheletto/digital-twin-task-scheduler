@@ -1,0 +1,8 @@
+{
+    "name": "No Cloud",
+    "generator": "RANDOM",
+    "mistCount": 6,
+    "edgeCount": 4,
+    "includeCloud": false,
+    "connectionDensit": 0.6
+}

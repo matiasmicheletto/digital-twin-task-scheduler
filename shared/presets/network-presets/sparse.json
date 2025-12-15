@@ -1,6 +1,6 @@
 {
   "name": "Sparse random network",
-  "topology": "random",
+  "topology": "RANDOM",
   "mistCount": 10,
   "edgeCount": 5,
   "connectionDensity": 0.2,

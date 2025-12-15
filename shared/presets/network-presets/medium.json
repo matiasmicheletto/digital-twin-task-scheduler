@@ -1,7 +1,8 @@
 {
-  "name": "Medium network",
-  "topology": "hierarchical",
-  "mistCount": 8,
-  "edgeCount": 4,
-  "includeCloud": true
+    "name": "Medium",
+    "generator": "HIERARCHICAL",
+    "mistCount": 8,
+    "edgeCount": 4,
+    "includeCloud": true,
+    "connectionDensity": 0.6
 }

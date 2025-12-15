@@ -1,0 +1,9 @@
+{
+    "name": "Large",
+    "generator": "CLUSTER",
+    "mistCount": 16,
+    "edgeCount": 8,
+    "includeCloud": true,
+    "connectionDensity": 0.5,
+    "clusterCount": 3
+}

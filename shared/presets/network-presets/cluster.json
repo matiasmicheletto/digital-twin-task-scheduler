@@ -1,6 +1,6 @@
 {
   "name": "Clustered network",
-  "topology": "cluster",
+  "topology": "CLUSTER",
   "mistCount": 12,
   "edgeCount": 6,
   "clusterCount": 2,

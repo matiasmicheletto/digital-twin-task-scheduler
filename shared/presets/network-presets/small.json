@@ -1,6 +1,6 @@
 {
   "name": "Small network",
-  "topology": "random",
+  "topology": "RANDOM",
   "mistCount": 4,
   "edgeCount": 2,
   "connectionDensity": 0.4,
