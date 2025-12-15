@@ -33,11 +33,35 @@ for (let i = 0; i < args.length; i++) {
     }
 }
 
-if (!scheduleFile || !networkFile || !outputFile) {
-    console.error('Usage: node json-to-dat.js -s schedule.json -n network.json -o output.dat');
+if(!scheduleFile) {
+    console.error('Error: Schedule JSON file not specified. Use -s <schedule.json>');
     process.exit(1);
 }
 
+if(!networkFile) {
+    console.error('Error: Network JSON file not specified. Use -n <network.json>');
+    process.exit(1);
+}
+
+if(!outputFile) {
+    console.error('Error: Output DAT file not specified. Use -o <output.dat>');
+    process.exit(1);
+}
+
+if(!fs.existsSync(path.resolve(__dirname, scheduleFile))) {
+    console.error(`Error: Schedule file "${scheduleFile}" does not exist.`);
+    process.exit(1);
+}
+
+if(!fs.existsSync(path.resolve(__dirname, networkFile))) {
+    console.error(`Error: Network file "${networkFile}" does not exist.`);
+    process.exit(1);
+}
+
+const outputDir = path.dirname(path.resolve(__dirname, outputFile));
+if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir, { recursive: true });
+}
 
 function main() {
     const scheduleData = fs.readFileSync(path.resolve(__dirname, scheduleFile), 'utf-8');
