@@ -7,7 +7,7 @@ out_dir="instances/dat"
 rm -r "$tasks_dir" "$nets_dir" "$out_dir"
 
 # Generate a batch of tasks based on the presets
-node task-generator.js presets --output-dir "$tasks_dir"
+node task-generator.js presets --output "$tasks_dir"
 
 # Build a batch of networks based on the presets
 node network-generator.js --batch presets --output "$nets_dir"

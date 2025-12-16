@@ -44,15 +44,15 @@ export const modelToDat = model => {
 
         Output format:
         N
-        nodeId    memory    u
+        nodeId (from 1)    memory    u
         ...
         M
-        taskId    C    T    D    a    M    allocatedNode
+        taskId (from 0)   C    T    D    a    M    allocatedNode
         ...
-        P
+        P (M x M)
         fromTaskId    toTaskId    exists (1/0)
         ...
-        S
+        S (N x N)
         fromNodeId    toNodeId    delay
         ...
     */
@@ -66,17 +66,17 @@ export const modelToDat = model => {
     // Write nodes
     lines.push(model.nodes.length.toString());
     model.nodes.forEach((node, index) => {
-        const numericId = index;
-        nodeUuidToId[node.id] = numericId-1; // Note that nodeId starts from 0
+        const numericId = index + 1;
+        nodeUuidToId[node.id] = numericId;
         lines.push(`${numericId}\t${node.memory}\t${node.u}`);
     });
 
     // Write tasks
     lines.push(model.tasks.length.toString());
     model.tasks.forEach((task, index) => {
-        const numericId = index + 1;
-        taskUuidToId[task.id] = numericId;
-        const allocatedNode = task.processorId ? '1' : '0'; // Simplified allocation
+        const numericId = index;
+        taskUuidToId[task.id] = numericId; // Note that taskId starts from 0
+        const allocatedNode = task.processorId ? nodeUuidToId[task.processorId] : '0';
         lines.push(`${numericId}\t${task.C}\t${task.T}\t${task.D}\t${task.a}\t${task.M}\t${allocatedNode}`);
     });
 
@@ -102,7 +102,7 @@ export const modelToDat = model => {
     lines.push((numNodes * numNodes).toString());
 
     // Build delay matrix with direct connections
-    const delayMatrix = Array.from({ length: numNodes }, () => Array(numNodes).fill(-1));
+    const delayMatrix = Array.from({ length: numNodes }, () => Array(numNodes).fill(1000)); // Use 1000 as infinity
 
     // Set diagonal to 0 (self-connection has no delay)
     for (let i = 0; i < numNodes; i++) {
@@ -111,15 +111,15 @@ export const modelToDat = model => {
 
     // Populate matrix with direct connection delays
     model.connections.forEach(conn => {
-        const fromId = nodeUuidToId[conn.from.id];
-        const toId = nodeUuidToId[conn.to.id];
+        const fromId = nodeUuidToId[conn.from];
+        const toId = nodeUuidToId[conn.to];
         
         if (fromId === undefined || toId === undefined) {
-            console.warn(`Invalid connection: node ${conn.from.id} or ${conn.to.id} not found`);
+            console.warn(`Invalid connection: node from "${conn.from}" or node to "${conn.to}" not found`);
             return;
         }
         
-        delayMatrix[fromId][toId] = conn.delay;
+        delayMatrix[fromId - 1][toId - 1] = conn.delay;
     });
 
     // Floyd-Warshall algorithm for all-pairs shortest paths

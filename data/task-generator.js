@@ -3,13 +3,13 @@
 /**
  * Task Graph Generator CLI
  * 
- * Usage: node instance-generator.js [options]
+ * Usage: node task-generator.js [options]
  * 
  * Examples:
  *  # Generate all presets
- * node instance-generator.js presets
+ * node task-generator.js presets
  * # Generate test suite
- * node instance-generator.js test-suite
+ * node task-generator.js test-suite
  * # Generate custom instance
  * node task-generator.js custom --config my-config.json --file my-instance.json
  */
@@ -17,9 +17,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import pkg from '../shared/taskGenerator.js';
-import TaskGenerator from '../shared/taskGenerator.js';
-let PRESETS = pkg.PRESETS; // To make it mutable
+import TaskGenerator, { PRESETS } from '../shared/taskGenerator.js';
 import GraphLayout from '../shared/graphLayout.js';
 
 // For ES modules __dirname equivalent
@@ -28,12 +26,13 @@ const __dirname = path.dirname(__filename);
 
 // Load presets from JSON file if it exists
 const PRESETS_FILE = './presets.json';
+let PRES = PRESETS; // Mutable copy of default presets
 
 
 if (fs.existsSync(PRESETS_FILE)) {
     try {
         const presetsData = fs.readFileSync(PRESETS_FILE, 'utf8');
-        PRESETS = JSON.parse(presetsData);
+        PRES = JSON.parse(presetsData);
         console.log(`Loaded presets from ${PRESETS_FILE}`);
     } catch (error) {
         console.warn(`Warning: Could not load ${PRESETS_FILE}, using default presets`);
@@ -150,10 +149,10 @@ function generateBatch(configs) {
  * Generate all preset configurations
  */
 function generateAllPresets() {
-    const configs = Object.keys(PRESETS).map(presetName => ({
-        config: PRESETS[presetName],
+    const configs = Object.keys(PRES).map(presetName => ({
+        config: PRES[presetName],
         name: `Preset: ${presetName}`,
-        filename: `preset-${presetName}.json`
+        filename: `${presetName}.json`
     }));
     
     generateBatch(configs);
@@ -345,7 +344,7 @@ function showHelp() {
 Task Graph Generator CLI
 
 Usage:
-  node instance-generator.js [mode] [options]
+  node task-generator.js [mode] [options]
 
 Modes:
   presets              Generate all preset configurations
@@ -354,7 +353,7 @@ Modes:
   help                 Show this help message
 
 Options:
-  --output-dir DIR     Output directory (default: ./instances/tasks)
+  --output DIR     Output directory (default: ./instances/tasks)
   --layout ALGORITHM   Layout algorithm: hierarchical, force, circular, grid
   --no-layout          Don't apply automatic layout
   --config FILE        JSON config file for custom generation
@@ -364,19 +363,19 @@ Options:
 
 Examples:
   # Generate all presets
-  node instance-generator.js presets
+  node task-generator.js presets
 
   # Generate presets from custom file
-  node instance-generator.js presets --presets ./my-presets.json
+  node task-generator.js presets --presets ./my-presets.json
 
   # Generate test suite with custom output directory
-  node instance-generator.js test-suite --output-dir ./my-tests
+  node task-generator.js test-suite --output ./my-tests
 
   # Generate custom instance from config file
-  node instance-generator.js custom --config my-config.json --file my-instance.json
+  node task-generator.js custom --config my-config.json --file my-instance.json
 
   # Generate with force-directed layout
-  node instance-generator.js presets --layout force
+  node task-generator.js presets --layout force
 
 Preset Configurations:
   - small: 5 tasks, chain topology
@@ -402,8 +401,8 @@ function main() {
     }
     
     // Apply options
-    if (options['output-dir']) {
-        CONFIG.outputDir = options['output-dir'];
+    if (options['output']) {
+        CONFIG.outputDir = options['output'];
     }
     
     if (options['layout']) {
@@ -419,8 +418,8 @@ function main() {
         try {
             const presetsPath = path.resolve(options['presets']);
             const presetsData = fs.readFileSync(presetsPath, 'utf8');
-            PRESETS = JSON.parse(presetsData);
-            validatePresetFormat(PRESETS);
+            PRES = JSON.parse(presetsData);
+            validatePresetFormat(PRES);
             console.log(`Loaded presets from ${presetsPath}\n`);
         } catch (error) {
             console.error(`Error loading presets file: ${error.message}`);
@@ -441,7 +440,7 @@ function main() {
         case 'custom':
             if (!options['config']) {
                 console.error('Error: --config option required for custom mode');
-                console.log('Use: node instance-generator.js help');
+                console.log('Use: node task-generator.js help');
                 process.exit(1);
             }
             
