@@ -416,6 +416,18 @@ const View = () => {
           viewportDimensions: graph.viewportDimensions
         };
         try{
+          const svgRect = svgRef.current?.getBoundingClientRect();
+          const viewportDimensions = svgRect ? { 
+            width: svgRect.width, 
+            height: svgRect.height 
+          } : null;
+          const layout = new GraphLayout({
+            width: viewportDimensions?.width || 1200,
+            height: viewportDimensions?.height || 800,
+            horizontalSpacing: 150,
+            verticalSpacing: 100
+          });
+          layout.applyLayout(modelGraph);
           graphToModel(modelGraph);
           handleResetView();
           toast(`Imported ${mode === GRAPH_MODES.SCHEDULE ? "schedule" : "network"} successfully`, "success");
