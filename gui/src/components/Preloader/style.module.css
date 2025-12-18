@@ -1,32 +1,23 @@
 .Container {
-    position: fixed;        
-    left: 0px;
-    height: 80%;    
-    width: 100%;
+    position: fixed;
+    inset: 0;
     z-index: 9999;
 }
 
-.Container:before {
-    content: '';    
-    display: block;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(20, 20, 20,.8);    
+.Container::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(20, 20, 20, 0.8);
+    z-index: 0;
 }
 
 .SpinnerContainer {
-    /*
-    position: absolute;
-    width: 100%;
-    text-align: center;
-    top: 40%;
-    */
+    position: relative;
+    z-index: 1;
+
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100%;
-    width: 100%;
 }

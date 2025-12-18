@@ -1,55 +1,93 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-tasks_dir="data/instances/tasks"
-nets_dir="data/instances/networks"
-results_dir="data/results/solver"
-charts_dir="data/charts"
+#######################################
+# Configuration
+#######################################
+TASKS_DIR="data/instances/tasks"
+NETS_DIR="data/instances/networks"
+DAT_DIR="data/instances/dat"
 
+RESULTS_HEU_DIR="data/results/solver"
+RESULTS_CPLEX_DIR="data/results/cplex"
+RESULTS_AMPL_DIR="data/results/ampl"
+CHARTS_DIR="data/charts"
+
+VENV_PATH="data/venv"
+RUNTIME_FILE="data/results/runtimes.txt"
+
+#######################################
+# Setup
+#######################################
+mkdir -p \
+  "$RESULTS_HEU_DIR" \
+  "$RESULTS_CPLEX_DIR" \
+  "$RESULTS_AMPL_DIR" \
+  "$CHARTS_DIR"
+
+: > "$RUNTIME_FILE"
+
+shopt -s nullglob
+
+#######################################
 # Generate dataset
-cd data
-./make-dataset.sh
-cd ..
+#######################################
+echo "=== Generating dataset ==="
+(
+  cd data
+  ./make-dataset.sh
+)
 
-# Solve all instances with custom solver and save results
-make --trace solver
-for s in "$tasks_dir"/*.json; do
-  for n in "$nets_dir"/*.json; do
-    base_s=$(basename "$s" .json)
+#######################################
+# Build solver
+#######################################
+echo "=== Building heuristic solver ==="
+make solver
+
+#######################################
+# Heuristic solver runs
+#######################################
+echo "=== Running heuristic solver ==="
+
+for t in "$TASKS_DIR"/*.json; do
+  for n in "$NETS_DIR"/*.json; do
+    base_t=$(basename "$t" .json)
     base_n=$(basename "$n" .json)
 
-    out_random="$results_dir/${base_s}__${base_n}_random.csv"
-    out_annealing="$results_dir/${base_s}__${base_n}_annealing.csv"
+    for strategy in random annealing; do
+      out="$RESULTS_HEU_DIR/${base_t}__${base_n}_${strategy}.csv"
 
-    ./solver/bin/solve -t "$s" -n "$n" -s random -o csv > "$out_random"
-    if [ $? -eq 0 ]; then
-      echo "Solved instance: tasks='$s', network='$n' -> result='$out_random'"
-    else
-      echo "Failed to solve instance: tasks='$s', network='$n'" >&2
-    fi
+      echo "Heuristic [$strategy]: $base_t / $base_n"
 
-    ./solver/bin/solve -t "$s" -n "$n" -s annealing -o csv > "$out_annealing"
-    if [ $? -eq 0 ]; then
-      echo "Solved instance: tasks='$s', network='$n' -> result='$out_annealing'"
-    else
-      echo "Failed to solve instance: tasks='$s', network='$n'" >&2
-    fi
+      if ./solver/bin/solve \
+          -t "$t" \
+          -n "$n" \
+          -s "$strategy" \
+          -o csv > "$out"; then
+        echo "OK  -> $out"
+      else
+        echo "FAIL -> $base_t / $base_n ($strategy)" >&2
+        rm -f "$out"
+      fi
+    done
   done
 done
 
+#######################################
+# AMPL solver
+#######################################
+echo "=== Running AMPL solver ==="
 
-# Solve all instances using AMPL solver
-runtime_file="runtimes.txt"
-touch "$runtime_file"
-
-for dat in data/instances/dat/*.dat; do
-    echo "Processing $dat..."
-
+if command -v ampl >/dev/null 2>&1; then
+  for dat in "$DAT_DIR"/*.dat; do
     base=$(basename "$dat" .dat)
-    out="schedules-ampl/${base}.out"
+    out="$RESULTS_AMPL_DIR/${base}_ampl.out"
 
-    start_ns=$(date +%s%N)
+    echo "AMPL: $base"
 
-    ampl <<EOF > "$out"
+    start=$(date +%s)
+
+    if ampl <<EOF > "$out"; then
 model ampl/model.mod;
 data $dat;
 
@@ -57,27 +95,108 @@ option solver gurobi;
 option gurobi_options "timelimit=180";
 
 solve;
-
 display s, f, L;
 EOF
+      end=$(date +%s)
+      echo "ampl $base $((end - start))s" >> "$RUNTIME_FILE"
+      echo "OK  -> $out"
+    else
+      echo "FAIL -> AMPL $base" >&2
+      rm -f "$out"
+    fi
+  done
+else
+  echo "AMPL not found — skipping"
+fi
 
-    end_ns=$(date +%s%N)
-    runtime_ms=$(( (end_ns - start_ns) / 1000000 ))
-    echo "ampl $base ${runtime_ms}ms" >> "$runtime_file"
+#######################################
+# CPLEX solver (XML solution output)
+#######################################
+echo "=== Running CPLEX solver ==="
 
-    echo "AMPL solved: $out"
+if command -v cplex >/dev/null 2>&1; then
+  for dat in "$DAT_DIR"/*.dat; do
+    base=$(basename "$dat" .dat)
+    sol="$RESULTS_CPLEX_DIR/${base}.sol"
+    csv="$RESULTS_CPLEX_DIR/${base}_cplex.csv"
+
+    echo "CPLEX: $base"
+
+    start=$(date +%s)
+
+    cplex -c \
+      "read $dat" \
+      "optimize" \
+      "write $sol sol" \
+      "quit"
+
+    end=$(date +%s)
+    echo "cplex $base $((end - start))s" >> "$RUNTIME_FILE"
+
+    ###################################
+    # Convert XML solution to CSV
+    ###################################
+    python3 <<EOF
+import xml.etree.ElementTree as ET
+import csv
+
+tree = ET.parse("$sol")
+root = tree.getroot()
+
+with open("$csv", "w", newline="") as f:
+    writer = csv.writer(f)
+    writer.writerow(["Task", "Start", "Finish", "Resource"])
+
+    starts = {}
+    finishes = {}
+
+    for var in root.iter("variable"):
+        name = var.attrib["name"]
+        value = float(var.attrib["value"])
+
+        if name.startswith("s["):
+            t, r = name[2:-1].split(",")
+            starts[t] = (r, value)
+        elif name.startswith("f["):
+            t = name[2:-1]
+            finishes[t] = value
+
+    for t, (r, s) in starts.items():
+        fval = finishes.get(t, "")
+        writer.writerow([t, s, fval, r])
+EOF
+
+    echo "OK  -> $csv"
+  done
+else
+  echo "CPLEX not found — skipping"
+fi
+
+#######################################
+# Plot generation
+#######################################
+echo "=== Generating charts ==="
+
+if [ -f "$VENV_PATH/bin/activate" ]; then
+  source "$VENV_PATH/bin/activate"
+else
+  echo "Virtualenv not found: $VENV_PATH" >&2
+  exit 1
+fi
+
+for r in \
+  "$RESULTS_HEU_DIR"/*.csv \
+  "$RESULTS_CPLEX_DIR"/*.csv \
+  "$RESULTS_AMPL_DIR"/*.out; do
+
+  [ -s "$r" ] || continue
+
+  out="$CHARTS_DIR/$(basename "$r" | sed 's/\..*$/_gantt.png/')"
+
+  echo "Plot: $(basename "$r")"
+  python3 data/plot.py "$r" "$out"
 done
 
-
-
-# Generate charts from results
-source ./data/venv/bin/activate
-mkdir -p "$charts_dir"
-for r in "$results_dir"/*.csv; do
-  if [ ! -s "$r" ]; then # skip empty result files
-    continue
-  fi
-  out="$charts_dir/$(basename "$r" .csv)_gantt.png"
-  python3 ./data/plot.py "$r" "$out"
-done
 deactivate
+
+echo "=== DONE ==="

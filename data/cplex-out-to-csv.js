@@ -5,7 +5,7 @@
  * Columns: server,start,finish
  *
  * Usage:
- *   node cplex_to_csv.mjs solution.xml output/schedule.csv
+ *   node cplex-out-to-csv.js solution.xml output/schedule.csv
  */
 
 import fs from 'fs';

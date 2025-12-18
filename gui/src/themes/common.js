@@ -1,10 +1,11 @@
 export const containerStyle = { 
   position: "absolute",
-  top: "64px", // Below the navigation bar
+  top: 0,
   left: 0,
-  width: "calc(100% - 20px)",
+  width: "calc(100vw - 20px)", // Full width minus some margin
+  height: "calc(100vh - 20px)", // Full height minus AppBar
+  display: "flex",
   flexDirection: "column",
-  height: "calc(100vh - 84px)", // Full height minus small margins
   margin: "10px", // Small margin around the entire component
   overflow: "hidden" // Prevent Paper from scrolling
 };
@@ -32,7 +33,8 @@ export const actionsTooltipStyle = { // Help box in canvas
   position: "fixed", 
   bottom: 0, 
   right: 0, 
-  margin: "20px",
+  marginRight: "20px",
+  marginBottom: "20px",
   padding: "16px", 
   borderRadius: "8px", 
   fontSize: "12px", 

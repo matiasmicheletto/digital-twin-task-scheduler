@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { 
     AppBar as MuiAppBar,
+    Box,
     Toolbar,
     Stack,
     Tooltip,
+    Button,
     IconButton,
     Menu,
-    FormControl,
-    MenuItem,
-    Select
+    MenuItem
 } from "@mui/material";
 import { 
     Delete, 
@@ -19,9 +19,17 @@ import {
     Download,
     Shuffle
 } from "@mui/icons-material";
+import usePreloader from "../../hooks/usePreloader";
 import { PRESETS as SCHEDULE_PRESETS } from "../../../../shared/taskGenerator.js";
 import { PRESETS as NETWORK_PRESETS } from "../../../../shared/networkGenerator.js";
 import { GRAPH_MODES } from "../../hooks/useGraph/index.js";
+
+
+const appBarStyle = {
+    backgroundColor: "#333333 !important",
+    opacity: "0.8",
+    height: "64px"
+};
 
 const AppBar = props => {
 
@@ -37,6 +45,8 @@ const AppBar = props => {
         handleExport,
         handleImport
     } = props;
+
+    const preloader = usePreloader();
 
     const [exportMenuAnchorEl, setExportMenuAnchorEl] = useState(null);
     const [generateTasksMenuAnchorEl, setGenerateTasksMenuAnchorEl] = useState(null);
@@ -59,17 +69,26 @@ const AppBar = props => {
 
     const tag = mode === GRAPH_MODES.NETWORK ? " (Network)" : " (Schedule)";
 
+    const handleSetMode = newMode => {
+        preloader(true);
+        setTimeout(() => { // Delay to avoid UI glitches
+            setMode(newMode);
+            preloader(false);
+        }, 100);
+    };
+
     return (
-        <MuiAppBar position="static" color="default" elevation={1}>
-            <Toolbar variant="dense">
-                <FormControl fullWidth>
-                    <Select
-                        value={mode}
-                        onChange={e => setMode(e.target.value)}>
-                            <MenuItem value={GRAPH_MODES.SCHEDULE}>Tasks Precedences Editor</MenuItem>
-                            <MenuItem value={GRAPH_MODES.NETWORK}>Network Editor</MenuItem>
-                    </Select>
-                </FormControl>
+        <MuiAppBar position="static" style={appBarStyle} color="primary" elevation={1}>
+            <Toolbar>
+                <Box sx={{ flexGrow: 1 }} >
+                    <Button color="inherit" onClick={() => handleSetMode(GRAPH_MODES.SCHEDULE)}>
+                        <span style={{fontWeight: mode===GRAPH_MODES.SCHEDULE ? "bold" : "normal"}}>Schedule</span>
+                    </Button>
+
+                    <Button color="inherit" onClick={() => handleSetMode(GRAPH_MODES.NETWORK)}>
+                        <span style={{fontWeight: mode===GRAPH_MODES.NETWORK ? "bold" : "normal"}}>Network</span>
+                    </Button>
+                </Box>
 
                 <Stack direction="row" spacing={1}>
                     

@@ -72,7 +72,7 @@ export const modelToDat = model => {
     });
 
     // Write tasks
-    lines.push(model.tasks.length.toString());
+    lines.push(model.tasks.length.toString()-1); // Starts from 0
     model.tasks.forEach((task, index) => {
         const numericId = index;
         taskUuidToId[task.id] = numericId; // Note that taskId starts from 0
@@ -84,8 +84,8 @@ export const modelToDat = model => {
     const numTasks = model.tasks.length;
     lines.push((numTasks * numTasks).toString());
 
-    for (let i = 1; i <= numTasks; i++) {
-        for (let j = 1; j <= numTasks; j++) {
+    for (let i = 0; i < numTasks; i++) {
+        for (let j = 0; j < numTasks; j++) {
             const fromUuid = Object.keys(taskUuidToId).find(key => taskUuidToId[key] === i);
             const toUuid = Object.keys(taskUuidToId).find(key => taskUuidToId[key] === j);
 

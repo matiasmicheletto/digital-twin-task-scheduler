@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { AppBar, Box, Toolbar, Button, Typography } from "@mui/material";
+import { AppBar, Box, Toolbar, Button } from "@mui/material";
 import { removeSlash } from '../../../../shared/utils.js';
 import views from "../../views";
 

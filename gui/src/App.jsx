@@ -4,7 +4,7 @@ import { ThemeProvider } from "@mui/material/styles";
 import theme, { globalStyles } from "./themes";
 import views from "./views";
 import ErrorBoundary from './components/ErrorBoundary';
-import Navigation from "./components/Navigation";
+//import Navigation from "./components/Navigation";
 import { ModelProvider } from './context/Model';
 import UIUtilsProvider from './context/UIFeedback';
 
@@ -17,7 +17,7 @@ const App = () => (
             <ModelProvider>
                 <BrowserRouter>
                     <ErrorBoundary>
-                        <Navigation/>
+                        {/* <Navigation/> */}
                         <Routes>
                             <Route index element={views[0].component} />
                             {
