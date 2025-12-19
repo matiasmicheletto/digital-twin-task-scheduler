@@ -136,41 +136,19 @@ if command -v cplex >/dev/null 2>&1; then
     ###################################
     # Convert XML solution to CSV
     ###################################
-    python3 <<EOF
-import xml.etree.ElementTree as ET
-import csv
-
-tree = ET.parse("$sol")
-root = tree.getroot()
-
-with open("$csv", "w", newline="") as f:
-    writer = csv.writer(f)
-    writer.writerow(["Task", "Start", "Finish", "Resource"])
-
-    starts = {}
-    finishes = {}
-
-    for var in root.iter("variable"):
-        name = var.attrib["name"]
-        value = float(var.attrib["value"])
-
-        if name.startswith("s["):
-            t, r = name[2:-1].split(",")
-            starts[t] = (r, value)
-        elif name.startswith("f["):
-            t = name[2:-1]
-            finishes[t] = value
-
-    for t, (r, s) in starts.items():
-        fval = finishes.get(t, "")
-        writer.writerow([t, s, fval, r])
-EOF
-
-    echo "OK  -> $csv"
-  done
 else
   echo "CPLEX not found — skipping"
 fi
+
+#######################################
+# Convert CPLEX XML solutions to CSV
+#######################################
+echo "=== Converting CPLEX solutions to CSV ==="
+(
+cd data
+./all-cplex-to-csv.sh
+)
+
 
 #######################################
 # Plot generation

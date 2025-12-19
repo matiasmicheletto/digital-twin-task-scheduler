@@ -1,3 +1,8 @@
+# !/usr/bin/env python3
+
+# Makes a Gantt chart from a CSV schedule file.
+# Usage: python plot.py <schedule.csv> [output.png]
+
 import sys
 import os
 import pandas as pd
@@ -6,11 +11,11 @@ import matplotlib.pyplot as plt
 def main():
     # Check arguments
     if len(sys.argv) < 2:
-        print("Usage: python plot_gantt.py <schedule.csv> [output.png]")
+        print("Usage: python plot.py <schedule.csv> [output.png]")
         sys.exit(1)
 
     input_file = sys.argv[1]
-    output_file = sys.argv[2] if len(sys.argv) >= 2 else None
+    output_file = sys.argv[2] if len(sys.argv) >= 3 else None
 
     # Validate file
     if not os.path.isfile(input_file):
@@ -57,7 +62,6 @@ def main():
     else:
         plt.show()
     
-
 
 if __name__ == "__main__":
     main()

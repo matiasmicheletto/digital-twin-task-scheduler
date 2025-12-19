@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Generates the dataset: tasks, networks in json format and converts them to .dat files
+
 tasks_dir="instances/tasks"
 nets_dir="instances/networks"
 out_dir="instances/dat"

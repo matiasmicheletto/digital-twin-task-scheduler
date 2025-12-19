@@ -5,7 +5,7 @@
  * Columns: server,start,finish
  *
  * Usage:
- *   node cplex-out-to-csv.js solution.xml output/schedule.csv
+ *   node cplex-out-to-csv.js solution.sol output/schedule.csv
  */
 
 import fs from 'fs';
@@ -74,7 +74,7 @@ if (outDir && outDir !== '.') {
 
 // --- Write CSV ---------------------------------------------------------------
 
-let csv = 'server,start,finish\n';
+let csv = 'task,server,start,finish\n';
 
 for (const t of tasks) {
   const s = start[t] ?? 0;
@@ -85,7 +85,7 @@ for (const t of tasks) {
     console.warn(`Warning: task ${t} has no server assignment`);
   }
 
-  csv += `${srv},${s},${f}\n`;
+  csv += `${t},${srv},${s},${f}\n`;
 }
 
 fs.writeFileSync(outputFile, csv, 'utf8');
