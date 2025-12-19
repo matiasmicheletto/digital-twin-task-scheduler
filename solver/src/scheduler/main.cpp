@@ -50,6 +50,9 @@ bool Scheduler::schedule(const Candidate& candidate) {
     // Schedules tasks onto servers based on the candidate allocation and priorities
     // Some tasks may be already allocated to specific servers (check task.fixedAllocationTo)
     // Returns true if scheduling was successful, false otherwise (infeasible)
+    // Candidate contains:
+    // - server_indices: vector<int> of size N (number of tasks), server index assigned to each task
+    // - priorities: vector<double> of size N, priority value for
 
     const int N = (int)tasks.size();
     if ((int)candidate.server_indices.size() != N || (int)candidate.priorities.size() != N) {

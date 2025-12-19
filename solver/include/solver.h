@@ -13,13 +13,13 @@ class Solver {
 public:
     Solver(Scheduler& sch) : scheduler(sch) {}
 
-    void solve(SolverMethod method = SolverMethod::RANDOM_SEARCH);
+    Candidate solve(SolverMethod method = SolverMethod::RANDOM_SEARCH);
 
 private: 
     Scheduler& scheduler;
-    void randomSearchSolve();
-    void geneticAlgorithmSolve();
-    void simulatedAnnealingSolve();
+    Candidate randomSearchSolve(int maxIterations = 1000, bool breakOnFirstFeasible = false);
+    Candidate geneticAlgorithmSolve();
+    Candidate simulatedAnnealingSolve(int maxInitTries = 3000, int maxIters = 3000, int maxNeighborTries = 20, double initialTemperature = 100.0, double coolingRate = 0.995, double minTemperature = 1e-3);
 };
 
 
