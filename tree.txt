@@ -1,0 +1,229 @@
+.
+├── all.sh
+├── ampl
+│   ├── executable.run
+│   ├── instance.dat
+│   ├── model.mod
+│   ├── task_layered_4_15__network_10.dat
+│   ├── task_layered_4_15__network_7.dat
+│   └── task_layered_4_5__network_7.dat
+├── data
+│   ├── all-cplex-to-csv.sh
+│   ├── ampl-out-to-csv.js
+│   ├── charts
+│   │   ├── constantPeriod__dense_annealing_gantt.png
+│   │   ├── constantPeriod__dense_random_gantt.png
+│   │   ├── constantPeriod__medium_annealing_gantt.png
+│   │   ├── constantPeriod__noCloud_annealing_gantt.png
+│   │   ├── constantPeriod__noCloud_random_gantt.png
+│   │   ├── constantPeriod__tiny_annealing_gantt.png
+│   │   └── constantPeriod__tiny_random_gantt.png
+│   ├── cplex-out-to-csv.js
+│   ├── instances
+│   │   ├── networks
+│   │   │   ├── clusterMedium.json
+│   │   │   ├── dense.json
+│   │   │   ├── hierarchicalLarge.json
+│   │   │   ├── large.json
+│   │   │   ├── medium.json
+│   │   │   ├── noCloud.json
+│   │   │   ├── small.json
+│   │   │   ├── sparse.json
+│   │   │   ├── starSmall.json
+│   │   │   └── tiny.json
+│   │   └── tasks
+│   │       ├── constantPeriod.json
+│   │       ├── highUtilization.json
+│   │       ├── largeDense.json
+│   │       ├── largeSparse.json
+│   │       ├── medium.json
+│   │       ├── pipeline.json
+│   │       └── small.json
+│   ├── json-to-ampl.js
+│   ├── json-to-dat.js
+│   ├── make-dataset.sh
+│   ├── network-generator.js
+│   ├── package.json
+│   ├── plot.py
+│   ├── requirements.txt
+│   ├── results
+│   │   ├── ampl
+│   │   ├── cplex
+│   │   │   ├── constant_dense.sol
+│   │   │   ├── constant_hierarchicalLarge.sol
+│   │   │   ├── constant_large.sol
+│   │   │   └── solution16x11.sol
+│   │   ├── csv
+│   │   │   ├── constant_dense.csv
+│   │   │   ├── constant_hierarchicalLarge.csv
+│   │   │   ├── constant_large.csv
+│   │   │   └── solution16x11.csv
+│   │   └── runtimes.txt
+│   ├── task-generator.js
+│   └── venv
+│       ├── bin
+│       │   ├── activate
+│       │   ├── activate.csh
+│       │   ├── activate.fish
+│       │   ├── activate.nu
+│       │   ├── activate.ps1
+│       │   ├── activate_this.py
+│       │   ├── f2py
+│       │   ├── fonttools
+│       │   ├── numpy-config
+│       │   ├── pip
+│       │   ├── pip3
+│       │   ├── pip-3.13
+│       │   ├── pip3.13
+│       │   ├── pyftmerge
+│       │   ├── pyftsubset
+│       │   ├── python -> /usr/bin/python
+│       │   ├── python3 -> python
+│       │   ├── python3.13 -> python
+│       │   └── ttx
+│       ├── CACHEDIR.TAG
+│       ├── lib
+│       │   └── python3.13
+│       ├── pyvenv.cfg
+│       └── share
+│           └── man
+├── gui
+│   ├── dist
+│   │   ├── assets
+│   │   │   ├── index--2mJYYSk.css
+│   │   │   ├── index-Clku9QgE.js
+│   │   │   └── working_monkey-Cz5jxPUE.jpg
+│   │   ├── index.html
+│   │   └── vite.svg
+│   ├── index.html
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── public
+│   │   └── vite.svg
+│   ├── src
+│   │   ├── App.css
+│   │   ├── App.jsx
+│   │   ├── assets
+│   │   │   ├── icons
+│   │   │   ├── logo.png
+│   │   │   └── working_monkey.jpg
+│   │   ├── components
+│   │   │   ├── AppBar
+│   │   │   ├── Confirm
+│   │   │   ├── EdgesLayer
+│   │   │   ├── EditDialog
+│   │   │   ├── ErrorBoundary
+│   │   │   ├── Hint
+│   │   │   ├── Inputs
+│   │   │   ├── MainView
+│   │   │   ├── Modal
+│   │   │   ├── Navigation
+│   │   │   ├── Preloader
+│   │   │   ├── Prompt
+│   │   │   ├── SchedulerConfigDialog
+│   │   │   ├── SidePanel
+│   │   │   ├── Svg
+│   │   │   └── Toast
+│   │   ├── context
+│   │   │   ├── Model
+│   │   │   └── UIFeedback
+│   │   ├── hooks
+│   │   │   ├── useConfirm
+│   │   │   ├── useGraph
+│   │   │   ├── useHint
+│   │   │   ├── useLocalStorage
+│   │   │   ├── useModal
+│   │   │   ├── useNetwork
+│   │   │   ├── usePreloader
+│   │   │   ├── usePrompt
+│   │   │   ├── useSchedule
+│   │   │   └── useToast
+│   │   ├── main.jsx
+│   │   ├── model
+│   │   │   └── utils.js
+│   │   ├── themes
+│   │   │   ├── common.js
+│   │   │   └── index.jsx
+│   │   └── views
+│   │       ├── About
+│   │       ├── Error
+│   │       ├── GraphEditor
+│   │       ├── Help
+│   │       └── index.jsx
+│   └── vite.config.js
+├── README.md
+├── shared
+│   ├── datConversions.js
+│   ├── graphLayout.js
+│   ├── networkGenerator.js
+│   ├── network.js
+│   ├── presets
+│   │   ├── network-presets
+│   │   │   ├── cluster.json
+│   │   │   ├── cluster-medium.json
+│   │   │   ├── dense.json
+│   │   │   ├── hierarchical-large.json
+│   │   │   ├── large.json
+│   │   │   ├── medium.json
+│   │   │   ├── no-cloud.json
+│   │   │   ├── small.json
+│   │   │   ├── sparse.json
+│   │   │   ├── star-small.json
+│   │   │   └── tiny.json
+│   │   └── task-presets
+│   │       ├── constant-period.json
+│   │       ├── high-utilization.json
+│   │       ├── large-dense.json
+│   │       ├── large-sparse.json
+│   │       ├── medium.json
+│   │       ├── pipeline.json
+│   │       └── small.json
+│   ├── schedule.js
+│   ├── taskGenerator.js
+│   └── utils.js
+├── solver
+│   ├── assets
+│   │   └── solve_manual.txt
+│   ├── bin
+│   │   ├── assets
+│   │   │   └── solve_manual.txt
+│   │   ├── hardcoded
+│   │   └── solve
+│   ├── include
+│   │   ├── json_fwd.hpp
+│   │   ├── json.hpp
+│   │   ├── scheduler.h
+│   │   ├── server.h
+│   │   ├── solver.h
+│   │   ├── task.h
+│   │   └── utils.h
+│   ├── Makefile
+│   ├── obj
+│   │   ├── scheduler
+│   │   │   ├── import.o
+│   │   │   ├── main.o
+│   │   │   └── print.o
+│   │   ├── server.o
+│   │   ├── solver.o
+│   │   ├── task.o
+│   │   └── utils.o
+│   ├── source_concat.sh
+│   ├── src
+│   │   ├── hardcoded_main.cpp
+│   │   ├── scheduler
+│   │   │   ├── import.cpp
+│   │   │   ├── main.cpp
+│   │   │   └── print.cpp
+│   │   ├── server.cpp
+│   │   ├── solve_main.cpp
+│   │   ├── solver.cpp
+│   │   ├── task.cpp
+│   │   └── utils.cpp
+│   └── test
+│       ├── nw-instance.json
+│       ├── sch-instance.json
+│       └── test.sh
+├── test.sh
+└── tree.txt
+
+76 directories, 151 files

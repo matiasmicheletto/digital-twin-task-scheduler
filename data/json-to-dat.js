@@ -4,7 +4,7 @@
  * Convert JSON models of tasks and network to DAT format
  * 
  * Usage:
- *  node json-to-dat.js -s schedule.json -n network.json -o output.dat
+ *  node json-to-dat.js -t schedule.json -n network.json -o output.dat
  */
 
 import fs from 'fs';
@@ -21,7 +21,7 @@ let networkFile = null;
 let outputFile = null;
 
 for (let i = 0; i < args.length; i++) {
-    if (args[i] === '-s' && i + 1 < args.length) {
+    if (args[i] === '-t' && i + 1 < args.length) {
         scheduleFile = args[i + 1];
         i++;
     } else if (args[i] === '-n' && i + 1 < args.length) {

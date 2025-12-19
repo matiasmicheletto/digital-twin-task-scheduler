@@ -6,13 +6,14 @@ This project implements a task scheduling system for digital twin environments. 
 - Generate tasks and network configurations via a graphical interface.
 - Automatic generation of large datasets of instances.
 - C++ solver for scheduling tasks based on various algorithms.
+- CPLEX integration for solving scheduling problems using ILP.
 - Data visualization and analysis tools.
 
 ## Stack
 - **Frontend**: JavaScript, Vite, React
-- **Backend**: C++17, Node.js
+- **Backend**: C++17, Node.js, Python, CPLEX
 - **Data Visualization**: Python, Matplotlib
-- **Task automations**: Bash, Node.js
+- **Task automations**: Bash, Node.js, Python
 
 ## Installation
 To build the project, ensure you have a C++ compiler and CMake installed. 
@@ -58,6 +59,12 @@ source venv/bin/activate
 pip install -r requirements.txt
 python plot.py schedule.csv
 ```
+
+## Usage
+The entire process can be automated using the provided `all.sh` script, which covers instance generation, solving, and visualization. Before running the script, ensure to:
+
+1. Define preset parameters for tasks and network generation in the `shared/presets` folder.
+2. Check directories in the header of the `all.sh` script.
 
 
 ## Data format
@@ -141,6 +148,25 @@ Network consists of nodes and connections represented in JSON format with the fo
     ]
 };
 ```
+
+### CPLEX Integration
+
+The following format is used to combine tasks and network data into a single .dat file for solving with CPLEX.
+
+```txt
+N (number of processors)
+nodeId (from 1)    memory    u
+...
+M (number of tasks)
+taskId (from 0)   C    T    D    a    M    allocatedProcessor (if preallocated, otherwise 0)
+...
+P (M x M, precedence matrix)
+fromTaskId    toTaskId    exists (1/0)
+...
+S (N x N, processors connection matrix)
+fromNodeId    toNodeId    delay
+```
+
 
 ### Solver
 

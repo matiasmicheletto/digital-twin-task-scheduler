@@ -8,7 +8,7 @@ TASKS_DIR="data/instances/tasks"
 NETS_DIR="data/instances/networks"
 DAT_DIR="data/instances/dat"
 
-RESULTS_HEU_DIR="data/results/solver"
+RESULTS_CSV_DIR="data/results/csv"
 RESULTS_CPLEX_DIR="data/results/cplex"
 RESULTS_AMPL_DIR="data/results/ampl"
 CHARTS_DIR="data/charts"
@@ -20,50 +20,84 @@ RUNTIME_FILE="data/results/runtimes.txt"
 # Setup
 #######################################
 mkdir -p \
-  "$RESULTS_HEU_DIR" \
+  "$RESULTS_CSV_DIR" \
   "$RESULTS_CPLEX_DIR" \
   "$RESULTS_AMPL_DIR" \
   "$CHARTS_DIR"
 
 : > "$RUNTIME_FILE"
 
-shopt -s nullglob
+shopt -s nullglob # Make globs return empty if no matches
+
+
 
 #######################################
 # Generate dataset
 #######################################
-echo "=== Generating dataset ==="
-(
-  cd data
-  ./make-dataset.sh
-)
+echo "=========================================="
+echo "Generating dataset"
+echo "=========================================="
+
+# Generate a batch of tasks based on the presets
+node data/task-generator.js presets --output "$TASKS_DIR"
+
+# Build a batch of networks based on the presets
+node data/network-generator.js --batch presets --output "$NETS_DIR"
+
+echo "=========================================="
+echo "Converting JSON to DAT"
+echo "=========================================="
+for t in "$TASKS_DIR"/*.json; do
+  for n in "$NETS_DIR"/*.json; do
+    base_t=$(basename "$t" .json)
+    base_n=$(basename "$n" .json)
+    t_abs=$(realpath "$t")
+    n_abs=$(realpath "$n")
+    out="$DAT_DIR/${base_t}__${base_n}.dat"
+
+    node data/json-to-dat.js -t "$t_abs" -n "$n_abs" -o "$out"
+  done
+done
+
+
 
 #######################################
 # Build solver
 #######################################
-echo "=== Building heuristic solver ==="
+echo "=========================================="
+echo "Building heuristic solver"
+echo "=========================================="
 make solver
+
+
 
 #######################################
 # Heuristic solver runs
 #######################################
-echo "=== Running heuristic solver ==="
+echo "=========================================="
+echo "Running heuristic solver"
+echo "=========================================="
 
 for t in "$TASKS_DIR"/*.json; do
   for n in "$NETS_DIR"/*.json; do
     base_t=$(basename "$t" .json)
     base_n=$(basename "$n" .json)
+    t_abs=$(realpath "$t")
+    n_abs=$(realpath "$n")
 
     for strategy in random annealing; do
-      out="$RESULTS_HEU_DIR/${base_t}__${base_n}_${strategy}.csv"
+      out="$RESULTS_CSV_DIR/${base_t}__${base_n}_${strategy}.csv"
 
       echo "Heuristic [$strategy]: $base_t / $base_n"
 
-      if ./solver/bin/solve \
-          -t "$t" \
-          -n "$n" \
+      if (
+        cd "$(dirname "$0")" && \
+        ./solver/bin/solve \
+          -t "$t_abs" \
+          -n "$n_abs" \
           -s "$strategy" \
-          -o csv > "$out"; then
+          -o csv
+      ) > "$out"; then
         echo "OK  -> $out"
       else
         echo "FAIL -> $base_t / $base_n ($strategy)" >&2
@@ -73,10 +107,15 @@ for t in "$TASKS_DIR"/*.json; do
   done
 done
 
+
+
+
 #######################################
 # AMPL solver
 #######################################
-echo "=== Running AMPL solver ==="
+echo "=========================================="
+echo "Running AMPL solver"
+echo "=========================================="
 
 if command -v ampl >/dev/null 2>&1; then
   for dat in "$DAT_DIR"/*.dat; do
@@ -109,61 +148,92 @@ else
   echo "AMPL not found — skipping"
 fi
 
+
+
 #######################################
 # CPLEX solver (XML solution output)
 #######################################
-echo "=== Running CPLEX solver ==="
+echo "=========================================="
+echo "Running CPLEX solver"
+echo "=========================================="
 
 if command -v cplex >/dev/null 2>&1; then
   for dat in "$DAT_DIR"/*.dat; do
     base=$(basename "$dat" .dat)
-    sol="$RESULTS_CPLEX_DIR/${base}.sol"
-    csv="$RESULTS_CPLEX_DIR/${base}_cplex.csv"
+    sol="$RESULTS_CPLEX_DIR/${base}_cplex.sol"
 
     echo "CPLEX: $base"
 
     start=$(date +%s)
 
-    cplex -c \
-      "read $dat" \
-      "optimize" \
-      "write $sol sol" \
-      "quit"
-
-    end=$(date +%s)
-    echo "cplex $base $((end - start))s" >> "$RUNTIME_FILE"
-
-    ###################################
-    # Convert XML solution to CSV
-    ###################################
+    if cplex -c \
+        "read $dat" \
+        "optimize" \
+        "write $sol sol" \
+        "quit"; then
+      end=$(date +%s)
+      echo "cplex $base $((end - start))s" >> "$RUNTIME_FILE"
+      echo "OK  -> $sol"
+    else
+      echo "FAIL -> CPLEX $base" >&2
+      rm -f "$sol"
+    fi
+  done
 else
   echo "CPLEX not found — skipping"
 fi
 
+
+
 #######################################
-# Convert CPLEX XML solutions to CSV
+# Convert CPLEX and AMPL solutions to CSV
 #######################################
-echo "=== Converting CPLEX solutions to CSV ==="
-(
-cd data
-./all-cplex-to-csv.sh
-)
+echo "=========================================="
+echo "Converting CPLEX solutions to CSV"
+echo "=========================================="
+
+find "$RESULTS_CPLEX_DIR" "$RESULTS_AMPL_DIR" -type f \( -name "*.sol" -o -name "*.out" \) |
+while read -r file; do
+  case "$file" in
+    "$RESULTS_CPLEX_DIR"/*.sol)
+      rel_path="${file#$RESULTS_CPLEX_DIR/}"
+      out_dir="$(dirname "$RESULTS_CSV_DIR/$rel_path")"
+      out_file="$out_dir/$(basename "${file%.sol}.csv")"
+      mkdir -p "$out_dir"
+      node data/cplex-out-to-csv.js "$file" "$out_file"
+      ;;
+
+    "$RESULTS_AMPL_DIR"/*.out)
+      rel_path="${file#$RESULTS_AMPL_DIR/}"
+      out_dir="$(dirname "$RESULTS_CSV_DIR/$rel_path")"
+      out_file="$out_dir/$(basename "${file%.out}.csv")"
+      mkdir -p "$out_dir"
+      node data/ampl-out-to-csv.js "$file" "$out_file"
+      ;;
+  esac
+done
+
 
 
 #######################################
 # Plot generation
 #######################################
-echo "=== Generating charts ==="
+echo "=========================================="
+echo "Generating charts"
+echo "=========================================="
 
 if [ -f "$VENV_PATH/bin/activate" ]; then
   source "$VENV_PATH/bin/activate"
 else
   echo "Virtualenv not found: $VENV_PATH" >&2
-  exit 1
+  echo "Creating virtualenv..." >&2
+  python3 -m venv "$VENV_PATH"
+  source "$VENV_PATH/bin/activate"
+  pip3 install -r data/requirements.txt
 fi
 
 for r in \
-  "$RESULTS_HEU_DIR"/*.csv \
+  "$RESULTS_CSV_DIR"/*.csv \
   "$RESULTS_CPLEX_DIR"/*.csv \
   "$RESULTS_AMPL_DIR"/*.out; do
 
@@ -177,4 +247,4 @@ done
 
 deactivate
 
-echo "=== DONE ==="
+echo "DONE"

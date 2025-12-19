@@ -123,9 +123,9 @@ function saveInstance(instance, filename) {
  * Generate multiple instances
  */
 function generateBatch(configs) {
-    console.log('='.repeat(60));
+    //console.log('='.repeat(60));
     console.log('Task Graph Generator - Batch Generation');
-    console.log('='.repeat(60));
+    //console.log('='.repeat(60));
     console.log();
     
     configs.forEach(({ config, name, filename }) => {
@@ -139,10 +139,10 @@ function generateBatch(configs) {
         }
     });
     
-    console.log('='.repeat(60));
+    //console.log('='.repeat(60));
     console.log('Batch generation complete!');
     console.log(`Output directory: ${path.resolve(CONFIG.outputDir)}`);
-    console.log('='.repeat(60));
+    //console.log('='.repeat(60));
 }
 
 /**
@@ -260,19 +260,19 @@ function generateTestSuite() {
  * Generate a single custom instance
  */
 function generateCustom(customConfig, outputFilename) {
-    console.log('='.repeat(60));
+    //console.log('='.repeat(60));
     console.log('Task Graph Generator - Custom Instance');
-    console.log('='.repeat(60));
+    //console.log('='.repeat(60));
     console.log();
     
     const instance = generateInstance(customConfig, 'Custom Instance');
     saveInstance(instance, outputFilename);
     
     console.log();
-    console.log('='.repeat(60));
+    //console.log('='.repeat(60));
     console.log('Generation complete!');
     console.log(`Output file: ${path.resolve(CONFIG.outputDir, outputFilename)}`);
-    console.log('='.repeat(60));
+    //console.log('='.repeat(60));
 }
 
 /** 
