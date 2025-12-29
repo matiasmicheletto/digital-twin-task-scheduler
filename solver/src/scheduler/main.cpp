@@ -1,4 +1,4 @@
-#include "../include/scheduler.h"
+#include "scheduler.h"
 
 Scheduler::Scheduler(std::string tasks_file, std::string network_file) {
     // Sets up the scheduler by loading tasks and network from JSON files
