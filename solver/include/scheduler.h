@@ -44,6 +44,8 @@ class Scheduler {
         inline const Server& getServer(size_t index) const { return servers.at(index); }
 
         int getScheduleSpan() const;
+
+        int getFinishTimeSum() const;
         
         void print(utils::PRINT_TYPE format = utils::PRINT_TYPE::PLAIN_TEXT) const;
         void exportScheduleToCSV() const;

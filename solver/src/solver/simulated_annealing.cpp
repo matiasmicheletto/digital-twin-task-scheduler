@@ -9,7 +9,8 @@ Candidate Solver::simulatedAnnealingSolve(int maxInitTries, int maxIters, int ma
         return Candidate(scheduler.getTaskCount());
     }
 
-    int currSpan = scheduler.getScheduleSpan();
+    //int currSpan = scheduler.getScheduleSpan();
+    int currSpan = scheduler.getFinishTimeSum();
     Candidate best = curr;
     int bestSpan = currSpan;
 
@@ -37,7 +38,8 @@ Candidate Solver::simulatedAnnealingSolve(int maxInitTries, int maxIters, int ma
             }
 
             if (scheduler.schedule(next)) {
-                nextSpan = scheduler.getScheduleSpan();
+                //nextSpan = scheduler.getScheduleSpan();
+                nextSpan = scheduler.getFinishTimeSum();
                 hasFeasibleNeighbor = true;
             }
         }

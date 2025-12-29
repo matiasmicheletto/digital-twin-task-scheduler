@@ -235,3 +235,15 @@ int Scheduler::getScheduleSpan() const {
     }
     return span;
 }
+
+int Scheduler::getFinishTimeSum() const {
+    if (!scheduled) {
+        utils::dbg << "Schedule not computed yet.\n";
+        return -1;
+    }
+    int finish_time_sum = 0;
+    for (const auto& t : tasks) {
+        finish_time_sum += t.getFinishTime();
+    }
+    return finish_time_sum;
+}

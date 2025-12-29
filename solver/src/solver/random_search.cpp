@@ -24,7 +24,8 @@ Candidate Solver::randomSearchSolve(int maxIterations, bool breakOnFirstFeasible
                 return curr;
             }
             // Check if this is the best solution found so far
-            int span = scheduler.getScheduleSpan();
+            //int span = scheduler.getScheduleSpan();
+            int span = scheduler.getFinishTimeSum();
             if (span < bestSpan) {
                 bestSpan = span;
                 best = curr;
