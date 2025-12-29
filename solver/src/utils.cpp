@@ -141,6 +141,17 @@ T require_type(const nlohmann::json& obj, const std::string& key) {
     }
 }
 
+double randNormal(double mean, double stddev) {
+    std::normal_distribution<double> distribution(mean, stddev);
+    return distribution(gen);
+}
+
+double clamp(double value, double minVal, double maxVal) {
+    if (value < minVal) return minVal;
+    if (value > maxVal) return maxVal;
+    return value;
+}
+
 template int require_type<int>(const nlohmann::json&, const std::string&);
 template bool require_type<bool>(const nlohmann::json&, const std::string&);
 template std::string require_type<std::string>(const nlohmann::json&, const std::string&);

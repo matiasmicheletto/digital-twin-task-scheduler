@@ -11,11 +11,8 @@ Candidate Solver::randomSearchSolve(int maxIterations, bool breakOnFirstFeasible
         for (size_t i = 0; i <  scheduler.getTaskCount(); ++i) {
             // Check if task has fixed allocation
             const Task& task = scheduler.getTask(i);
-            if (task.hasFixedAllocation()) {
-                curr.server_indices[i] = task.fixedAllocationInternalId;
-            }else{
+            if (!task.hasFixedAllocation())
                 curr.server_indices[i] = rand() % scheduler.getServerCount(); // Random server assignment
-            }
             curr.priorities[i] = static_cast<double>(rand()) / RAND_MAX; // Random priority between 0 and 1
         }
         // Schedule using the generated candidate

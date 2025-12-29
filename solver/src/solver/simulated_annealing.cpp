@@ -37,10 +37,12 @@ Candidate Solver::simulatedAnnealingSolve(int maxInitTries, int maxIters, int ma
                 next.priorities[idx] = static_cast<double>(rand()) / RAND_MAX;
             }
 
-            if (scheduler.schedule(next)) {
+            if (scheduler.schedule(next)) { // schedule() is expensive, so only call it once per neighbor
                 //nextSpan = scheduler.getScheduleSpan();
                 nextSpan = scheduler.getFinishTimeSum();
-                hasFeasibleNeighbor = true;
+                hasFeasibleNeighbor = true; // found a feasible neighbor, exit inner loop
+                if (nextSpan < currSpan)
+                    break; // improvement found — stop searching
             }
         }
 
