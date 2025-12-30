@@ -111,7 +111,6 @@ int main(int argc, char **argv) {
             }
             config.solverMethod = method;
             config.print(); // Uses utils::dbg
-            return 0;
             Solver solver(sch, config);
             solver.solve();
         }

@@ -18,17 +18,17 @@ Candidate Solver::simulatedAnnealingSolve() {
         return Candidate(scheduler.getTaskCount());
     }
 
-    //int currSpan = scheduler.getScheduleSpan();
-    int currSpan = scheduler.getFinishTimeSum();
+    //int currFitness = scheduler.getScheduleSpan();
+    int currFitness = scheduler.getFinishTimeSum();
     Candidate best = curr;
-    int bestSpan = currSpan;
+    int bestFitness = currFitness;
 
     double T = initialTemperature;
     Candidate next(scheduler.getTaskCount());
     for (int iter = 0; iter < maxIterations && T > minTemperature; ++iter) {
 
         bool hasFeasibleNeighbor = false;
-        int nextSpan = INT_MAX;
+        int nextFitness = INT_MAX;
 
         // Try several neighbors at this temperature
         for (int tr = 0; tr < maxNeighborTries && !hasFeasibleNeighbor; ++tr) {
@@ -47,10 +47,10 @@ Candidate Solver::simulatedAnnealingSolve() {
             }
 
             if (scheduler.schedule(next)) { // schedule() is expensive, so only call it once per neighbor
-                //nextSpan = scheduler.getScheduleSpan();
-                nextSpan = scheduler.getFinishTimeSum();
+                //nextFitness = scheduler.getScheduleFitness();
+                nextFitness = scheduler.getFinishTimeSum();
                 hasFeasibleNeighbor = true; // found a feasible neighbor, exit inner loop
-                if (nextSpan < currSpan)
+                if (nextFitness < currFitness)
                     break; // improvement found — stop searching
             }
         }
@@ -64,12 +64,12 @@ Candidate Solver::simulatedAnnealingSolve() {
         // Accept / reject rule
         bool accept = false;
 
-        if (nextSpan < currSpan) {
+        if (nextFitness < currFitness) {
             // improvement
             accept = true;
         } else {
             // probabilistic acceptance
-            double delta = nextSpan - currSpan;
+            double delta = nextFitness - currFitness;
             double prob  = exp(-delta / T);
             double r     = static_cast<double>(rand()) / RAND_MAX;
             if (r < prob) accept = true;
@@ -77,18 +77,20 @@ Candidate Solver::simulatedAnnealingSolve() {
 
         if (accept) {
             curr     = next;
-            currSpan = nextSpan;
+            currFitness = nextFitness;
 
-            if (nextSpan < bestSpan) {
-                bestSpan = nextSpan;
-                best     = next;
+            refinePriorities(config.priorityRefinementMethod, curr, T, currFitness);
+
+            if (currFitness < bestFitness) {
+                bestFitness = currFitness;
+                best     = curr;
             }
         }
 
         T *= coolingRate;
     }
 
-    if (bestSpan < INT_MAX)
+    if (bestFitness < INT_MAX)
         scheduler.schedule(best);
     else
         utils::dbg << "SA: No feasible solution found.\n";

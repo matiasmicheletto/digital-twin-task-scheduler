@@ -1,38 +1,36 @@
 #include "solver.h"
 
-bool refinePrioritiesNormal(Candidate& c, double T) {
-    /*
-    double sigma = sigmaMax * (T / initialTemperature);
+void Solver::refinePrioritiesNormal(Candidate& c, double T, int currFitness) {
+    double sigma = config.sa_sigmaMax * (T / config.sa_initialTemperature);
 
     Candidate trial = c;
-    for (size_t i = 0; i < taskCount; ++i) {
+    for (size_t i = 0; i < scheduler.getTaskCount(); ++i) {
         trial.priorities[i] += utils::randNormal(0, sigma);
         trial.priorities[i] = utils::clamp(trial.priorities[i], 0.0, 1.0);
     }
 
     if (scheduler.schedule(trial)) {
-        int span = scheduler.getFinishTimeSum();
-        if (span < currSpan) {
+        int fitness = scheduler.getFinishTimeSum();
+        if (fitness < currFitness) {
             c = trial;
-            currSpan = span;
-            return true;
+            currFitness = fitness;
         }
     }
-    */
-    return false;
 }
 
-bool refinePrioritiesPSO(Candidate& c, double T) {
-    return false;
+void Solver::refinePrioritiesPSO(Candidate& c, double T, int currFitness) {
+    
 }
 
-bool Solver::refinePriorities(PriorityRefinementMethod refinementMethod, Candidate& c, double T) {
+void Solver::refinePriorities(PriorityRefinementMethod refinementMethod, Candidate& c, double T, int currFitness) {
     switch (refinementMethod) {
         case PriorityRefinementMethod::NORMAL_PERTURBATION:
-            return refinePrioritiesNormal(c, T);
+            refinePrioritiesNormal(c, T, currFitness);
+            return;
         case PriorityRefinementMethod::PARTICLE_SWARM_OPTIMIZATION:
-            return refinePrioritiesPSO(c, T);
+            refinePrioritiesPSO(c, T, currFitness);
+            return;
         default:
-            return false;
+            return;
     }
 }

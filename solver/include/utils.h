@@ -60,6 +60,9 @@ T require_type(const nlohmann::json&, const std::string&);
 
 inline bool areEqual(double a, double b) { return std::fabs(a - b) < 1e-9; }
 
+double randNormal(double mean, double stddev);
+double clamp(double value, double minVal, double maxVal);
+
 } // namespace utils
 
 #endif // UTILS_HPP

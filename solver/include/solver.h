@@ -2,6 +2,7 @@
 #define SOLVER_H
 
 #include <yaml-cpp/yaml.h>
+#include "utils.h"
 #include "scheduler.h"
 
 enum class SolverMethod {
@@ -27,6 +28,7 @@ public:
     double sa_initialTemperature = 100.0;
     double sa_coolingRate = 0.995;
     double sa_minTemperature = 1e-3;
+    double sa_sigmaMax = 0.1; // Maximum standard deviation for priority refinement (use smaller values for finer adjustments)
 
     // Parameters for Random Search
     int rs_maxIterations = 1000;
@@ -57,7 +59,9 @@ private:
     Candidate geneticAlgorithmSolve();
     Candidate simulatedAnnealingSolve();
 
-    bool refinePriorities(PriorityRefinementMethod refinementMethod, Candidate& c, double T);
+    void refinePrioritiesNormal(Candidate& c, double T, int currFitness);
+    void refinePrioritiesPSO(Candidate& c, double T, int currFitness);
+    void refinePriorities(PriorityRefinementMethod refinementMethod, Candidate& c, double T, int currFitness);
 };
 
 

@@ -6,7 +6,7 @@ Candidate Solver::randomSearchSolve() {
     int maxIterations = config.rs_maxIterations;
     bool breakOnFirstFeasible = config.rs_breakOnFirstFeasible;
     
-    int bestSpan = INT_MAX;
+    int bestFitness = INT_MAX;
     Candidate curr( scheduler.getTaskCount());
     Candidate best(scheduler.getTaskCount());
     
@@ -24,10 +24,10 @@ Candidate Solver::randomSearchSolve() {
                 return curr;
             }
             // Check if this is the best solution found so far
-            //int span = scheduler.getScheduleSpan();
-            int span = scheduler.getFinishTimeSum();
-            if (span < bestSpan) {
-                bestSpan = span;
+            //int firness = scheduler.getScheduleSpan();
+            int firness = scheduler.getFinishTimeSum();
+            if (firness < bestFitness) {
+                bestFitness = firness;
                 best = curr;
             }
         }
