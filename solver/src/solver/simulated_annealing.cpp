@@ -1,9 +1,18 @@
 #include "solver.h"
 
-Candidate Solver::simulatedAnnealingSolve(int maxInitTries, int maxIters, int maxNeighborTries, double initialTemperature, double coolingRate, double minTemperature) {
+Candidate Solver::simulatedAnnealingSolve() {
+    // Parameters from config
+    int maxInitTries        = config.sa_maxInitTries;
+    int maxIterations       = config.sa_maxIterations;
+    int maxNeighborTries    = config.sa_maxNeighborTries;
+    double initialTemperature = config.sa_initialTemperature;
+    double coolingRate      = config.sa_coolingRate;
+    double minTemperature   = config.sa_minTemperature;
 
     // Initialize using random search to find an initial feasible solution
-    Candidate curr = randomSearchSolve(maxInitTries, true);
+    config.rs_breakOnFirstFeasible = true;
+    config.rs_maxIterations = maxInitTries;
+    Candidate curr = randomSearchSolve();
     if (!scheduler.isScheduled()) {
         utils::dbg << "SA: Could not find initial feasible solution.\n";
         return Candidate(scheduler.getTaskCount());
@@ -16,7 +25,7 @@ Candidate Solver::simulatedAnnealingSolve(int maxInitTries, int maxIters, int ma
 
     double T = initialTemperature;
     Candidate next(scheduler.getTaskCount());
-    for (int iter = 0; iter < maxIters && T > minTemperature; ++iter) {
+    for (int iter = 0; iter < maxIterations && T > minTemperature; ++iter) {
 
         bool hasFeasibleNeighbor = false;
         int nextSpan = INT_MAX;

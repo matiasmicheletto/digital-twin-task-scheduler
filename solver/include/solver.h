@@ -1,6 +1,7 @@
 #ifndef SOLVER_H
 #define SOLVER_H
 
+#include <yaml-cpp/yaml.h>
 #include "scheduler.h"
 
 enum class SolverMethod {
@@ -14,18 +15,47 @@ enum class PriorityRefinementMethod {
     PARTICLE_SWARM_OPTIMIZATION
 };
 
+class SolverConfig { // Configuration parameters for the solver
+public:
+    SolverMethod solverMethod = SolverMethod::RANDOM_SEARCH;
+    PriorityRefinementMethod priorityRefinementMethod = PriorityRefinementMethod::NORMAL_PERTURBATION;
+
+    // Parameters for Simulated Annealing
+    int sa_maxInitTries = 3000;
+    int sa_maxIterations = 3000;
+    int sa_maxNeighborTries = 20;
+    double sa_initialTemperature = 100.0;
+    double sa_coolingRate = 0.995;
+    double sa_minTemperature = 1e-3;
+
+    // Parameters for Random Search
+    int rs_maxIterations = 1000;
+    bool rs_breakOnFirstFeasible = false;
+
+    // Parameters for Genetic Algorithm
+    int ga_populationSize = 100;
+    int ga_maxGenerations = 500;
+    double ga_mutationRate = 0.1;
+    double ga_crossoverRate = 0.7;
+
+    static SolverConfig fromYaml(const std::string& file_path);
+
+    void print() const;
+};
+
 class Solver {
 public:
-    Solver(Scheduler& sch) : scheduler(sch) {}
+    Solver(Scheduler& sch, SolverConfig& config) : scheduler(sch), config(config) {}
 
-    // TODO: pass parameters to configure each method
-    Candidate solve(SolverMethod method = SolverMethod::RANDOM_SEARCH);
+    Candidate solve();
 
 private: 
-    Scheduler& scheduler;
-    Candidate randomSearchSolve(int maxIterations = 1000, bool breakOnFirstFeasible = false);
+    Scheduler& scheduler;    
+    SolverConfig& config;
+    
+    Candidate randomSearchSolve();
     Candidate geneticAlgorithmSolve();
-    Candidate simulatedAnnealingSolve(int maxInitTries = 3000, int maxIters = 3000, int maxNeighborTries = 20, double initialTemperature = 100.0, double coolingRate = 0.995, double minTemperature = 1e-3);
+    Candidate simulatedAnnealingSolve();
 
     bool refinePriorities(PriorityRefinementMethod refinementMethod, Candidate& c, double T);
 };

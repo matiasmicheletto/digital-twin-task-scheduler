@@ -1,0 +1,17 @@
+simulated_annealing:
+  max_init_tries: 5000
+  max_iterations: 1000
+  max_neighbor_tries: 30
+  initial_temperature: 150.0
+  cooling_rate: 0.99
+  min_temperature: 1.0e-4
+
+random_search:
+  max_iterations: 1000
+  break_on_first_feasible: true
+
+genetic_algorithm:
+  population_size: 150
+  max_generations: 800
+  mutation_rate: 0.15
+  crossover_rate: 0.75

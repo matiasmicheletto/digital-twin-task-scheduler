@@ -1,7 +1,19 @@
 CPP      = g++
+
+# External libraries
+PKG_CONFIG ?= pkg-config
+
+# yaml-cpp (required)
+YAML_CPP_CFLAGS  := $(shell $(PKG_CONFIG) --cflags yaml-cpp 2>/dev/null)
+YAML_CPP_LDFLAGS := $(shell $(PKG_CONFIG) --libs   yaml-cpp 2>/dev/null)
+
+ifeq ($(YAML_CPP_LDFLAGS),)
+$(error yaml-cpp not found. Please install yaml-cpp development package)
+endif
+
 #CFLAGS   = -Wall -pthread -fopenmp -O3 -std=c++17 # Uncomment to optimize
-CFLAGS   = -Wall -pthread -fopenmp -std=c++17
-LDFLAGS  = -lgsl -lgslcblas -lm
+CFLAGS   = -Wall -pthread -fopenmp -std=c++17 $(YAML_CPP_CFLAGS)
+LDFLAGS  = -lgsl -lgslcblas -lm $(YAML_CPP_LDFLAGS)
 
 SRCDIR   = src
 OBJDIR   = obj

@@ -1,7 +1,7 @@
 #include "solver.h"
 
-Candidate Solver::solve(SolverMethod method) {
-    switch(method) {
+Candidate Solver::solve() {
+    switch(config.solverMethod) {
         case SolverMethod::RANDOM_SEARCH:
             return randomSearchSolve();
         case SolverMethod::GENETIC_ALGORITHM:

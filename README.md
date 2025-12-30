@@ -16,7 +16,17 @@ This project implements a task scheduling system for digital twin environments. 
 - **Task automations**: Bash, Node.js, Python
 
 ## Installation
-To build the project, ensure you have a C++ compiler and CMake installed. 
+To build the project, ensure you have a C++ compiler and CMake installed.  
+Also install the following dependencies:  
+
+Arch / Manjaro:
+  sudo pacman -S yaml-cpp
+
+Debian / Ubuntu:
+  sudo apt install libyaml-cpp-dev
+
+Fedora:
+  sudo dnf install yaml-cpp-devel
 
 1. Clone the repository:
 ```bash
@@ -46,9 +56,10 @@ cd ..
 4. Run solver:
 ```bash
 cd solver
+
 make
 cd bin
-./solve -t tasks.json -n network.json -s -o json
+./solve -t tasks.json -n network.json -c config.yaml -s -o json
 ```
 
 5. Visualize schedule. Run solver with `-o csv` to generate `schedule.csv`, then:
@@ -147,6 +158,29 @@ Network consists of nodes and connections represented in JSON format with the fo
         }
     ]
 };
+```
+
+### Optimization options
+Optimization options can be specified in a YAML configuration file with the following structure:
+
+```yaml
+simulated_annealing:
+  max_init_tries: 5000
+  max_iterations: 8000
+  max_neighbor_tries: 30
+  initial_temperature: 150.0
+  cooling_rate: 0.99
+  min_temperature: 1.0e-4
+
+random_search:
+  max_iterations: 2000
+  break_on_first_feasible: true
+
+genetic_algorithm:
+  population_size: 150
+  max_generations: 800
+  mutation_rate: 0.15
+  crossover_rate: 0.75
 ```
 
 ### CPLEX Integration

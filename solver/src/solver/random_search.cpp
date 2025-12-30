@@ -1,8 +1,11 @@
 #include "solver.h"
 
-Candidate Solver::randomSearchSolve(int maxIterations, bool breakOnFirstFeasible) {
+Candidate Solver::randomSearchSolve() {
     // Performs random search to find a feasible scheduling solution
- 
+
+    int maxIterations = config.rs_maxIterations;
+    bool breakOnFirstFeasible = config.rs_breakOnFirstFeasible;
+    
     int bestSpan = INT_MAX;
     Candidate curr( scheduler.getTaskCount());
     Candidate best(scheduler.getTaskCount());

@@ -13,6 +13,7 @@ int main(int argc, char **argv) {
 
     std::string tsk_filename; // Tasks file (json)
     std::string nw_filename; // Network file (json)
+    std::string cfg_filename; // Solver config file (yaml)
     utils::PRINT_TYPE output_format = utils::PRINT_TYPE::PLAIN_TEXT;
     SolverMethod method = SolverMethod::RANDOM_SEARCH;
     bool solve = false;
@@ -68,6 +69,13 @@ int main(int argc, char **argv) {
             }
         }
 
+        if(strcmp(argv[i], "-c") == 0 || strcmp(argv[i], "--config") == 0) {
+            if(i+1 < argc) {
+                const char* file = argv[i+1];
+                cfg_filename = std::string(file);
+            }
+        }
+
         if(strcmp(argv[i], "-o") == 0 || strcmp(argv[i], "--output") == 0) {
             if(i+1 < argc) {
                 const char* format = argv[i+1];
@@ -96,8 +104,16 @@ int main(int argc, char **argv) {
         Scheduler sch(tsk_filename, nw_filename);
         
         if(solve){
-            Solver solver(sch);
-            solver.solve(method);
+            SolverConfig config; // Default configuration
+            if(!cfg_filename.empty()) {
+                utils::dbg << "Loading solver configuration from file: " << cfg_filename << "\n";
+                config = SolverConfig::fromYaml(cfg_filename);
+            }
+            config.solverMethod = method;
+            config.print(); // Uses utils::dbg
+            return 0;
+            Solver solver(sch, config);
+            solver.solve();
         }
         
         sch.print(output_format);
