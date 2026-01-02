@@ -32,6 +32,7 @@ public:
     double sa_minTemperature = 1e-3;
     // Refinement parameters
     double sa_sigmaMax = 0.1; // Maximum standard deviation for priority refinement (use smaller values for finer adjustments)
+    double sa_sigmaMin = 1e-3; // Minimum standard deviation for priority refinement
     int sa_refinementIterations = 50;
     int sa_pso_swarmSize = 30;
     int sa_pso_velocityClamp = 2;

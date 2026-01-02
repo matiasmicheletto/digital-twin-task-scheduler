@@ -15,7 +15,8 @@ SolverConfig SolverConfig::fromYaml(const std::string& file_path) {
         if (sa["initial_temperature"])   cfg.sa_initialTemperature = sa["initial_temperature"].as<double>();
         if (sa["cooling_rate"])          cfg.sa_coolingRate = sa["cooling_rate"].as<double>();
         if (sa["min_temperature"])       cfg.sa_minTemperature = sa["min_temperature"].as<double>();
-        if (sa["sigma_max"])             cfg.sa_sigmaMax = sa["sigma_max"].as<double>();
+        if (sa["normal_sigma_max"])      cfg.sa_sigmaMax = sa["normal_sigma_max"].as<double>();
+        if (sa["normal_sigma_min"])      cfg.sa_sigmaMin = sa["normal_sigma_min"].as<double>();
         if (sa["refinement_iterations"]) cfg.sa_refinementIterations = sa["refinement_iterations"].as<int>();
         if (sa["pso_swarm_size"])        cfg.sa_pso_swarmSize = sa["pso_swarm_size"].as<int>();
         if (sa["pso_velocity_clamp"])    cfg.sa_pso_velocityClamp = sa["pso_velocity_clamp"].as<int>();
@@ -42,7 +43,7 @@ SolverConfig SolverConfig::fromYaml(const std::string& file_path) {
         if (ga["mutation_rate"])      cfg.ga_mutationRate = ga["mutation_rate"].as<double>();
         if (ga["crossover_rate"])     cfg.ga_crossoverRate = ga["crossover_rate"].as<double>();
     }
-
+ 
     return cfg;
 }   
 
@@ -72,20 +73,34 @@ void SolverConfig::print() const {
     }
 
     utils::dbg << "  Simulated Annealing Parameters:\n";
-    utils::dbg << "    maxInitTries: " << sa_maxInitTries << "\n";
-    utils::dbg << "    maxIterations: " << sa_maxIterations << "\n";
-    utils::dbg << "    maxNeighborTries: " << sa_maxNeighborTries << "\n";
-    utils::dbg << "    initialTemperature: " << sa_initialTemperature << "\n";
-    utils::dbg << "    coolingRate: " << sa_coolingRate << "\n";
-    utils::dbg << "    minTemperature: " << sa_minTemperature << "\n";
-
+    utils::dbg << "    max_init_tries: " << sa_maxInitTries << "\n";
+    utils::dbg << "    max_iterations: " << sa_maxIterations << "\n";
+    utils::dbg << "    timeout: " << sa_timeout << "\n";
+    utils::dbg << "    stagnation_limit: " << sa_stagnationLimit << "\n";
+    utils::dbg << "    max_neighbor_tries: " << sa_maxNeighborTries << "\n";
+    utils::dbg << "    initial_temperature: " << sa_initialTemperature << "\n";
+    utils::dbg << "    cooling_rate: " << sa_coolingRate << "\n";
+    utils::dbg << "    min_temperature: " << sa_minTemperature << "\n";
+    utils::dbg << "    sigma_max: " << sa_sigmaMax << "\n";
+    utils::dbg << "    refinement_iterations: " << sa_refinementIterations << "\n";
+    utils::dbg << "    pso_swarm_size: " << sa_pso_swarmSize << "\n";
+    utils::dbg << "    pso_velocity_clamp: " << sa_pso_velocityClamp << "\n";
+    utils::dbg << "    pso_inertia_weight: " << sa_pso_inertiaWeight << "\n";
+    utils::dbg << "    pso_cognitive_coefficient: " << sa_pso_cognitiveCoefficient << "\n";
+    utils::dbg << "    pso_social_coefficient: " << sa_pso_socialCoefficient << "\n";
+    
     utils::dbg << "  Random Search Parameters:\n";
-    utils::dbg << "    maxIterations: " << rs_maxIterations << "\n";
-    utils::dbg << "    breakOnFirstFeasible: " << (rs_breakOnFirstFeasible ? "true" : "false") << "\n";
-
+    utils::dbg << "    max_iterations: " << rs_maxIterations << "\n";
+    utils::dbg << "    timeout: " << rs_timeout << "\n";
+    utils::dbg << "    stagnation_limit: " << rs_stagnationLimit << "\n";
+    utils::dbg << "    break_on_first_feasible: " << (rs_breakOnFirstFeasible ? "true" : "false") << "\n";
+    
     utils::dbg << "  Genetic Algorithm Parameters:\n";
-    utils::dbg << "    populationSize: " << ga_populationSize << "\n";
-    utils::dbg << "    maxGenerations: " << ga_maxGenerations << "\n";
-    utils::dbg << "    mutationRate: " << ga_mutationRate << "\n";
-    utils::dbg << "    crossoverRate: " << ga_crossoverRate << "\n";
+    utils::dbg << "    population_size: " << ga_populationSize << "\n";
+    utils::dbg << "    max_generations: " << ga_maxGenerations << "\n";
+    utils::dbg << "    timeout: " << ga_timeout << "\n";
+    utils::dbg << "    elite_count: " << ga_eliteCount << "\n";
+    utils::dbg << "    stagnation_limit: " << ga_stagnationLimit << "\n";
+    utils::dbg << "    mutation_rate: " << ga_mutationRate << "\n";
+    utils::dbg << "    crossover_rate: " << ga_crossoverRate << "\n";
 }   
