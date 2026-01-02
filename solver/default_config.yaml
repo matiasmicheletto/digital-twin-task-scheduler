@@ -8,6 +8,7 @@ simulated_annealing:
   cooling_rate: 0.995
   min_temperature: 1.0e-3
   # Refinement parameters
+  priority_refinement_method: NORMAL # NORMAL or PSO
   refinement_iterations: 50
   normal_sigma_max: 0.1
   normal_sigma_min: 1.0e-3

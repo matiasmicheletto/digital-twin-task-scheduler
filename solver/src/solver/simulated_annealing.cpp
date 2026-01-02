@@ -79,7 +79,7 @@ Candidate Solver::simulatedAnnealingSolve() {
             curr     = next;
             currFitness = nextFitness;
 
-            refinePriorities(config.priorityRefinementMethod, curr, currFitness, T);
+            refinePriorities(config.sa_priorityRefinementMethod, curr, currFitness, T);
 
             if (currFitness < bestFitness) {
                 bestFitness = currFitness;

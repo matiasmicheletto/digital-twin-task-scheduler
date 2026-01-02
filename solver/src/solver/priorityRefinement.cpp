@@ -10,10 +10,11 @@ void Solver::refinePrioritiesNormal(Candidate& curr, int currFitness, double T) 
 
     double sigma = config.sa_sigmaMax * (T / config.sa_initialTemperature);
     sigma = std::max(sigma, config.sa_sigmaMin); // ensure sigma does not go below minimum
+    const int maxIterations = config.sa_refinementIterations;
 
     // For each task, perturb its priority with a normal distribution
     int noImproveCount = 0;
-    for(int iter = 0; iter < config.sa_refinementIterations; ++iter){
+    for(int iter = 0; iter < maxIterations; ++iter){
         Candidate trial = curr;
 
         for (size_t i = 0; i < scheduler.getTaskCount(); ++i) {
@@ -52,17 +53,17 @@ void Solver::refinePrioritiesPSO(Candidate& curr, int currFitness, double T) {
     */
 
     // PSO parameters
-    int swarmSize = config.sa_pso_swarmSize;
-    double inertiaWeight = config.sa_pso_inertiaWeight;
-    double cognitiveCoefficient = config.sa_pso_cognitiveCoefficient;
-    double socialCoefficient = config.sa_pso_socialCoefficient;
-    int maxIterations = config.sa_refinementIterations;
+    const int swarmSize = config.sa_pso_swarmSize;
+    const double inertiaWeight = config.sa_pso_inertiaWeight;
+    const double cognitiveCoefficient = config.sa_pso_cognitiveCoefficient;
+    const double socialCoefficient = config.sa_pso_socialCoefficient;
+    const int maxIterations = config.sa_refinementIterations;
 
     // Velocity clamp decreases with temperature
     double velocityClamp = static_cast<double>(config.sa_pso_velocityClamp) * (T / config.sa_initialTemperature);
     velocityClamp = std::max(velocityClamp, 0.1); // ensure velocity
 
-    size_t taskCount = scheduler.getTaskCount();
+    const size_t taskCount = scheduler.getTaskCount();
 
     // Initialize swarm
     struct Particle {

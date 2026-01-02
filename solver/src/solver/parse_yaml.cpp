@@ -7,6 +7,15 @@ SolverConfig SolverConfig::fromYaml(const std::string& file_path) {
 
     // --- Simulated Annealing ---
     if (auto sa = root["simulated_annealing"]) {
+        if (sa["priority_refinement_method"]) {
+            std::string method = sa["priority_refinement_method"].as<std::string>();
+            if (method == "NORMAL")
+                cfg.sa_priorityRefinementMethod = PriorityRefinementMethod::NORMAL_PERTURBATION;
+            else if (method == "PSO")
+                cfg.sa_priorityRefinementMethod = PriorityRefinementMethod::PARTICLE_SWARM_OPTIMIZATION;
+            else
+                throw std::runtime_error("Invalid priority_refinement_method in YAML config");
+        }
         if (sa["max_init_tries"])        cfg.sa_maxInitTries = sa["max_init_tries"].as<int>();
         if (sa["max_iterations"])        cfg.sa_maxIterations = sa["max_iterations"].as<int>();
         if (sa["timeout"])               cfg.sa_timeout = sa["timeout"].as<int>();
@@ -63,7 +72,7 @@ void SolverConfig::print() const {
     }
 
     utils::dbg << "  Priority Refinement Method: ";
-    switch (priorityRefinementMethod) {
+    switch (sa_priorityRefinementMethod) {
         case PriorityRefinementMethod::NORMAL_PERTURBATION:
             utils::dbg << "NORMAL_PERTURBATION\n";
             break;
