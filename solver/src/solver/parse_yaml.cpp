@@ -1,18 +1,5 @@
 #include "solver.h"
 
-SolverMethod solverMethodFromString(const std::string& s) {
-    if (s == "RANDOM_SEARCH")        return SolverMethod::RANDOM_SEARCH;
-    if (s == "SIMULATED_ANNEALING")  return SolverMethod::SIMULATED_ANNEALING;
-    if (s == "GENETIC_ALGORITHM")    return SolverMethod::GENETIC_ALGORITHM;
-    throw std::runtime_error("Unknown SolverMethod: " + s);
-}
-
-PriorityRefinementMethod priorityMethodFromString(const std::string& s) {
-    if (s == "NORMAL_PERTURBATION")      return PriorityRefinementMethod::NORMAL_PERTURBATION;
-    if (s == "PARTICLE_SWARM_OPTIMIZATION")  return PriorityRefinementMethod::PARTICLE_SWARM_OPTIMIZATION;
-    throw std::runtime_error("Unknown PriorityRefinementMethod: " + s);
-}
-
 SolverConfig SolverConfig::fromYaml(const std::string& file_path) {
     SolverConfig cfg; // defaults already set
 
@@ -22,15 +9,26 @@ SolverConfig SolverConfig::fromYaml(const std::string& file_path) {
     if (auto sa = root["simulated_annealing"]) {
         if (sa["max_init_tries"])        cfg.sa_maxInitTries = sa["max_init_tries"].as<int>();
         if (sa["max_iterations"])        cfg.sa_maxIterations = sa["max_iterations"].as<int>();
+        if (sa["timeout"])               cfg.sa_timeout = sa["timeout"].as<int>();
+        if (sa["stagnation_limit"])      cfg.sa_stagnationLimit = sa["stagnation_limit"].as<int>();
         if (sa["max_neighbor_tries"])    cfg.sa_maxNeighborTries = sa["max_neighbor_tries"].as<int>();
         if (sa["initial_temperature"])   cfg.sa_initialTemperature = sa["initial_temperature"].as<double>();
         if (sa["cooling_rate"])          cfg.sa_coolingRate = sa["cooling_rate"].as<double>();
         if (sa["min_temperature"])       cfg.sa_minTemperature = sa["min_temperature"].as<double>();
+        if (sa["sigma_max"])             cfg.sa_sigmaMax = sa["sigma_max"].as<double>();
+        if (sa["refinement_iterations"]) cfg.sa_refinementIterations = sa["refinement_iterations"].as<int>();
+        if (sa["pso_swarm_size"])        cfg.sa_pso_swarmSize = sa["pso_swarm_size"].as<int>();
+        if (sa["pso_velocity_clamp"])    cfg.sa_pso_velocityClamp = sa["pso_velocity_clamp"].as<int>();
+        if (sa["pso_inertia_weight"])    cfg.sa_pso_inertiaWeight = sa["pso_inertia_weight"].as<double>();
+        if (sa["pso_cognitive_coef"]) cfg.sa_pso_cognitiveCoefficient = sa["pso_cognitive_coef"].as<double>();
+        if (sa["pso_social_coef"])    cfg.sa_pso_socialCoefficient = sa["pso_social_coef"].as<double>();
     }
 
     // --- Random Search ---
     if (auto rs = root["random_search"]) {
         if (rs["max_iterations"])            cfg.rs_maxIterations = rs["max_iterations"].as<int>();
+        if (rs["timeout"])                   cfg.rs_timeout = rs["timeout"].as<int>();
+        if (rs["stagnation_limit"])          cfg.rs_stagnationLimit = rs["stagnation_limit"].as<int>();
         if (rs["break_on_first_feasible"])   cfg.rs_breakOnFirstFeasible = rs["break_on_first_feasible"].as<bool>();
     }
 
@@ -38,6 +36,9 @@ SolverConfig SolverConfig::fromYaml(const std::string& file_path) {
     if (auto ga = root["genetic_algorithm"]) {
         if (ga["population_size"])   cfg.ga_populationSize = ga["population_size"].as<int>();
         if (ga["max_generations"])    cfg.ga_maxGenerations = ga["max_generations"].as<int>();
+        if (ga["timeout"])            cfg.ga_timeout = ga["timeout"].as<int>();
+        if (ga["elite_count"])        cfg.ga_eliteCount = ga["elite_count"].as<int>();
+        if (ga["stagnation_limit"])   cfg.ga_stagnationLimit = ga["stagnation_limit"].as<int>();
         if (ga["mutation_rate"])      cfg.ga_mutationRate = ga["mutation_rate"].as<double>();
         if (ga["crossover_rate"])     cfg.ga_crossoverRate = ga["crossover_rate"].as<double>();
     }

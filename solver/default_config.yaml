@@ -1,17 +1,32 @@
 simulated_annealing:
   max_init_tries: 5000
-  max_iterations: 1000
+  max_iterations: 3000
+  timeout: 3600
+  stagnation_limit: 200 # Iterations without improvement
   max_neighbor_tries: 30
   initial_temperature: 150.0
-  cooling_rate: 0.99
-  min_temperature: 1.0e-4
+  cooling_rate: 0.995
+  min_temperature: 1.0e-3
+  # Refinement parameters
+  sigma_max: 0.1 # For normal perturbations
+  refinement_iterations: 50
+  pso_warm_size: 30
+  pso_velocity_clamp: 2
+  pso_inertia_weight: 0.5
+  pso_cognitive_coef: 1.5
+  pso_social_coef: 1.5
 
 random_search:
-  max_iterations: 1000
-  break_on_first_feasible: true
+  max_iterations: 5000
+  timeout: 3600
+  stagnation_limit: 200
+  break_on_first_feasible: false
 
 genetic_algorithm:
   population_size: 150
   max_generations: 800
+  timeout: 3600
+  elite_count: 5
+  stagnation_limit: 200
   mutation_rate: 0.15
   crossover_rate: 0.75
