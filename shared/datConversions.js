@@ -1,61 +1,61 @@
 import { generateUUID8 } from "./utils.js";
 
+/*
+    Model format:
+    {
+        nodes: [
+            {
+                id: uuid,
+                memory: number,
+                u: number
+            },
+            ...
+        ],
+        tasks: [
+            {
+                id: uuid,
+                C: number,
+                T: number,
+                D: number,
+                a: number,
+                M: number,
+                processorId: uuid | null
+            },
+            ...
+        ],
+        precedences: [
+            {
+                from: taskUuid,
+                to: taskUuid
+            },
+            ...
+        ],
+        connections: [
+            {
+                from: nodeUuid,
+                to: nodeUuid,
+                delay: number
+            },
+            ...
+        ]
+    }
+
+    Output format:
+    N
+    nodeId (from 1)    memory    u
+    ...
+    M
+    taskId (from 0)   C    T    D    a    M    allocatedNode
+    ...
+    P (M x M)
+    fromTaskId    toTaskId    exists (1/0)
+    ...
+    S (N x N)
+    fromNodeId    toNodeId    delay
+    ...
+*/
+
 export const modelToDat = model => {
-
-    /*
-        Model format:
-        {
-            nodes: [
-                {
-                    id: uuid,
-                    memory: number,
-                    u: number
-                },
-                ...
-            ],
-            tasks: [
-                {
-                    id: uuid,
-                    C: number,
-                    T: number,
-                    D: number,
-                    a: number,
-                    M: number,
-                    processorId: uuid | null
-                },
-                ...
-            ],
-            precedences: [
-                {
-                    from: taskUuid,
-                    to: taskUuid
-                },
-                ...
-            ],
-            connections: [
-                {
-                    from: nodeUuid,
-                    to: nodeUuid,
-                    delay: number
-                },
-                ...
-            ]
-        }
-
-        Output format:
-        N
-        nodeId (from 1)    memory    u
-        ...
-        M
-        taskId (from 0)   C    T    D    a    M    allocatedNode
-        ...
-        P (M x M)
-        fromTaskId    toTaskId    exists (1/0)
-        ...
-        S (N x N)
-        fromNodeId    toNodeId    delay
-        ...
-    */
 
     const lines = [];
 
@@ -155,8 +155,8 @@ export const modelToDat = model => {
 
 export const datToModel = (datString) => {
 
-    console.log("Parsing DAT:");
-    console.log(datString);
+    //console.log("Parsing DAT:");
+    //console.log(datString);
 
     const lines = datString.trim().split('\n');
     let lineIndex = 0;
@@ -234,7 +234,7 @@ export const datToModel = (datString) => {
                 bidirectional: false
             });
 
-            // Add to successors list
+            // Add to successors list of from task
             const fromTask = tasks.find(t => t.id === fromUuid);
             if (fromTask && !fromTask.successors.includes(toUuid)) {
                 fromTask.successors.push(toUuid);
@@ -279,6 +279,22 @@ export const datToModel = (datString) => {
         }
     }
 
+    // if a node has a single connection, set type MIST
+    nodes.forEach(node => {
+        const hasIncoming = connections.some(conn => conn.to === node.id);
+        if(!hasIncoming) {
+            node.type = "MIST";
+        }
+    });
+
+    // if a task has no precedences, set mist to true
+    tasks.forEach(task => {
+        const hasPrecedence = precedences.some(p => p.to === task.id);
+        if (!hasPrecedence) {
+            task.mist = true;
+        }
+    });
+
     const model = {
         nodes,
         connections,
@@ -286,13 +302,5 @@ export const datToModel = (datString) => {
         precedences
     };
 
-    // return model;
-    // console.log(model);
-
-    return { // Not implemented yet
-        nodes: [],
-        connections: [],
-        tasks: [],
-        precedences: []
-    };
+    return model;
 };
