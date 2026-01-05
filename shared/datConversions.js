@@ -40,7 +40,7 @@ import { generateUUID8 } from "./utils.js";
         ]
     }
 
-    Output format:
+    Dat format:
     N
     nodeId (from 1)    memory    u
     ...
@@ -155,13 +155,11 @@ export const modelToDat = model => {
 
 export const datToModel = (datString) => {
 
-    //console.log("Parsing DAT:");
-    //console.log(datString);
-
     const lines = datString.trim().split('\n');
     let lineIndex = 0;
 
     // Parse nodes
+    console.log("Parsing nodes...");
     const numNodes = parseInt(lines[lineIndex++]);
     const nodes = [];
     const nodeIdMap = {}; // Map numeric IDs to generated UUIDs
@@ -185,9 +183,11 @@ export const datToModel = (datString) => {
             }
         });
     }
+    console.log(`Parsed ${nodes.length} nodes.\n`);
 
     // Parse tasks
-    const numTasks = parseInt(lines[lineIndex++]);
+    console.log("Parsing tasks...");
+    const numTasks = parseInt(lines[lineIndex++])+1; // Tasks start from 0
     const tasks = [];
     const taskIdMap = {}; // Map numeric IDs to generated UUIDs
 
@@ -215,9 +215,11 @@ export const datToModel = (datString) => {
             }
         });
     }
+    console.log(`Parsed ${tasks.length} tasks.\n`);
 
     // Parse precedences
-    const numPrecedences = parseInt(lines[lineIndex++]);
+    console.log("Parsing precedences...");
+    const numPrecedences = parseInt(lines[lineIndex++]); // Should be M x M
     const precedences = [];
 
     for (let i = 0; i < numPrecedences; i++) {
@@ -241,8 +243,11 @@ export const datToModel = (datString) => {
             }
         }
     }
+    console.log(`Parsed ${precedences.length} precedences.\n`);
 
     // Parse connections
+    console.log("Parsing connections...");
+
     const numConnections = parseInt(lines[lineIndex++]);
     const connections = [];
 
@@ -278,6 +283,7 @@ export const datToModel = (datString) => {
             }
         }
     }
+    console.log(`Parsed ${connections.length} connections.\n`);
 
     // if a node has a single connection, set type MIST
     nodes.forEach(node => {

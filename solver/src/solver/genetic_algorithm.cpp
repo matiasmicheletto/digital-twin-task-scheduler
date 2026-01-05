@@ -38,12 +38,12 @@ Candidate crossover(Scheduler& scheduler, const Candidate& p1, const Candidate& 
 Candidate Solver::geneticAlgorithmSolve() {
     
     const int maxInitTries = config.ga_maxInitTries;
-    const int populationSize = config.ga_populationSize;
+    const size_t populationSize = config.ga_populationSize;
     const int maxGenerations = config.ga_maxGenerations;
     const double mutationRate = config.ga_mutationRate;
     const double crossoverRate = config.ga_crossoverRate;
     const int timeout = config.ga_timeout;
-    const int eliteCount = config.ga_eliteCount;
+    const size_t eliteCount = config.ga_eliteCount;
 
     
 
@@ -51,7 +51,7 @@ Candidate Solver::geneticAlgorithmSolve() {
     std::vector<Individual> population;
     config.rs_breakOnFirstFeasible = true;
     config.rs_maxIterations = maxInitTries;
-    for (int i = 0; i < populationSize; ++i) {
+    for (size_t i = 0; i < populationSize; ++i) {
         Candidate candidate = randomSearchSolve();
         if (scheduler.isScheduled()) {
             population.emplace_back(candidate, scheduler.getFinishTimeSum());
@@ -93,12 +93,12 @@ Candidate Solver::geneticAlgorithmSolve() {
         std::vector<Individual> newPopulation;
 
         // Elitism: carry over the best individuals
-        for (int i = 0; i < eliteCount && i < population.size(); ++i) {
+        for (size_t i = 0; i < eliteCount && i < population.size(); ++i) {
             newPopulation.push_back(population[i]);
         }
 
         // Generate new individuals
-        while ((int)newPopulation.size() < populationSize) {
+        while (newPopulation.size() < populationSize) {
             const auto& p1 = tournamentSelect();
             const auto& p2 = tournamentSelect();
 

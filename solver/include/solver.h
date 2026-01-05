@@ -47,11 +47,12 @@ public:
     bool rs_breakOnFirstFeasible = false;
 
     // Parameters for Genetic Algorithm
+    // Variables with type size_t are used for counts to avoid signed/unsigned comparison warnings
     int ga_maxInitTries = 3000;
-    int ga_populationSize = 100;
+    size_t ga_populationSize = 100;
     int ga_maxGenerations = 500;
     int ga_timeout = 3600;
-    int ga_eliteCount = 5;
+    size_t ga_eliteCount = 5;
     int ga_stagnationLimit = 50;
     double ga_mutationRate = 0.1;
     double ga_crossoverRate = 0.7;

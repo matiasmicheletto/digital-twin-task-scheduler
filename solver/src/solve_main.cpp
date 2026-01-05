@@ -108,6 +108,8 @@ int main(int argc, char **argv) {
             if(!cfg_filename.empty()) {
                 utils::dbg << "Loading solver configuration from file: " << cfg_filename << "\n";
                 config = SolverConfig::fromYaml(cfg_filename);
+            }else{
+                utils::dbg << "Using default solver configuration.\n";
             }
             config.solverMethod = method;
             config.print(); // Uses utils::dbg

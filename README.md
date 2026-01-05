@@ -1,11 +1,11 @@
 # Digital Twin Task Scheduler
 
-This project implements a task scheduling system for digital twin environments. It provides functionalities to model tasks and servers, and to schedule tasks efficiently across available servers.
+A comprehensive tool for generating, solving, and visualizing task scheduling problems in mist-edge-cloud computing environments. This project includes a graphical user interface for instance generation, a C++ solver implementing various scheduling algorithms, and python based data visualization for computed solutions.
 
 ## Features
 - Generate tasks and network configurations via a graphical interface.
-- Automatic generation of large datasets of instances.
-- C++ solver for scheduling tasks based on various algorithms.
+- Automatic generation of large datasets of instances in different formats.
+- C++ solvers for scheduling tasks based on various algorithms (simulated annealing, random search, genetic algorithms).
 - CPLEX integration for solving scheduling problems using ILP.
 - Data visualization and analysis tools.
 
@@ -28,6 +28,9 @@ Debian / Ubuntu:
 Fedora:
   sudo dnf install yaml-cpp-devel
 
+## Getting Started
+Follow these steps to generate instances, run the solver, and visualize the results:
+
 1. Clone the repository:
 ```bash
 git clone https://github.com/matiasmicheletto/digital-twin-task-scheduler.git
@@ -44,7 +47,7 @@ cd ..
 ```
 Open your browser and navigate to `http://localhost:5173` to access the GUI. Or use the pre-built version in the `dist` folder.
 
-3. Generate large datasets of instances automatically (See scripts help manuals for custom presets):
+3. To generate large datasets of instances automatically (See scripts help manuals for custom presets):
 ```bash
 cd data
 npm install
@@ -53,16 +56,19 @@ node network-generator.js --batch presets
 cd ..
 ```
 
-4. Run solver:
+4. Compile and run solver (for instance, using simulated annealing):
 ```bash
 cd solver
-
 make
 cd bin
-./solve -t tasks.json -n network.json -c config.yaml -s -o json
+./solve -t tasks.json -n network.json -c config.yaml -s annealing -o json
 ```
+To save a csv file, use `-o csv` instead of `-o json`:
+```bash
+./solve -t tasks.json -n network.json -c config.yaml -s annealing -o csv > ../../data/schedule.csv
+``` 
 
-5. Visualize schedule. Run solver with `-o csv` to generate `schedule.csv`, then:
+5. Visualize schedule. Run solver with `-o csv`, then:
 ```bash
 cd data
 virtualenv venv
@@ -81,7 +87,7 @@ The entire process can be automated using the provided `all.sh` script, which co
 ## Data format
 Instances can be generated using the GUI or the automatic generators. They consist of two JSON files: one for tasks and another for the network. There is also a tool to combine both data structures into a single .dat file to solve the instance with ILP optimizers.  
 
-Automatic generators are located in the [shared](shared) folder. The [data](data) folder contains node scripts to access these generators and create datasets. To automate the generation of large datasets, use the [generate.sh](data/generate.sh) script.
+Automatic generators and format converters are located in the [shared](shared) folder. The [data](data) folder contains node scripts to access these generators and create datasets. To automate the generation of large datasets, use the [generate.sh](data/generate.sh) script.
 
 ### Tasks
 Tasks are represented in JSON format with the following structure:
@@ -164,21 +170,37 @@ Network consists of nodes and connections represented in JSON format with the fo
 Optimization options can be specified in a YAML configuration file with the following structure:
 
 ```yaml
-simulated_annealing:
+
   max_init_tries: 5000
-  max_iterations: 8000
+  max_iterations: 3000
+  timeout: 3600
+  stagnation_limit: 200
   max_neighbor_tries: 30
   initial_temperature: 150.0
-  cooling_rate: 0.99
-  min_temperature: 1.0e-4
+  cooling_rate: 0.995
+  min_temperature: 1.0e-3
+  priority_refinement_method: NORMAL
+  refinement_iterations: 50
+  normal_sigma_max: 0.1
+  normal_sigma_min: 1.0e-3
+  pso_warm_size: 30
+  pso_velocity_clamp: 2
+  pso_inertia_weight: 0.5
+  pso_cognitive_coef: 1.5
+  pso_social_coef: 1.5
 
 random_search:
-  max_iterations: 2000
-  break_on_first_feasible: true
+  max_iterations: 5000
+  timeout: 3600
+  stagnation_limit: 200
+  break_on_first_feasible: false
 
 genetic_algorithm:
   population_size: 150
   max_generations: 800
+  timeout: 3600
+  elite_count: 5
+  stagnation_limit: 200
   mutation_rate: 0.15
   crossover_rate: 0.75
 ```
@@ -210,17 +232,3 @@ Read the [manual](solver/assets/solve_manual.txt) for detailed instructions on h
 
 ### Results
 The solver can output results in three formats: text, JSON, and CSV. The CSV format is particularly useful for visualizing schedules using the provided Python script in the [data](data) folder. The script generates Gantt charts to represent task allocations over time.
-
-To visualize a schedule, run the solver with the `-o csv` option and pass the output to a .csv file, for example:
-
-```bash
-cd solver # Go to solver folder
-make # Build the solver
-./bin/solve -t tasks.json -n network.json -o csv > ../data/schedule.csv # Run solver and pass output to .csv file
-cd ../data # Go to data folder
-virtualenv venv # Create virtual environment
-source venv/bin/activate # Activate virtual environment
-pip install -r requirements.txt # Install dependencies (matplotlib)
-python plot.py schedule.csv # Generate Gantt chart
-deactivate # Deactivate virtual environment
-```
