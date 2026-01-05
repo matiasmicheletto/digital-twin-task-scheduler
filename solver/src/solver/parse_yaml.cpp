@@ -44,10 +44,10 @@ SolverConfig SolverConfig::fromYaml(const std::string& file_path) {
 
     // --- Genetic Algorithm ---
     if (auto ga = root["genetic_algorithm"]) {
-        if (ga["population_size"])   cfg.ga_populationSize = ga["population_size"].as<int>();
+        if (ga["population_size"])   cfg.ga_populationSize = ga["population_size"].as<size_t>();
         if (ga["max_generations"])    cfg.ga_maxGenerations = ga["max_generations"].as<int>();
         if (ga["timeout"])            cfg.ga_timeout = ga["timeout"].as<int>();
-        if (ga["elite_count"])        cfg.ga_eliteCount = ga["elite_count"].as<int>();
+        if (ga["elite_count"])        cfg.ga_eliteCount = ga["elite_count"].as<size_t>();
         if (ga["stagnation_limit"])   cfg.ga_stagnationLimit = ga["stagnation_limit"].as<int>();
         if (ga["mutation_rate"])      cfg.ga_mutationRate = ga["mutation_rate"].as<double>();
         if (ga["crossover_rate"])     cfg.ga_crossoverRate = ga["crossover_rate"].as<double>();

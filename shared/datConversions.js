@@ -254,7 +254,7 @@ export const datToModel = (datString) => {
     for (let i = 0; i < numConnections; i++) {
         const [fromId, toId, delay] = lines[lineIndex++].split('\t').map(val => val.trim());
 
-        if (delay !== '0' && delay !== '') {
+        if (delay !== '0' && delay !== '' && delay !== '1000') { // Ignore self-connections and infinite delays
             const fromUuid = nodeIdMap[fromId];
             const toUuid = nodeIdMap[toId];
             const fromNode = nodes.find(n => n.id === fromUuid);
@@ -296,9 +296,7 @@ export const datToModel = (datString) => {
     // if a task has no precedences, set mist to true
     tasks.forEach(task => {
         const hasPrecedence = precedences.some(p => p.to === task.id);
-        if (!hasPrecedence) {
-            task.mist = true;
-        }
+        task.mist = !hasPrecedence
     });
 
     const model = {
