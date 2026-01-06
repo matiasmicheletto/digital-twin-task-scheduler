@@ -9,12 +9,15 @@ Candidate Solver::simulatedAnnealingSolve() {
     double coolingRate      = config.sa_coolingRate;
     double minTemperature   = config.sa_minTemperature;
 
+    auto start_time = std::chrono::high_resolution_clock::now();
+
     // Initialize using random search to find an initial feasible solution
     config.rs_breakOnFirstFeasible = true;
     config.rs_maxIterations = maxInitTries;
     Candidate curr = randomSearchSolve();
     if (scheduler.getScheduleState() != SCHEDULED) {
         utils::dbg << "SA: Could not find initial feasible solution.\n";
+        writeLog(utils::getElapsed(start_time), 0, -1, -1, scheduler.getScheduleState(), "Could not find initial feasible solution");
         return Candidate(scheduler.getTaskCount());
     }
 
@@ -95,5 +98,6 @@ Candidate Solver::simulatedAnnealingSolve() {
     else
         utils::dbg << "SA: No feasible solution found.\n";
 
+    writeLog(utils::getElapsed(start_time), maxIterations, scheduler.getScheduleSpan(), scheduler.getFinishTimeSum(), scheduler.getScheduleState());
     return best;
 }

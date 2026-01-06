@@ -48,6 +48,8 @@ class Scheduler {
         ScheduleState schedule(const Candidate& candidate);
         inline ScheduleState getScheduleState() const { return schedule_state; }
 
+        std::string getInstanceName() const { return instance_name; }
+
         inline size_t getTaskCount() const { return tasks.size(); }
         inline size_t getServerCount() const { return servers.size(); }
 
@@ -68,6 +70,7 @@ class Scheduler {
         std::vector<Server> servers;
         std::vector<Connection> connections;
         std::vector<std::vector<int>> delay_matrix;
+        std::string instance_name;
 
         ScheduleState schedule_state;
 

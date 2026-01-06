@@ -45,7 +45,7 @@ Candidate Solver::geneticAlgorithmSolve() {
     const int timeout = config.ga_timeout;
     const size_t eliteCount = config.ga_eliteCount;
 
-    
+    auto start_time = std::chrono::high_resolution_clock::now();
 
     // Initialize population
     std::vector<Individual> population;
@@ -57,6 +57,7 @@ Candidate Solver::geneticAlgorithmSolve() {
             population.emplace_back(candidate, scheduler.getFinishTimeSum());
         }else{
             utils::dbg << "GA: Individual " << (i + 1) << "/" << populationSize << " infeasible during initialization.\n";
+            writeLog(utils::getElapsed(start_time), i + 1, scheduler.getScheduleSpan(), scheduler.getFinishTimeSum(), scheduler.getScheduleState(), "Individual infeasible during initialization");
             return Candidate(scheduler.getTaskCount());
         }
     }
@@ -64,6 +65,7 @@ Candidate Solver::geneticAlgorithmSolve() {
     // Check if all individuals are feasible
     if (population.size() < populationSize / 2) {
         utils::dbg << "GA: Could not initialize a sufficient feasible population.\n";
+        writeLog(utils::getElapsed(start_time), population.size(), scheduler.getScheduleSpan(), scheduler.getFinishTimeSum(), scheduler.getScheduleState(), "Insufficient feasible population");
         return Candidate(scheduler.getTaskCount());
     }
 
@@ -128,5 +130,6 @@ Candidate Solver::geneticAlgorithmSolve() {
     }
 
     scheduler.schedule(best.candidate);
+    writeLog(utils::getElapsed(start_time), maxGenerations, scheduler.getScheduleSpan(), scheduler.getFinishTimeSum(), scheduler.getScheduleState());
     return best.candidate;
 }

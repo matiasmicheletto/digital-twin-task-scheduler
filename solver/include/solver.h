@@ -64,14 +64,22 @@ public:
 
 class Solver {
 public:
-    Solver(Scheduler& sch, SolverConfig& config) : scheduler(sch), config(config) {}
+    Solver(Scheduler& sch, SolverConfig& config, std::ostream& log = utils::dbg) : 
+        scheduler(sch), 
+        config(config), 
+        log(log) {}
 
     Candidate solve();
+
+    SolverConfig& getConfig() { return config; }
 
 private: 
     Scheduler& scheduler;    
     SolverConfig& config;
+    std::ostream& log;
     
+    void writeLog(int runtime, int iterations, int scheduleSpan, int finishTimeSum, ScheduleState state, std::string obs = ""); 
+
     Candidate randomSearchSolve();
     Candidate geneticAlgorithmSolve();
     Candidate simulatedAnnealingSolve();

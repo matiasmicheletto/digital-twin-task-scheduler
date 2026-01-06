@@ -10,6 +10,8 @@ Candidate Solver::randomSearchSolve() {
     Candidate curr(scheduler.getTaskCount());
     Candidate best(scheduler.getTaskCount());
     
+    auto start_time = std::chrono::high_resolution_clock::now();
+
     for (int iteration = 0; iteration < maxIterations; ++iteration) {
         for (size_t i = 0; i <  scheduler.getTaskCount(); ++i) {
             // Check if task has fixed allocation
@@ -34,11 +36,14 @@ Candidate Solver::randomSearchSolve() {
     }
 
     // Final scheduling with the best candidate found
+    std::string obs = "";
     if (scheduler.getScheduleState() == SCHEDULED) {
         scheduler.schedule(best);
     } else {
+        obs = "No feasible schedule found";
         utils::dbg << "No feasible schedule found.\n";
     }
 
+    writeLog(utils::getElapsed(start_time), maxIterations, scheduler.getScheduleSpan(), scheduler.getFinishTimeSum(), scheduler.getScheduleState(), obs);
     return best;
 }

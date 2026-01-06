@@ -75,6 +75,18 @@ void printHelp(const char* file, const char* message) { // Open readme file with
     std::cerr << "Error: Unable to open manual file." << std::endl;
 }
 
+std::string currentDateTime() {
+    std::time_t now = std::time(nullptr);
+    char buf[100];
+    std::strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", std::localtime(&now));
+    return std::string(buf);
+}
+
+int getElapsed(const std::chrono::high_resolution_clock::time_point& start_time) {
+    auto end_time = std::chrono::high_resolution_clock::now();
+    return static_cast<int>(std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time).count());
+}
+
 template<typename T>
 T require_type(const nlohmann::json& obj, const std::string& key) {
     // Throws nlohmann::json::out_of_range if key is missing

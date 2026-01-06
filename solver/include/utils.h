@@ -41,6 +41,10 @@ std::string generate_uuid();
 inline constexpr const char defaultMessage[] = "";
 void printHelp(const char* file, const char* message = defaultMessage); 
 
+std::string currentDateTime();
+
+int getElapsed(const std::chrono::high_resolution_clock::time_point& start_time);
+
 // Random number generator
 static std::random_device rd;
 static std::mt19937 gen(rd());

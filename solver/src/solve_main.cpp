@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <cstring>
+#include <fstream>
 
 #include "../include/json.hpp"
 #include "../include/utils.h"
@@ -17,6 +18,7 @@ int main(int argc, char **argv) {
     utils::PRINT_TYPE output_format = utils::PRINT_TYPE::PLAIN_TEXT;
     SolverMethod method = SolverMethod::RANDOM_SEARCH;
     bool solve = false;
+    std::string log_file_name = "solver_log.csv";
 
     for(int i = 0; i < argc; i++) {  
         if(argc == 1) {
@@ -93,6 +95,13 @@ int main(int argc, char **argv) {
             }   
         }
 
+        if(strcmp(argv[i], "--log") == 0) {
+            if(i+1 < argc) {
+                const char* file = argv[i+1];
+                log_file_name = std::string(file);
+            }
+        }
+
         if(strcmp(argv[i], "--dbg") == 0) {
             utils::dbg.rdbuf(std::cout.rdbuf()); // Enable debug output to std::cout
         }
@@ -112,8 +121,22 @@ int main(int argc, char **argv) {
                 utils::dbg << "Using default solver configuration.\n";
             }
             config.solverMethod = method;
-            config.print(); // Uses utils::dbg
-            Solver solver(sch, config);
+            config.print(); // Works if --dbg is enabled
+
+            // File for logging optimization results
+            std::ofstream log_file;
+            if(!log_file_name.empty()) {
+                log_file.open(log_file_name, std::ios::app); // Append mode
+                if(!log_file.is_open()) { // If doesnt exists create and write header
+                    log_file.open(log_file_name, std::ios::out);
+                    log_file << "Date,Instance,Solver Method,Runtime (s),Iterations,Schedule Span,Finish Time Sum,Schedule State\n";
+                    log_file.close();
+                    log_file.open(log_file_name, std::ios::app);
+                }   
+            }
+            std::ostream& log = log_file.is_open() ? log_file : utils::dbg;
+
+            Solver solver(sch, config, log);
             solver.solve();
         }
         

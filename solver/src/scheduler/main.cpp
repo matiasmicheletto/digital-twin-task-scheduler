@@ -1,6 +1,8 @@
 #include "scheduler.h"
 
 Scheduler::Scheduler(std::string tasks_file, std::string network_file) {
+    // Save instance name
+    instance_name = tasks_file + "_" + network_file;
     // Sets up the scheduler by loading tasks and network from JSON files
     loadTasksFromJSONFile(tasks_file);
     loadNetworkFromJSONFile(network_file);
