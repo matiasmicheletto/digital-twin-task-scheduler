@@ -60,7 +60,7 @@ void Scheduler::printText() const {
         std::cout << "\n";
     }
 
-    if(scheduled){
+    if(schedule_state == SCHEDULED) {
         std::cout << "\n" << "####################\n";
         std::cout << "Tasks allocation:\n";
         for (const auto& server : servers) {
@@ -142,7 +142,7 @@ void Scheduler::printJSON() const {
         j["delay_matrix"]["matrix"].push_back(jr);
     }   
 
-    if(scheduled){
+    if(schedule_state == SCHEDULED){
         j["task_allocation"] = nlohmann::json::array();
         for (const auto& server : servers) {
             nlohmann::json js;
@@ -159,7 +159,7 @@ void Scheduler::printJSON() const {
 }
 
 void Scheduler::exportScheduleToCSV() const {
-    if (!scheduled) {
+    if (schedule_state != SCHEDULED) {
         throw std::runtime_error("Schedule not computed yet. Cannot export.");
     }
 

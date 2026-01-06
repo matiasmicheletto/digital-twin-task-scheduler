@@ -53,8 +53,11 @@ Candidate Solver::geneticAlgorithmSolve() {
     config.rs_maxIterations = maxInitTries;
     for (size_t i = 0; i < populationSize; ++i) {
         Candidate candidate = randomSearchSolve();
-        if (scheduler.isScheduled()) {
+        if (scheduler.getScheduleState() == SCHEDULED) {
             population.emplace_back(candidate, scheduler.getFinishTimeSum());
+        }else{
+            utils::dbg << "GA: Individual " << (i + 1) << "/" << populationSize << " infeasible during initialization.\n";
+            return Candidate(scheduler.getTaskCount());
         }
     }
 
@@ -110,7 +113,7 @@ Candidate Solver::geneticAlgorithmSolve() {
 
             mutate(scheduler, mutationRate, child);
 
-            if (scheduler.schedule(child)) {
+            if (scheduler.schedule(child) == SCHEDULED) {
                 int fitness = scheduler.getFinishTimeSum();
                 newPopulation.push_back({child, fitness});
             }

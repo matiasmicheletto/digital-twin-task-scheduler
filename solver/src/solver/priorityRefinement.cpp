@@ -23,7 +23,7 @@ void Solver::refinePrioritiesNormal(Candidate& curr, int currFitness, double T) 
         }
 
         // If the new candidate is better, accept it
-        if (scheduler.schedule(trial)) {
+        if (scheduler.schedule(trial) == SCHEDULED) {
             int fitness = scheduler.getFinishTimeSum();
             if (fitness < currFitness) {
                 curr = trial;
@@ -86,7 +86,7 @@ void Solver::refinePrioritiesPSO(Candidate& curr, int currFitness, double T) {
             particle.position.priorities[j] = static_cast<double>(rand()) / RAND_MAX;
             particle.velocity[j] = (static_cast<double>(rand()) / RAND_MAX - 0.5) * 2.0; // random velocity in [-1, 1]
         }
-        if(scheduler.schedule(particle.position)) {
+        if(scheduler.schedule(particle.position) == SCHEDULED) {
             int fitness = scheduler.getFinishTimeSum();
             particle.bestPosition = particle.position;
             particle.bestFitness = fitness;
@@ -118,7 +118,7 @@ void Solver::refinePrioritiesPSO(Candidate& curr, int currFitness, double T) {
             }
 
             // Evaluate fitness
-            if (scheduler.schedule(particle.position)) {
+            if (scheduler.schedule(particle.position) == SCHEDULED) {
                 int fitness = scheduler.getFinishTimeSum();
                 // Update personal best
                 if (fitness < particle.bestFitness) {

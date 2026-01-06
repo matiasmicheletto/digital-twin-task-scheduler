@@ -1,6 +1,7 @@
 #include "solver.h"
 
 Candidate Solver::solve() {
+    srand(static_cast<unsigned int>(time(nullptr)));
     switch(config.solverMethod) {
         case SolverMethod::RANDOM_SEARCH:
             return randomSearchSolve();

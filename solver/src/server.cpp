@@ -24,6 +24,7 @@ Server Server::fromJSON(const nlohmann::json& j) {
 
     server.memory = utils::require_type<int>(j, "memory");
     server.utilization = utils::require_type<double>(j, "u");
+    server.available_utilization = server.utilization; // Initially available equals total
 
     server.internal_id = -1; // Default value
 

@@ -31,17 +31,19 @@ public:
     
     inline const std::deque<Task>& getAssignedTasks() const { return assigned_tasks; }
     inline std::deque<Task>& getAssignedTasks() { return assigned_tasks; }
-    inline void clearTasks() { assigned_tasks.clear(); }
+    inline void clearTasks() { assigned_tasks.clear(); available_utilization = utilization; }
 
-    inline void pushBackTask(const Task& task) { assigned_tasks.push_back(task); }
-    inline void pushFrontTask(const Task& task) { assigned_tasks.push_front(task); }
+    inline void pushBackTask(const Task& task) { assigned_tasks.push_back(task); available_utilization -= task.getU(); }
+    inline void pushFrontTask(const Task& task) { assigned_tasks.push_front(task); available_utilization -= task.getU(); }
+    inline double getAvailableUtilization() const { return available_utilization; }
 
 private:
     std::string id;
     ServerType type;
     std::string label;
     int memory; // Total memory
-    double utilization; // 0-1
+    double utilization; // 0..1
+    double available_utilization; // available utilization
     int last_slot; // Last slot occupied by a task
     std::deque<Task> assigned_tasks;
 };

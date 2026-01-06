@@ -19,7 +19,7 @@ simulated_annealing:
   pso_social_coef: 1.5
 
 random_search:
-  max_iterations: 5000
+  max_iterations: 1000
   timeout: 3600
   stagnation_limit: 200
   break_on_first_feasible: false

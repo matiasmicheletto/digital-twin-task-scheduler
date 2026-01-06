@@ -16,6 +16,33 @@ enum class TaskType {
 class Task {
     public:
         Task() = default;
+        Task(const Task&) = default;
+        Task(int internal_id_,
+            const std::string& id_,
+            TaskType type_,
+            const std::string& label_,
+            bool fixedAllocation_,
+            const std::string& fixedAllocationId_,
+            int C_,
+            int T_,
+            int D_,
+            int M_,
+            int a_)
+            : internal_id(internal_id_),
+            id(id_),
+            type(type_),
+            label(label_),
+            fixedAllocation(fixedAllocation_),
+            fixedAllocationId(fixedAllocationId_),
+            C(C_),
+            T(T_),
+            D(D_),
+            a(a_),          // Moved 'a' up to match class declaration
+            start_time(0),
+            finish_time(0),
+            M(M_),          // Moved 'M' down to match class declaration
+            u(static_cast<double>(C_) / T_) 
+        {}
         ~Task() = default;
 
         static Task fromJSON(const nlohmann::json& j);
@@ -50,6 +77,14 @@ class Task {
         inline double getU() const { return u; }
         inline int getStartTime() const { return start_time; }
         inline int getFinishTime() const { return finish_time; }
+
+        inline void setC(int c) { C = c; }
+        inline void setT(int t) { T = t; }
+        inline void setD(int d) { D = d; }
+        inline void setM(int m) { M = m; }
+        inline void setU(double utilization) { u = utilization; }
+        inline void setStart_time(int start) { start_time = start; }
+        inline void setFinish_time(int finish) { finish_time = finish; }
         
         inline const std::vector<std::string>& getPredecessors() const { return predecessors; }
         inline const std::vector<int>& getPredecessorInternalIds() const { return predecessor_internal_ids; }

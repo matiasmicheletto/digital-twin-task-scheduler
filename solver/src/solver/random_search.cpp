@@ -7,7 +7,7 @@ Candidate Solver::randomSearchSolve() {
     bool breakOnFirstFeasible = config.rs_breakOnFirstFeasible;
     
     int bestFitness = INT_MAX;
-    Candidate curr( scheduler.getTaskCount());
+    Candidate curr(scheduler.getTaskCount());
     Candidate best(scheduler.getTaskCount());
     
     for (int iteration = 0; iteration < maxIterations; ++iteration) {
@@ -19,22 +19,22 @@ Candidate Solver::randomSearchSolve() {
             curr.priorities[i] = static_cast<double>(rand()) / RAND_MAX; // Random priority between 0 and 1
         }
         // Schedule using the generated candidate
-        if (scheduler.schedule(curr)) { // feasible
+        if (scheduler.schedule(curr) == SCHEDULED) { // feasible
             if (breakOnFirstFeasible) {
                 return curr;
             }
             // Check if this is the best solution found so far
-            //int firness = scheduler.getScheduleSpan();
-            int firness = scheduler.getFinishTimeSum();
-            if (firness < bestFitness) {
-                bestFitness = firness;
+            //int fitness = scheduler.getScheduleSpan();
+            int fitness = scheduler.getFinishTimeSum();
+            if (fitness < bestFitness) {
+                bestFitness = fitness;
                 best = curr;
             }
         }
     }
 
     // Final scheduling with the best candidate found
-    if (scheduler.isScheduled()) {
+    if (scheduler.getScheduleState() == SCHEDULED) {
         scheduler.schedule(best);
     } else {
         utils::dbg << "No feasible schedule found.\n";

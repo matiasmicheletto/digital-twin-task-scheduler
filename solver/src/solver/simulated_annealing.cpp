@@ -13,7 +13,7 @@ Candidate Solver::simulatedAnnealingSolve() {
     config.rs_breakOnFirstFeasible = true;
     config.rs_maxIterations = maxInitTries;
     Candidate curr = randomSearchSolve();
-    if (!scheduler.isScheduled()) {
+    if (scheduler.getScheduleState() != SCHEDULED) {
         utils::dbg << "SA: Could not find initial feasible solution.\n";
         return Candidate(scheduler.getTaskCount());
     }
@@ -46,7 +46,7 @@ Candidate Solver::simulatedAnnealingSolve() {
                 next.priorities[idx] = static_cast<double>(rand()) / RAND_MAX;
             }
 
-            if (scheduler.schedule(next)) { // schedule() is expensive, so only call it once per neighbor
+            if (scheduler.schedule(next) == SCHEDULED) { // schedule() is expensive, so only call it once per neighbor
                 //nextFitness = scheduler.getScheduleFitness();
                 nextFitness = scheduler.getFinishTimeSum();
                 hasFeasibleNeighbor = true; // found a feasible neighbor, exit inner loop
