@@ -16,6 +16,19 @@ Candidate Solver::solve() {
     }
 }
 
+std::string Solver::getSolverMethodName() const {
+    switch(config.solverMethod) {
+        case SolverMethod::RANDOM_SEARCH:
+            return "Random Search";
+        case SolverMethod::GENETIC_ALGORITHM:
+            return "Genetic Algorithm";
+        case SolverMethod::SIMULATED_ANNEALING:
+            return "Simulated Annealing";
+        default:
+            return "Unknown Method";
+    }
+}
+
 void Solver::writeLog(int runtime, int iterations, int scheduleSpan, int finishTimeSum, ScheduleState state, std::string obs) {
     // Prints optimization results in csv format to the log stream
     std::string timestamp = utils::currentDateTime();

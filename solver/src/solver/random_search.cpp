@@ -31,6 +31,7 @@ Candidate Solver::randomSearchSolve() {
             if (fitness < bestFitness) {
                 bestFitness = fitness;
                 best = curr;
+                utils::dbg << "Iteration " << iteration + 1 << ": New best solution found with finish time sum = " << fitness << "\n";
             }
         }
     }

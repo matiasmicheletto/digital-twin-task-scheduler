@@ -73,6 +73,8 @@ public:
 
     SolverConfig& getConfig() { return config; }
 
+    std::string getSolverMethodName() const;
+
 private: 
     Scheduler& scheduler;    
     SolverConfig& config;
