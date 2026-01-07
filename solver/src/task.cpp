@@ -22,6 +22,7 @@ Task Task::fromJSON(const nlohmann::json& j) {
 
     // Handle processorId that can be string or null
     task.fixedAllocation = j.contains("processorId") && !j["processorId"].is_null();
+    
     if (task.fixedAllocation) {
         task.fixedAllocationId = utils::require_type<std::string>(j, "processorId");
         task.fixedAllocationInternalId = -1;

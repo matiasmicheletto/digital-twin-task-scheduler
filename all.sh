@@ -34,30 +34,30 @@ shopt -s nullglob # Make globs return empty if no matches
 #######################################
 # Generate dataset
 #######################################
-echo "=========================================="
-echo "Generating dataset"
-echo "=========================================="
+#echo "=========================================="
+#echo "Generating dataset"
+#echo "=========================================="
 
 # Generate a batch of tasks based on the presets
-node data/task-generator.js presets --output "$TASKS_DIR"
+#node data/task-generator.js presets --output "$TASKS_DIR"
 
 # Build a batch of networks based on the presets
-node data/network-generator.js --batch presets --output "$NETS_DIR"
+#node data/network-generator.js --batch presets --output "$NETS_DIR"
 
-echo "=========================================="
-echo "Converting JSON to DAT"
-echo "=========================================="
-for t in "$TASKS_DIR"/*.json; do
-  for n in "$NETS_DIR"/*.json; do
-    base_t=$(basename "$t" .json)
-    base_n=$(basename "$n" .json)
-    t_abs=$(realpath "$t")
-    n_abs=$(realpath "$n")
-    out="$DAT_DIR/${base_t}__${base_n}.dat"
+#echo "=========================================="
+#echo "Converting JSON to DAT"
+#echo "=========================================="
+#for t in "$TASKS_DIR"/*.json; do
+#  for n in "$NETS_DIR"/*.json; do
+#    base_t=$(basename "$t" .json)
+#    base_n=$(basename "$n" .json)
+#    t_abs=$(realpath "$t")
+#    n_abs=$(realpath "$n")
+#    out="$DAT_DIR/${base_t}__${base_n}.dat"
 
-    node data/json-to-dat.js -t "$t_abs" -n "$n_abs" -o "$out"
-  done
-done
+#    node data/json-to-dat.js -t "$t_abs" -n "$n_abs" -o "$out"
+#  done
+#done
 
 
 
@@ -69,6 +69,14 @@ echo "Building heuristic solver"
 echo "=========================================="
 make solver
 
+
+#######################################
+# Convert DAT to JSON
+#######################################
+echo "=========================================="
+echo "Converting DAT to JSON"
+echo "=========================================="
+./data/all-dat-to-json.sh
 
 
 #######################################
@@ -85,7 +93,7 @@ for t in "$TASKS_DIR"/*.json; do
     t_abs=$(realpath "$t")
     n_abs=$(realpath "$n")
 
-    for strategy in random annealing; do
+    for strategy in random annealing genetic; do
       out="$RESULTS_CSV_DIR/${base_t}__${base_n}_${strategy}.csv"
 
       echo "Heuristic [$strategy]: $base_t / $base_n"

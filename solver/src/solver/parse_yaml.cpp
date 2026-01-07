@@ -1,7 +1,8 @@
 #include "solver.h"
+#include <filesystem>
+#include <fstream>
 
-SolverConfig SolverConfig::fromYaml(const std::string& file_path) {
-    SolverConfig cfg; // defaults already set
+void SolverConfig::fromYaml(const std::string& file_path) {
 
     YAML::Node root = YAML::LoadFile(file_path);
 
@@ -10,51 +11,78 @@ SolverConfig SolverConfig::fromYaml(const std::string& file_path) {
         if (sa["priority_refinement_method"]) {
             std::string method = sa["priority_refinement_method"].as<std::string>();
             if (method == "NORMAL")
-                cfg.sa_priorityRefinementMethod = PriorityRefinementMethod::NORMAL_PERTURBATION;
+                sa_priorityRefinementMethod = PriorityRefinementMethod::NORMAL_PERTURBATION;
             else if (method == "PSO")
-                cfg.sa_priorityRefinementMethod = PriorityRefinementMethod::PARTICLE_SWARM_OPTIMIZATION;
+                sa_priorityRefinementMethod = PriorityRefinementMethod::PARTICLE_SWARM_OPTIMIZATION;
             else
                 throw std::runtime_error("Invalid priority_refinement_method in YAML config");
         }
-        if (sa["max_init_tries"])        cfg.sa_maxInitTries = sa["max_init_tries"].as<int>();
-        if (sa["max_iterations"])        cfg.sa_maxIterations = sa["max_iterations"].as<int>();
-        if (sa["timeout"])               cfg.sa_timeout = sa["timeout"].as<int>();
-        if (sa["stagnation_limit"])      cfg.sa_stagnationLimit = sa["stagnation_limit"].as<int>();
-        if (sa["max_neighbor_tries"])    cfg.sa_maxNeighborTries = sa["max_neighbor_tries"].as<int>();
-        if (sa["initial_temperature"])   cfg.sa_initialTemperature = sa["initial_temperature"].as<double>();
-        if (sa["cooling_rate"])          cfg.sa_coolingRate = sa["cooling_rate"].as<double>();
-        if (sa["min_temperature"])       cfg.sa_minTemperature = sa["min_temperature"].as<double>();
-        if (sa["normal_sigma_max"])      cfg.sa_sigmaMax = sa["normal_sigma_max"].as<double>();
-        if (sa["normal_sigma_min"])      cfg.sa_sigmaMin = sa["normal_sigma_min"].as<double>();
-        if (sa["refinement_iterations"]) cfg.sa_refinementIterations = sa["refinement_iterations"].as<int>();
-        if (sa["pso_swarm_size"])        cfg.sa_pso_swarmSize = sa["pso_swarm_size"].as<int>();
-        if (sa["pso_velocity_clamp"])    cfg.sa_pso_velocityClamp = sa["pso_velocity_clamp"].as<int>();
-        if (sa["pso_inertia_weight"])    cfg.sa_pso_inertiaWeight = sa["pso_inertia_weight"].as<double>();
-        if (sa["pso_cognitive_coef"]) cfg.sa_pso_cognitiveCoefficient = sa["pso_cognitive_coef"].as<double>();
-        if (sa["pso_social_coef"])    cfg.sa_pso_socialCoefficient = sa["pso_social_coef"].as<double>();
+        if (sa["max_init_tries"])        sa_maxInitTries = sa["max_init_tries"].as<int>();
+        if (sa["max_iterations"])        sa_maxIterations = sa["max_iterations"].as<int>();
+        if (sa["timeout"])               sa_timeout = sa["timeout"].as<int>();
+        if (sa["stagnation_limit"])      sa_stagnationLimit = sa["stagnation_limit"].as<int>();
+        if (sa["max_neighbor_tries"])    sa_maxNeighborTries = sa["max_neighbor_tries"].as<int>();
+        if (sa["initial_temperature"])   sa_initialTemperature = sa["initial_temperature"].as<double>();
+        if (sa["cooling_rate"])          sa_coolingRate = sa["cooling_rate"].as<double>();
+        if (sa["min_temperature"])       sa_minTemperature = sa["min_temperature"].as<double>();
+        if (sa["normal_sigma_max"])      sa_sigmaMax = sa["normal_sigma_max"].as<double>();
+        if (sa["normal_sigma_min"])      sa_sigmaMin = sa["normal_sigma_min"].as<double>();
+        if (sa["refinement_iterations"]) sa_refinementIterations = sa["refinement_iterations"].as<int>();
+        if (sa["pso_swarm_size"])        sa_pso_swarmSize = sa["pso_swarm_size"].as<int>();
+        if (sa["pso_velocity_clamp"])    sa_pso_velocityClamp = sa["pso_velocity_clamp"].as<int>();
+        if (sa["pso_inertia_weight"])    sa_pso_inertiaWeight = sa["pso_inertia_weight"].as<double>();
+        if (sa["pso_cognitive_coef"]) sa_pso_cognitiveCoefficient = sa["pso_cognitive_coef"].as<double>();
+        if (sa["pso_social_coef"])    sa_pso_socialCoefficient = sa["pso_social_coef"].as<double>();
     }
 
     // --- Random Search ---
     if (auto rs = root["random_search"]) {
-        if (rs["max_iterations"])            cfg.rs_maxIterations = rs["max_iterations"].as<int>();
-        if (rs["timeout"])                   cfg.rs_timeout = rs["timeout"].as<int>();
-        if (rs["stagnation_limit"])          cfg.rs_stagnationLimit = rs["stagnation_limit"].as<int>();
-        if (rs["break_on_first_feasible"])   cfg.rs_breakOnFirstFeasible = rs["break_on_first_feasible"].as<bool>();
+        if (rs["max_iterations"])            rs_maxIterations = rs["max_iterations"].as<int>();
+        if (rs["timeout"])                   rs_timeout = rs["timeout"].as<int>();
+        if (rs["stagnation_limit"])          rs_stagnationLimit = rs["stagnation_limit"].as<int>();
+        if (rs["break_on_first_feasible"])   rs_breakOnFirstFeasible = rs["break_on_first_feasible"].as<bool>();
     }
 
     // --- Genetic Algorithm ---
     if (auto ga = root["genetic_algorithm"]) {
-        if (ga["population_size"])   cfg.ga_populationSize = ga["population_size"].as<size_t>();
-        if (ga["max_generations"])    cfg.ga_maxGenerations = ga["max_generations"].as<int>();
-        if (ga["timeout"])            cfg.ga_timeout = ga["timeout"].as<int>();
-        if (ga["elite_count"])        cfg.ga_eliteCount = ga["elite_count"].as<size_t>();
-        if (ga["stagnation_limit"])   cfg.ga_stagnationLimit = ga["stagnation_limit"].as<int>();
-        if (ga["mutation_rate"])      cfg.ga_mutationRate = ga["mutation_rate"].as<double>();
-        if (ga["crossover_rate"])     cfg.ga_crossoverRate = ga["crossover_rate"].as<double>();
+        if (ga["population_size"])   ga_populationSize = ga["population_size"].as<size_t>();
+        if (ga["max_generations"])    ga_maxGenerations = ga["max_generations"].as<int>();
+        if (ga["timeout"])            ga_timeout = ga["timeout"].as<int>();
+        if (ga["elite_count"])        ga_eliteCount = ga["elite_count"].as<size_t>();
+        if (ga["stagnation_limit"])   ga_stagnationLimit = ga["stagnation_limit"].as<int>();
+        if (ga["mutation_rate"])      ga_mutationRate = ga["mutation_rate"].as<double>();
+        if (ga["crossover_rate"])     ga_crossoverRate = ga["crossover_rate"].as<double>();
     }
- 
-    return cfg;
 }   
+
+void SolverConfig::setLogFile(const std::string& file_path) {
+    log = &utils::dbg;
+
+    if (file_path.empty())
+        return;
+
+    // Use path relative to binary directory
+    auto relative_path = utils::getBinaryDir() / file_path;
+    std::string file_path_str = relative_path.string();
+
+    // Check if file exists
+    const bool file_exists = std::filesystem::exists(file_path_str);
+
+    // Open file in append mode
+    log_file_stream.open(file_path_str, std::ios::app);
+    if (!log_file_stream.is_open())
+        return;
+
+    if (!file_exists) { // New file, write header
+        if (log_file_stream.tellp() == 0) { // File is empty, write header
+            log_file_stream
+                << "Date,Instance,Solver Method,Runtime (s),Iterations,"
+                "Schedule Span,Finish Time Sum,Schedule State\n";
+        }
+    }
+
+    log = &log_file_stream;
+}
 
 void SolverConfig::print() const {
     utils::dbg << "Solver Configuration:\n";

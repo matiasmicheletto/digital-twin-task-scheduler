@@ -50,7 +50,7 @@ void Solver::writeLog(int runtime, int iterations, int scheduleSpan, int finishT
 
     std::string scheduleStateStr = scheduler.printScheduleState();
 
-    log << timestamp << "," 
+    (*config.log) << timestamp << "," 
         << instanceName << "," 
         << solverMethodName << "," 
         << runtime << "," 

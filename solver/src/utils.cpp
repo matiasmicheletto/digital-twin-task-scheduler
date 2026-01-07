@@ -2,7 +2,43 @@
 
 namespace utils {
 
-std::string getExecutableDir() {
+std::filesystem::path getBinaryDir(){
+#if defined(_WIN32)
+
+    wchar_t buffer[MAX_PATH];
+    DWORD len = GetModuleFileNameW(nullptr, buffer, MAX_PATH);
+    if (len == 0 || len == MAX_PATH)
+        throw std::runtime_error("GetModuleFileNameW failed");
+
+    return std::filesystem::path(buffer).parent_path();
+
+#elif defined(__APPLE__)
+
+    uint32_t size = 0;
+    _NSGetExecutablePath(nullptr, &size); // get required size
+
+    std::string buffer(size, '\0');
+    if (_NSGetExecutablePath(buffer.data(), &size) != 0)
+        throw std::runtime_error("_NSGetExecutablePath failed");
+
+    return std::filesystem::canonical(buffer).parent_path();
+
+#elif defined(__linux__)
+
+    char buffer[PATH_MAX];
+    ssize_t len = ::readlink("/proc/self/exe", buffer, sizeof(buffer) - 1);
+    if (len == -1)
+        throw std::runtime_error("readlink(/proc/self/exe) failed");
+
+    buffer[len] = '\0';
+    return std::filesystem::path(buffer).parent_path();
+
+#else
+    #error "Unsupported platform"
+#endif
+}
+
+std::string getBinaryDirStr() {
 #ifdef _WIN32
     char result[MAX_PATH];
     GetModuleFileName(NULL, result, MAX_PATH);
@@ -59,7 +95,7 @@ void printHelp(const char* file, const char* message) { // Open readme file with
         manualFile.close();
         exit(1);
     } else { // try to load from executable dir
-        std::string execDir = getExecutableDir();
+        std::string execDir = getBinaryDirStr();
         std::string fullPath = execDir + "/" + file;
         std::ifstream defaultManualFile(fullPath);
         if (defaultManualFile.is_open()) {

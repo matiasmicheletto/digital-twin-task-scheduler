@@ -2,6 +2,7 @@
 #define SOLVER_H
 
 #include <yaml-cpp/yaml.h>
+#include <fstream>
 #include "utils.h"
 #include "scheduler.h"
 
@@ -18,6 +19,9 @@ enum class PriorityRefinementMethod {
 
 class SolverConfig { // Configuration parameters for the solver
 public:
+    SolverConfig() = default;
+
+    // General solver parameters
     SolverMethod solverMethod = SolverMethod::RANDOM_SEARCH;
 
     // Parameters for Simulated Annealing
@@ -57,17 +61,23 @@ public:
     double ga_mutationRate = 0.1;
     double ga_crossoverRate = 0.7;
 
-    static SolverConfig fromYaml(const std::string& file_path);
+    void fromYaml(const std::string& file_path);
+    
+    void setLogFile(const std::string& file_path);
+    std::ostream* log;
 
     void print() const;
+
+private:
+    
+    std::ofstream log_file_stream;
 };
 
 class Solver {
 public:
-    Solver(Scheduler& sch, SolverConfig& config, std::ostream& log = utils::dbg) : 
+    Solver(Scheduler& sch, SolverConfig& config) : 
         scheduler(sch), 
-        config(config), 
-        log(log) {}
+        config(config) {}
 
     Candidate solve();
 
@@ -78,7 +88,6 @@ public:
 private: 
     Scheduler& scheduler;    
     SolverConfig& config;
-    std::ostream& log;
     
     void writeLog(int runtime, int iterations, int scheduleSpan, int finishTimeSum, ScheduleState state, std::string obs = ""); 
 

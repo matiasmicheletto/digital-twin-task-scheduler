@@ -208,6 +208,7 @@ export const datToModel = (datString) => {
             D: parseFloat(D),
             a: parseFloat(a),
             M: parseFloat(M),
+            processorId: isMist ? nodeIdMap[allocatedNode] : null,
             successors: [],
             position: {
                 x: 200 + i * 80,
@@ -252,6 +253,7 @@ export const datToModel = (datString) => {
     const connections = [];
 
     for (let i = 0; i < numConnections; i++) {
+
         const [fromId, toId, delay] = lines[lineIndex++].split('\t').map(val => val.trim());
 
         if (delay !== '0' && delay !== '' && delay !== '1000') { // Ignore self-connections and infinite delays
@@ -261,12 +263,41 @@ export const datToModel = (datString) => {
 
             const connection = {
                 id: `${fromUuid}_${toUuid}`,
-                label: `Node ${fromId} → Node ${toId}`,
+                label: `Node ${fromId} -> Node ${toId}`,
                 from: fromUuid,
                 to: toUuid,
                 delay: parseFloat(delay),
                 bidirectional: false
             };
+
+            // Check if there already is a connection between from and to
+            /*
+            const existingConnection = connections.findIndex(conn => conn.from === toUuid && conn.to === fromUuid);
+            if(existingConnection !== -1) {
+                connections[existingConnection].delay = Math.min(connections[existingConnection].delay, parseFloat(delay));
+                connections[existingConnection].label = `Node ${fromId} <--> Node ${toId}`;
+                connections[existingConnection].bidirectional = true;
+
+                // Update link in fromNode and toNode
+                const connectionId = connections[existingConnection].id;
+                const toNode = nodes.find(n => n.id === toUuid);
+                if (fromNode && toNode) {
+                    const linkFromIndex = fromNode.links.findIndex(l => l.id === connectionId);
+                    const linkToIndex = toNode.links.findIndex(l => l.id === connectionId);
+                    if(linkFromIndex !== -1) {
+                        fromNode.links[linkFromIndex].delay = Math.min(fromNode.links[linkFromIndex].delay, parseFloat(delay));
+                        fromNode.links[linkFromIndex].label = `Node ${fromId} <--> Node ${toId}`;
+                        fromNode.links[linkFromIndex].bidirectional = true;
+                    }
+                    if(linkToIndex !== -1) {
+                        toNode.links[linkToIndex].delay = Math.min(toNode.links[linkToIndex].delay, parseFloat(delay));
+                        toNode.links[linkToIndex].label = `Node ${fromId} <--> Node ${toId}`;
+                        toNode.links[linkToIndex].bidirectional = true;
+                    }
+                }
+                continue; // Skip adding a new connection
+            }
+            */
 
             connections.push(connection);
 
@@ -285,18 +316,29 @@ export const datToModel = (datString) => {
     }
     console.log(`Parsed ${connections.length} connections.\n`);
 
-    // if a node has a single connection, set type MIST
+    // If a node has a single incoming connection, set type MIST. If it has none outgoing connections, set to CLOUD
     nodes.forEach(node => {
         const hasIncoming = connections.some(conn => conn.to === node.id);
+        const hasOutgoing = connections.some(conn => conn.from === node.id);
         if(!hasIncoming) {
             node.type = "MIST";
         }
+        if(!hasOutgoing){
+            node.type = "CLOUD";
+        }
     });
 
-    // if a task has no precedences, set mist to true
+    // If a task has no precedences, set mist to true
     tasks.forEach(task => {
         const hasPrecedence = precedences.some(p => p.to === task.id);
-        task.mist = !hasPrecedence
+        task.mist = !hasPrecedence;
+        // If is preallocated, set that node to mist
+        if(task.processorId) {
+            const node = nodes.find(n => n.id === task.processorId);
+            if(node) {
+                node.type = "MIST";
+            }
+        }
     });
 
     const model = {

@@ -113,30 +113,18 @@ int main(int argc, char **argv) {
         Scheduler sch(tsk_filename, nw_filename);
         
         if(solve){
-            SolverConfig config; // Default configuration
+            SolverConfig config;
             if(!cfg_filename.empty()) {
                 utils::dbg << "Loading solver configuration from file: " << cfg_filename << "\n";
-                config = SolverConfig::fromYaml(cfg_filename);
+                config.fromYaml(cfg_filename);
             }else{
                 utils::dbg << "Using default solver configuration.\n";
             }
             config.solverMethod = method;
+            config.setLogFile(log_file_name);
             config.print(); // Works if --dbg is enabled
 
-            // File for logging optimization results
-            std::ofstream log_file;
-            if(!log_file_name.empty()) {
-                log_file.open(log_file_name, std::ios::app); // Append mode
-                if(!log_file.is_open()) { // If doesnt exists create and write header
-                    log_file.open(log_file_name, std::ios::out);
-                    log_file << "Date,Instance,Solver Method,Runtime (s),Iterations,Schedule Span,Finish Time Sum,Schedule State\n";
-                    log_file.close();
-                    log_file.open(log_file_name, std::ios::app);
-                }   
-            }
-            std::ostream& log = log_file.is_open() ? log_file : utils::dbg;
-
-            Solver solver(sch, config, log);
+            Solver solver(sch, config);
             solver.solve();
         }
         

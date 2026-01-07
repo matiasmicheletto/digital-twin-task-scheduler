@@ -12,8 +12,20 @@
 #include <string>
 #include <random>
 #include <type_traits>
+#include <filesystem>
+#include <stdexcept>
 
 #include "json.hpp"
+
+#if defined(_WIN32)
+    #include <windows.h>
+#elif defined(__APPLE__)
+    #include <mach-o/dyld.h>
+    #include <limits.h>
+#elif defined(__linux__)
+    #include <unistd.h>
+    #include <limits.h>
+#endif
 
 // Same as __DBL_MAX__ from <cfloat> but compatible with C++17
 #define DBL_MAX std::numeric_limits<double>::max()
@@ -32,7 +44,8 @@ namespace utils { // Utility functions
 enum PRINT_TYPE { PLAIN_TEXT, JSON, SCHEDULE_CSV };
 
 // Get directory of the executable (to load the manual file if not specified)
-std::string getExecutableDir();
+std::filesystem::path getBinaryDir();
+std::string getBinaryDirStr();
 
 // Generate a simple UUID (not RFC4122 compliant, just for unique IDs)
 std::string generate_uuid();
