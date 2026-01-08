@@ -1,9 +1,6 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -euo pipefail # Strict mode
 
-#######################################
-# Configuration
-#######################################
 TASKS_DIR="data/instances/tasks"
 NETS_DIR="data/instances/networks"
 DAT_DIR="data/instances/dat"
@@ -16,9 +13,11 @@ CHARTS_DIR="data/charts"
 VENV_PATH="data/venv"
 RUNTIME_FILE="data/results/runtimes.txt"
 
-#######################################
-# Setup
-#######################################
+
+
+echo "=========================================="
+echo "Setting up directories"
+echo "=========================================="
 mkdir -p \
   "$RESULTS_CSV_DIR" \
   "$RESULTS_CPLEX_DIR" \
@@ -27,63 +26,47 @@ mkdir -p \
 
 : > "$RUNTIME_FILE"
 
+if [ -f "./solver/bin/solver_log.csv" ]; then
+  rm ./solver/bin/solver_log.csv
+fi
+
+rm -f "$RESULTS_CSV_DIR"/*.csv
+rm -f "$CHARTS_DIR"/*
+
 shopt -s nullglob # Make globs return empty if no matches
 
 
 
-#######################################
-# Generate dataset
-#######################################
-#echo "=========================================="
-#echo "Generating dataset"
-#echo "=========================================="
-
-# Generate a batch of tasks based on the presets
-#node data/task-generator.js presets --output "$TASKS_DIR"
-
-# Build a batch of networks based on the presets
-#node data/network-generator.js --batch presets --output "$NETS_DIR"
-
-#echo "=========================================="
-#echo "Converting JSON to DAT"
-#echo "=========================================="
-#for t in "$TASKS_DIR"/*.json; do
-#  for n in "$NETS_DIR"/*.json; do
-#    base_t=$(basename "$t" .json)
-#    base_n=$(basename "$n" .json)
-#    t_abs=$(realpath "$t")
-#    n_abs=$(realpath "$n")
-#    out="$DAT_DIR/${base_t}__${base_n}.dat"
-
-#    node data/json-to-dat.js -t "$t_abs" -n "$n_abs" -o "$out"
-#  done
-#done
-
-
-
-#######################################
-# Build solver
-#######################################
 echo "=========================================="
 echo "Building heuristic solver"
 echo "=========================================="
 make solver
 
 
-#######################################
-# Convert DAT to JSON
-#######################################
+
 echo "=========================================="
 echo "Converting DAT to JSON"
 echo "=========================================="
-./data/all-dat-to-json.sh
+for dat_file in "$DAT_DIR"/*.dat; do
+    
+    # Extract the filename without the path and extension (e.g., "40")
+    filename=$(basename "$dat_file" .dat)
+    
+    echo "Processing $filename..."
+
+    # Define the output paths based on the filename
+    dat_abs=$(realpath "$dat_file")
+    net_output=$(realpath "$NETS_DIR")/net${filename}.json
+    task_output=$(realpath "$TASKS_DIR")/sched${filename}.json
+
+    # Execute the node command
+    node data/dat-to-json.js -d "$dat_abs" -n "$net_output" -t "$task_output"
+done
 
 
-#######################################
-# Heuristic solver runs
-#######################################
+
 echo "=========================================="
-echo "Running heuristic solver"
+echo "Running heuristic solvers"
 echo "=========================================="
 
 for t in "$TASKS_DIR"/*.json; do
@@ -117,10 +100,6 @@ done
 
 
 
-
-#######################################
-# AMPL solver
-#######################################
 echo "=========================================="
 echo "Running AMPL solver"
 echo "=========================================="
@@ -158,9 +137,6 @@ fi
 
 
 
-#######################################
-# CPLEX solver (XML solution output)
-#######################################
 echo "=========================================="
 echo "Running CPLEX solver"
 echo "=========================================="
@@ -193,9 +169,6 @@ fi
 
 
 
-#######################################
-# Convert CPLEX and AMPL solutions to CSV
-#######################################
 echo "=========================================="
 echo "Converting CPLEX solutions to CSV"
 echo "=========================================="
@@ -223,9 +196,6 @@ done
 
 
 
-#######################################
-# Plot generation
-#######################################
 echo "=========================================="
 echo "Generating charts"
 echo "=========================================="
@@ -254,5 +224,6 @@ for r in \
 done
 
 deactivate
+
 
 echo "DONE"
