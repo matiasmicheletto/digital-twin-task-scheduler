@@ -270,7 +270,7 @@ export const datToModel = (datString) => {
                 bidirectional: false
             };
 
-            // Check if there already is a connection between from and to
+            // Check if there is already a connection between fromId and toId in the opposite direction
             /*
             const existingConnection = connections.findIndex(conn => conn.from === toUuid && conn.to === fromUuid);
             if(existingConnection !== -1) {

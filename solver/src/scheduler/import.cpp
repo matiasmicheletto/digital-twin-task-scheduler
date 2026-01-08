@@ -27,7 +27,7 @@ void Scheduler::loadTasksFromJSONFile(const std::string& file_path) {
     for (const auto& jt : j.at("tasks")) {
         try {
             tasks.emplace_back(Task::fromJSON(jt));
-            tasks.back().internal_id = task_index;
+            tasks.back().setInternalIdx(task_index);
             task_index++;
         } catch (const std::exception& e) {
             throw std::runtime_error("Failed to load task " + std::to_string(task_index + 1) + ": " + std::string(e.what()));
@@ -53,10 +53,10 @@ void Scheduler::loadTasksFromJSONFile(const std::string& file_path) {
             if (to_it == tasks.end()) 
                 throw std::runtime_error("Invalid to_id in precedence: " + to_id);
 
-            int pred_internal = from_it->internal_id;   // PREDECESSOR is FROM
+            int pred_internal = from_it->getInternalIdx();   // PREDECESSOR is FROM
             to_it->addPredecessor(from_id, pred_internal);
 
-            int succ_internal = to_it->internal_id;     // SUCCESSOR is TO
+            int succ_internal = to_it->getInternalIdx();     // SUCCESSOR is TO
             from_it->addSuccessor(to_id, succ_internal);
         }
     }
@@ -87,7 +87,7 @@ void Scheduler::loadNetworkFromJSONFile(const std::string& file_path) {
     int server_index = 0;
     for (const auto& jn : j.at("nodes")) {
         Server server = Server::fromJSON(jn);
-        server.internal_id = server_index;
+        server.setInternalIdx(server_index);
         server_index++;
         servers.push_back(server);
     }
@@ -99,13 +99,13 @@ void Scheduler::loadNetworkFromJSONFile(const std::string& file_path) {
     for (auto& task : tasks) {
         if (task.hasFixedAllocation()) {
             std::string server_id = task.getFixedAllocationTo();
-            auto it = std::find_if(servers.begin(), servers.end(), [&](const Server& s) {
+            auto server = std::find_if(servers.begin(), servers.end(), [&](const Server& s) {
                 return s.getId() == server_id;
             });
-            if (it == servers.end()) {
+            if (server == servers.end()) {
                 throw std::runtime_error("Task " + task.getId() + " has invalid fixed allocation to server: " + server_id);
             }
-            task.fixedAllocationInternalId = it->internal_id;
+            task.setFixedAllocationInternalId(server->getInternalIdx());
             fixedAllocationCount++;
         }
     }

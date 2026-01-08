@@ -65,13 +65,13 @@ ScheduleState Scheduler::schedule(const Candidate& candidate) {
         return schedule_state = CANDIDATE_ERROR;
     }
 
-    // Build mapping from internal_id -> index in tasks vector
+    // Build mapping from internal_idx -> index in tasks vector
 
     utils::dbg << "Starting scheduling of " << N << " tasks.\n";
-    std::unordered_map<int,int> id2idx;
-    id2idx.reserve(N);
+    std::unordered_map<int,int> taskIdToInternalIdx;
+    taskIdToInternalIdx.reserve(N);
     for (int i = 0; i < N; ++i) {
-        id2idx[tasks[i].internal_id] = i;
+        taskIdToInternalIdx[tasks[i].getInternalIdx()] = i;
     }
 
     // Ensure delay matrix is available
@@ -83,15 +83,14 @@ ScheduleState Scheduler::schedule(const Candidate& candidate) {
     //}
 
     // 1) Compute indegree (number of predecessors) for each task
-    utils::dbg << "Computing indegrees for tasks.\n";
     std::vector<int> indeg(N, 0);
     for (int i = 0; i < N; ++i) {
-        const auto &pred_ids = tasks[i].getPredecessorInternalIds();
+        const auto &pred_ids = tasks[i].getPredecessorInternalIdxs();
         for (int pid : pred_ids) {
-            auto it = id2idx.find(pid);
-            if (it == id2idx.end()) {
+            auto it = taskIdToInternalIdx.find(pid);
+            if (it == taskIdToInternalIdx.end()) {
                 // unknown predecessor reference -> infeasible input
-                utils::dbg << "Task " << tasks[i].getLabel() << " has unknown predecessor internal ID " << pid << "\n";
+                utils::dbg << "Task " << tasks[i].getLabel() << " has unknown predecessor internal index " << pid << "\n";
                 return schedule_state = PRECEDENCES_ERROR;
             }
             ++indeg[i];
@@ -100,7 +99,6 @@ ScheduleState Scheduler::schedule(const Candidate& candidate) {
 
     // 2) Kahn's algorithm with priority tie-breaker:
     // We'll use a max-heap ordered by priority value (higher priority popped first).
-    utils::dbg << "Performing topological sort of tasks using Kahn's algorithm with priorities.\n";
     std::priority_queue<PQItem, std::vector<PQItem>, Cmp> pq;
     for (int i = 0; i < N; ++i) {
         if (indeg[i] == 0) {
@@ -108,7 +106,6 @@ ScheduleState Scheduler::schedule(const Candidate& candidate) {
         }
     }
 
-    utils::dbg << "Processing tasks in topological order.\n";
     std::vector<int> topo_order;
     topo_order.reserve(N);
     while (!pq.empty()) {
@@ -116,13 +113,13 @@ ScheduleState Scheduler::schedule(const Candidate& candidate) {
         int u = it.idx;
         topo_order.push_back(u);
 
-        // Visit successors: use successor_internal_ids
-        const auto& succ_internal_ids = tasks[u].getSuccessorInternalIds();
+        // Visit successors: use successor_internal_idxs
+        const auto& succ_internal_ids = tasks[u].getSuccessorInternalIdxs();
         for (int succ_internal : succ_internal_ids) {
-            auto jt = id2idx.find(succ_internal);
-            if (jt == id2idx.end()) {
+            auto jt = taskIdToInternalIdx.find(succ_internal);
+            if (jt == taskIdToInternalIdx.end()) {
                 // unknown successor reference -> infeasible input
-                utils::dbg << "Task " << tasks[u].getId() << " has unknown successor internal ID " << succ_internal << "\n";
+                utils::dbg << "Task " << tasks[u].getId() << " has unknown successor internal index " << succ_internal << "\n";
                 return schedule_state = SUCCESSORS_ERROR;
             }
             int v = jt->second;
@@ -147,12 +144,12 @@ ScheduleState Scheduler::schedule(const Candidate& candidate) {
     for (auto &srv : servers) srv.clearTasks();
 
     // For each task in topological order compute earliest start
-    utils::dbg << "Assigning tasks to servers based on candidate allocation.\n";
     for (int idx : topo_order) {
         Task &t = tasks[idx];
 
-        // Find server assigned
-        int server_idx = candidate.server_indices[idx];
+        // Find assigned server
+        int server_idx = t.hasFixedAllocation() ? t.getFixedAllocationInternalIdx() : candidate.server_indices[idx];
+        
         if (server_idx < 0 || server_idx >= S){
             // invalid server index
             utils::dbg << "Task " << t.getLabel() << " assigned to invalid server index " << server_idx << "\n";
@@ -163,12 +160,12 @@ ScheduleState Scheduler::schedule(const Candidate& candidate) {
         long long earliest = (long long)t.getA();
 
         // predecessors constraints
-        const auto& pred_internal_ids = t.getPredecessorInternalIds();
-        for (int pred_internal : pred_internal_ids) {
-            auto it = id2idx.find(pred_internal);
-            if (it == id2idx.end()){ 
+        const auto& pred_internal_idxs = t.getPredecessorInternalIdxs();
+        for (int pred_internal : pred_internal_idxs) {
+            auto it = taskIdToInternalIdx.find(pred_internal);
+            if (it == taskIdToInternalIdx.end()){ 
                 // unknown predecessor reference -> infeasible input
-                utils::dbg << "Task " << t.getId() << " has unknown predecessor internal ID " << pred_internal << "\n";
+                utils::dbg << "Task " << t.getId() << " has unknown predecessor internal index " << pred_internal << "\n";
                 return schedule_state = PRECEDENCES_ERROR;
             }
             int pidx = it->second;
@@ -176,7 +173,7 @@ ScheduleState Scheduler::schedule(const Candidate& candidate) {
 
             // must have been scheduled already (topo order ensures this)
             long long pred_finish = (long long)pt.getFinishTime();
-            int pred_server = candidate.server_indices[pidx];
+            int pred_server = pt.hasFixedAllocation() ? pt.getFixedAllocationInternalIdx() : candidate.server_indices[pidx];
 
             // get communication delay
             if (pred_server == server_idx) {
@@ -214,7 +211,7 @@ ScheduleState Scheduler::schedule(const Candidate& candidate) {
                 return schedule_state = DEADLINE_MISSED;
             }
         }
-
+        
         // Update server ready time (server executes tasks sequentially)
         server_ready[server_idx] = (long long)t.getFinishTime();
 

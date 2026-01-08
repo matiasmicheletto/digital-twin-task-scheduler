@@ -22,13 +22,11 @@ Task Task::fromJSON(const nlohmann::json& j) {
 
     // Handle processorId that can be string or null
     task.fixedAllocation = j.contains("processorId") && !j["processorId"].is_null();
-    
+    task.fixedAllocationInternalIdx = -1; // Will be set later when servers are loaded
     if (task.fixedAllocation) {
         task.fixedAllocationId = utils::require_type<std::string>(j, "processorId");
-        task.fixedAllocationInternalId = -1;
     } else {
         task.fixedAllocationId = ""; // or some default value indicating unallocated
-        task.fixedAllocationInternalId = -1;
     }
 
     task.successors.clear();    
@@ -53,10 +51,10 @@ Task Task::fromJSON(const nlohmann::json& j) {
     task.finish_time = task.start_time + task.C;
 
     // Following attributes will be set by Scheduler during tasks system loading
-    task.internal_id = -1;
+    task.internal_idx = -1;
     task.predecessors.clear();
-    task.successor_internal_ids.clear();
-    task.predecessor_internal_ids.clear();
+    task.successor_internal_idxs.clear();
+    task.predecessor_internal_idxs.clear();
 
     return task;
 }

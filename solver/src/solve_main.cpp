@@ -105,7 +105,7 @@ int main(int argc, char **argv) {
         if(strcmp(argv[i], "--dbg") == 0) {
             utils::dbg.rdbuf(std::cout.rdbuf()); // Enable debug output to std::cout
         }
-    }    
+    }
 
     utils::dbg << "Initializing Scheduler with tasks file: " << tsk_filename << " and network file: " << nw_filename << "\n";
     
@@ -123,7 +123,6 @@ int main(int argc, char **argv) {
             config.solverMethod = method;
             config.setLogFile(log_file_name);
             config.print(); // Works if --dbg is enabled
-
             Solver solver(sch, config);
             solver.solve();
         }

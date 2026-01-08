@@ -26,7 +26,7 @@ Server Server::fromJSON(const nlohmann::json& j) {
     server.utilization = utils::require_type<double>(j, "u");
     server.available_utilization = server.utilization; // Initially available equals total
 
-    server.internal_id = -1; // Default value
+    server.internal_idx = -1; // Default value
 
     return server;
 }
