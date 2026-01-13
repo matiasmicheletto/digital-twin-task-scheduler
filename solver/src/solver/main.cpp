@@ -1,5 +1,20 @@
 #include "solver.h"
 
+double Solver::computeObjective() const {
+    if (scheduler.getScheduleState() != SCHEDULED) {
+        utils::dbg << "Schedule not computed yet.\n";
+        return -1.0;
+    }
+    //int schedule_span = scheduler.getScheduleSpan();
+    int finish_time_sum = scheduler.getFinishTimeSum();
+    int processors_cost = scheduler.getProcessorsCost();
+    int delay_cost = scheduler.getDelayCost();
+
+    double objective = config.alpha * static_cast<double>(finish_time_sum)
+                     + config.beta * delay_cost
+                     + config.gamma * static_cast<double>(processors_cost);
+    return objective;
+}
 
 Candidate Solver::solve() {
     srand(static_cast<unsigned int>(time(nullptr)));

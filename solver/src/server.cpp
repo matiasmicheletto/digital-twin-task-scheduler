@@ -23,6 +23,7 @@ Server Server::fromJSON(const nlohmann::json& j) {
     }
 
     server.memory = utils::require_type<int>(j, "memory");
+    server.cost = utils::require_type<int>(j, "cost");
     server.utilization = utils::require_type<double>(j, "u");
     server.available_utilization = server.utilization; // Initially available equals total
 
@@ -47,6 +48,7 @@ void Server::print() const {
             break;
     }
     std::cout << "Memory: " << memory << "\n";
+    std::cout << "Cost: " << cost << "\n";
     std::cout << "Utilization: " << utilization << "\n";
     std::cout << "Last Slot: " << last_slot << "\n";
     std::cout << "Assigned Tasks: " << assigned_tasks.size() << "\n";

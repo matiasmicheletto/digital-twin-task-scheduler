@@ -7,6 +7,7 @@ import { generateUUID8 } from "./utils.js";
             {
                 id: uuid,
                 memory: number,
+                cost: number,
                 u: number
             },
             ...
@@ -42,7 +43,7 @@ import { generateUUID8 } from "./utils.js";
 
     Dat format:
     N
-    nodeId (from 1)    memory    u
+    nodeId (from 1)    memory    u    cost
     ...
     M
     taskId (from 0)   C    T    D    a    M    allocatedNode
@@ -68,7 +69,7 @@ export const modelToDat = model => {
     model.nodes.forEach((node, index) => {
         const numericId = index + 1;
         nodeUuidToId[node.id] = numericId;
-        lines.push(`${numericId}\t${node.memory}\t${node.u}`);
+        lines.push(`${numericId}\t${node.memory}\t${node.u}\t${node.cost}`);
     });
 
     // Write tasks
@@ -165,7 +166,7 @@ export const datToModel = (datString) => {
     const nodeIdMap = {}; // Map numeric IDs to generated UUIDs
 
     for (let i = 0; i < numNodes; i++) {
-        const [id, memory, u] = lines[lineIndex++].split('\t').map(val => val.trim());
+        const [id, memory, u, cost] = lines[lineIndex++].split('\t').map(val => val.trim());
         const nodeId = generateUUID8();
         nodeIdMap[id] = nodeId;
 
@@ -176,6 +177,7 @@ export const datToModel = (datString) => {
             tasks: {},
             memory: parseFloat(memory),
             u: parseFloat(u),
+            cost: parseFloat(cost),
             links: [],
             position: {
                 x: 100 + i * 100,

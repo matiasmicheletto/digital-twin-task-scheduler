@@ -179,15 +179,15 @@ Optimization options can be specified in a YAML configuration file with the foll
   initial_temperature: 150.0
   cooling_rate: 0.995
   min_temperature: 1.0e-3
-  priority_refinement_method: NORMAL
+  refinement_priority_method: NORMAL
   refinement_iterations: 50
-  normal_sigma_max: 0.1
-  normal_sigma_min: 1.0e-3
-  pso_warm_size: 30
-  pso_velocity_clamp: 2
-  pso_inertia_weight: 0.5
-  pso_cognitive_coef: 1.5
-  pso_social_coef: 1.5
+  refinement_sigma_max: 0.1
+  refinement_sigma_min: 1.0e-3
+  refinement_pso_warm_size: 30
+  refinement_pso_velocity_clamp: 2
+  refinement_pso_inertia_weight: 0.5
+  refinement_pso_cognitive_coef: 1.5
+  refinement_pso_social_coef: 1.5
 
 random_search:
   max_iterations: 5000

@@ -27,7 +27,7 @@ Candidate Solver::randomSearchSolve() {
             }
             // Check if this is the best solution found so far
             //int fitness = scheduler.getScheduleSpan();
-            int fitness = scheduler.getFinishTimeSum();
+            int fitness = computeObjective();
             if (fitness < bestFitness) {
                 bestFitness = fitness;
                 best = curr;

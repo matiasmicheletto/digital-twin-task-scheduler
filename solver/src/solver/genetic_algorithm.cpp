@@ -54,7 +54,7 @@ Candidate Solver::geneticAlgorithmSolve() {
     for (size_t i = 0; i < populationSize; ++i) {
         Candidate candidate = randomSearchSolve();
         if (scheduler.getScheduleState() == SCHEDULED) {
-            population.emplace_back(candidate, scheduler.getFinishTimeSum());
+            population.emplace_back(candidate, computeObjective());
         }else{
             utils::dbg << "GA: Individual " << (i + 1) << "/" << populationSize << " infeasible during initialization.\n";
             writeLog(utils::getElapsed(start_time), i + 1, scheduler.getScheduleSpan(), scheduler.getFinishTimeSum(), scheduler.getScheduleState(), "Individual infeasible during initialization");
@@ -116,7 +116,7 @@ Candidate Solver::geneticAlgorithmSolve() {
             mutate(scheduler, mutationRate, child);
 
             if (scheduler.schedule(child) == SCHEDULED) {
-                int fitness = scheduler.getFinishTimeSum();
+                int fitness = computeObjective();
                 newPopulation.push_back({child, fitness});
             }
         }

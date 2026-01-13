@@ -24,6 +24,10 @@ public:
     // General solver parameters
     SolverMethod solverMethod = SolverMethod::RANDOM_SEARCH;
 
+    double alpha = 1.0; // Weight for finish time sum in objective function
+    double beta = 0.0;  // Weight for delay cost in objective function
+    double gamma = 0.0; // Weight for processors cost in objective function
+
     // Parameters for Simulated Annealing
     int sa_maxInitTries = 3000;
     int sa_maxIterations = 3000;
@@ -88,6 +92,8 @@ public:
 private: 
     Scheduler& scheduler;    
     SolverConfig& config;
+
+    double computeObjective() const;
     
     void writeLog(int runtime, int iterations, int scheduleSpan, int finishTimeSum, ScheduleState state, std::string obs = ""); 
 

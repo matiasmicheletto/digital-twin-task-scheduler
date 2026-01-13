@@ -59,6 +59,10 @@ class Scheduler {
         int getScheduleSpan() const;
 
         int getFinishTimeSum() const;
+
+        int getProcessorsCost() const;
+
+        int getDelayCost() const;
         
         void print(utils::PRINT_TYPE format = utils::PRINT_TYPE::PLAIN_TEXT) const;
         std::string printScheduleState() const;

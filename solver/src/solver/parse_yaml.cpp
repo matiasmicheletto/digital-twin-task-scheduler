@@ -8,14 +8,14 @@ void SolverConfig::fromYaml(const std::string& file_path) {
 
     // --- Simulated Annealing ---
     if (auto sa = root["simulated_annealing"]) {
-        if (sa["priority_refinement_method"]) {
-            std::string method = sa["priority_refinement_method"].as<std::string>();
+        if (sa["refinement_priority_method"]) {
+            std::string method = sa["refinement_priority_method"].as<std::string>();
             if (method == "NORMAL")
                 sa_priorityRefinementMethod = PriorityRefinementMethod::NORMAL_PERTURBATION;
             else if (method == "PSO")
                 sa_priorityRefinementMethod = PriorityRefinementMethod::PARTICLE_SWARM_OPTIMIZATION;
             else
-                throw std::runtime_error("Invalid priority_refinement_method in YAML config");
+                throw std::runtime_error("Invalid refinement_priority_method in YAML config");
         }
         if (sa["max_init_tries"])        sa_maxInitTries = sa["max_init_tries"].as<int>();
         if (sa["max_iterations"])        sa_maxIterations = sa["max_iterations"].as<int>();
@@ -25,14 +25,14 @@ void SolverConfig::fromYaml(const std::string& file_path) {
         if (sa["initial_temperature"])   sa_initialTemperature = sa["initial_temperature"].as<double>();
         if (sa["cooling_rate"])          sa_coolingRate = sa["cooling_rate"].as<double>();
         if (sa["min_temperature"])       sa_minTemperature = sa["min_temperature"].as<double>();
-        if (sa["normal_sigma_max"])      sa_sigmaMax = sa["normal_sigma_max"].as<double>();
-        if (sa["normal_sigma_min"])      sa_sigmaMin = sa["normal_sigma_min"].as<double>();
+        if (sa["refinement_sigma_max"])      sa_sigmaMax = sa["refinement_sigma_max"].as<double>();
+        if (sa["refinement_sigma_min"])      sa_sigmaMin = sa["refinement_sigma_min"].as<double>();
         if (sa["refinement_iterations"]) sa_refinementIterations = sa["refinement_iterations"].as<int>();
         if (sa["pso_swarm_size"])        sa_pso_swarmSize = sa["pso_swarm_size"].as<int>();
-        if (sa["pso_velocity_clamp"])    sa_pso_velocityClamp = sa["pso_velocity_clamp"].as<int>();
-        if (sa["pso_inertia_weight"])    sa_pso_inertiaWeight = sa["pso_inertia_weight"].as<double>();
-        if (sa["pso_cognitive_coef"]) sa_pso_cognitiveCoefficient = sa["pso_cognitive_coef"].as<double>();
-        if (sa["pso_social_coef"])    sa_pso_socialCoefficient = sa["pso_social_coef"].as<double>();
+        if (sa["refinement_pso_velocity_clamp"])    sa_pso_velocityClamp = sa["refinement_pso_velocity_clamp"].as<int>();
+        if (sa["refinement_pso_inertia_weight"])    sa_pso_inertiaWeight = sa["refinement_pso_inertia_weight"].as<double>();
+        if (sa["refinement_pso_cognitive_coef"]) sa_pso_cognitiveCoefficient = sa["refinement_pso_cognitive_coef"].as<double>();
+        if (sa["refinement_pso_social_coef"])    sa_pso_socialCoefficient = sa["refinement_pso_social_coef"].as<double>();
     }
 
     // --- Random Search ---
@@ -121,8 +121,8 @@ void SolverConfig::print() const {
     utils::dbg << "    sigma_max: " << sa_sigmaMax << "\n";
     utils::dbg << "    refinement_iterations: " << sa_refinementIterations << "\n";
     utils::dbg << "    pso_swarm_size: " << sa_pso_swarmSize << "\n";
-    utils::dbg << "    pso_velocity_clamp: " << sa_pso_velocityClamp << "\n";
-    utils::dbg << "    pso_inertia_weight: " << sa_pso_inertiaWeight << "\n";
+    utils::dbg << "    refinement_pso_velocity_clamp: " << sa_pso_velocityClamp << "\n";
+    utils::dbg << "    refinement_pso_inertia_weight: " << sa_pso_inertiaWeight << "\n";
     utils::dbg << "    pso_cognitive_coefficient: " << sa_pso_cognitiveCoefficient << "\n";
     utils::dbg << "    pso_social_coefficient: " << sa_pso_socialCoefficient << "\n";
     

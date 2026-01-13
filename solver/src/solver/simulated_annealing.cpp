@@ -22,7 +22,7 @@ Candidate Solver::simulatedAnnealingSolve() {
     }
 
     //int currFitness = scheduler.getScheduleSpan();
-    int currFitness = scheduler.getFinishTimeSum();
+    int currFitness = computeObjective();
     Candidate best = curr;
     int bestFitness = currFitness;
 
@@ -51,7 +51,7 @@ Candidate Solver::simulatedAnnealingSolve() {
 
             if (scheduler.schedule(next) == SCHEDULED) { // schedule() is expensive, so only call it once per neighbor
                 //nextFitness = scheduler.getScheduleFitness();
-                nextFitness = scheduler.getFinishTimeSum();
+                nextFitness = computeObjective();
                 hasFeasibleNeighbor = true; // found a feasible neighbor, exit inner loop
                 if (nextFitness < currFitness)
                     break; // improvement found — stop searching

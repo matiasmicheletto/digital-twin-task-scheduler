@@ -25,6 +25,7 @@ public:
     inline ServerType getType() const { return type; }
     inline std::string getLabel() const { return label; }
     inline int getMemory() const { return memory; }
+    inline int getCost() const { return cost; }
     inline double getUtilization() const { return utilization; }
     inline int getLastSlot() const { return last_slot; }
     
@@ -44,6 +45,7 @@ private:
     ServerType type;
     std::string label;
     int memory; // Total memory
+    int cost; // Cost per use
     double utilization; // 0..1
     double available_utilization; // available utilization
     int last_slot; // Last slot occupied by a task
