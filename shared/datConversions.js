@@ -189,7 +189,7 @@ export const datToModel = (datString) => {
 
     // Parse tasks
     console.log("Parsing tasks...");
-    const numTasks = parseInt(lines[lineIndex++])+1; // Tasks start from 0
+    const numTasks = parseInt(lines[lineIndex++]); // Tasks start from 0
     const tasks = [];
     const taskIdMap = {}; // Map numeric IDs to generated UUIDs
 

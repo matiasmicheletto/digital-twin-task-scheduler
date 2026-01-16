@@ -140,7 +140,7 @@ ScheduleState Scheduler::schedule(const Candidate& candidate) {
     // 3) Schedule tasks in topo order.
     // Keep track of server availability time (when server becomes free)
     const int S = (int)servers.size();
-    std::vector<long long> server_ready(S, 0LL);
+    std::vector<long long> server_ready(S, 0LL); // initially all servers ready at time 0
 
     // Before assigning tasks, clear server assigned tasks (optional, but convenient)
     for (auto &srv : servers) srv.clearTasks();
@@ -150,11 +150,14 @@ ScheduleState Scheduler::schedule(const Candidate& candidate) {
         Task &t = tasks[idx];
 
         // Find assigned server
-        int server_idx = t.hasFixedAllocation() ? t.getFixedAllocationInternalIdx() : candidate.server_indices[idx];
+        int server_idx = t.hasFixedAllocation() ? 
+            t.getFixedAllocationInternalIdx()
+            : candidate.server_indices[idx];
 
-        if(servers[server_idx].getType() == ServerType::Mist && !t.hasFixedAllocation()){
-            // MIST servers can only host fixed-allocation tasks
-            utils::dbg << "Task " << t.getLabel() << " cannot be assigned to MIST server " << servers[server_idx].getLabel() << ".\n";
+        if (servers[server_idx].getType() == ServerType::Mist && !t.hasFixedAllocation()) {
+            utils::dbg << "Task " << t.getLabel()
+                    << " cannot be assigned to MIST server "
+                    << servers[server_idx].getLabel() << ".\n";
             return schedule_state = CANDIDATE_ERROR;
         }
         
@@ -198,7 +201,7 @@ ScheduleState Scheduler::schedule(const Candidate& candidate) {
                 earliest = std::max(earliest, candidate_start);
             }
         }
-
+        
         // server availability constraint
         earliest = std::max(earliest, server_ready[server_idx]);
 
@@ -221,7 +224,15 @@ ScheduleState Scheduler::schedule(const Candidate& candidate) {
         }
         
         // Update server ready time (server executes tasks sequentially)
-        server_ready[server_idx] = (long long)t.getFinishTime();
+        if (servers[server_idx].getType() != ServerType::Mist) {
+            server_ready[server_idx] = (long long)t.getFinishTime();
+        }else{
+            if (!servers[server_idx].getAssignedTasks().empty()) {
+                utils::dbg << "Mist server " << servers[server_idx].getLabel()
+                        << " already has a task assigned.\n";
+                return schedule_state = CANDIDATE_ERROR;
+            }
+        }
 
         // Append task to server assigned tasks (copy)
         servers[server_idx].pushBackTask(t);

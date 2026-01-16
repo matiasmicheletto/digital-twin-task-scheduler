@@ -124,7 +124,18 @@ int main(int argc, char **argv) {
             config.setLogFile(log_file_name);
             config.print(); // Works if --dbg is enabled
             Solver solver(sch, config);
-            solver.solve();
+            Candidate c = solver.solve();
+            
+            // Print if text mode and feasible
+            if(sch.getScheduleState() == SCHEDULED && output_format == utils::PRINT_TYPE::PLAIN_TEXT) {
+                sch.print(output_format);
+                std::cout << std::endl << "####################" << std::endl;
+                std::cout << "Best candidate:" << std::endl;
+                c.print();
+                return 0;
+            } else {
+                utils::dbg << "No feasible solution could be scheduled.\n";
+            }
         }else{
             std::cout << utils::red << "Solve flag not set. Skipping solving step." << utils::reset << "\n";
         }
