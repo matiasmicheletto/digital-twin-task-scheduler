@@ -3,6 +3,8 @@
 Candidate Solver::randomSearchSolve() {
     // Performs random search to find a feasible scheduling solution
 
+    auto start_time = std::chrono::high_resolution_clock::now();
+
     int maxIterations = config.rs_maxIterations;
     bool breakOnFirstFeasible = config.rs_breakOnFirstFeasible;
     
@@ -10,14 +12,21 @@ Candidate Solver::randomSearchSolve() {
     Candidate curr(scheduler.getTaskCount());
     Candidate best(scheduler.getTaskCount());
     
-    auto start_time = std::chrono::high_resolution_clock::now();
+    const size_t allocable_servers_count = scheduler.getNonMISTServerCount();
+    if(allocable_servers_count == 0) {
+        utils::dbg << "No allocable servers available.\n";
+        writeLog(utils::getElapsed(start_time), 0, 0, 0, scheduler.getScheduleState(), "No allocable servers available");
+        return best;
+    }
 
     for (int iteration = 0; iteration < maxIterations; ++iteration) {
         for (size_t i = 0; i <  scheduler.getTaskCount(); ++i) {
             // Check if task has fixed allocation
             const Task& task = scheduler.getTask(i);
-            if (!task.hasFixedAllocation())
-                curr.server_indices[i] = rand() % scheduler.getServerCount(); // Random server assignment
+            if (!task.hasFixedAllocation()){
+                //curr.server_indices[i] = rand() % scheduler.getServerCount(); // Random server assignment
+                curr.server_indices[i] = scheduler.getNonMISTServerIdx(rand() % allocable_servers_count);
+            }
             curr.priorities[i] = static_cast<double>(rand()) / RAND_MAX; // Random priority between 0 and 1
         }
         // Schedule using the generated candidate

@@ -22,7 +22,9 @@ mkdir -p \
   "$RESULTS_CSV_DIR" \
   "$RESULTS_CPLEX_DIR" \
   "$RESULTS_AMPL_DIR" \
-  "$CHARTS_DIR"
+  "$CHARTS_DIR" \
+  "$TASKS_DIR" \
+  "$NETS_DIR"
 
 : > "$RUNTIME_FILE"
 
@@ -45,7 +47,7 @@ make solver
 
 
 echo "=========================================="
-echo "Converting DAT to JSON"
+echo "Converting DAT to JSON and solving instances"
 echo "=========================================="
 for dat_file in "$DAT_DIR"/*.dat; do
     
@@ -61,20 +63,11 @@ for dat_file in "$DAT_DIR"/*.dat; do
 
     # Execute the node command
     node data/dat-to-json.js -d "$dat_abs" -n "$net_output" -t "$task_output"
-done
 
-
-
-echo "=========================================="
-echo "Running heuristic solvers"
-echo "=========================================="
-
-for t in "$TASKS_DIR"/*.json; do
-  for n in "$NETS_DIR"/*.json; do
-    base_t=$(basename "$t" .json)
-    base_n=$(basename "$n" .json)
-    t_abs=$(realpath "$t")
-    n_abs=$(realpath "$n")
+    base_t="sched${filename}"
+    base_n="net${filename}"
+    t_abs=$(realpath "$TASKS_DIR/$base_t.json")
+    n_abs=$(realpath "$NETS_DIR/$base_n.json")
 
     for strategy in random annealing genetic; do
       out="$RESULTS_CSV_DIR/${base_t}__${base_n}_${strategy}.csv"
@@ -89,13 +82,18 @@ for t in "$TASKS_DIR"/*.json; do
           -s "$strategy" \
           -o csv
       ) > "$out"; then
+        # Check if the output file is non-empty
+        if [ ! -s "$out" ]; then
+          echo "FAIL -> $base_t / $base_n ($strategy): Empty output file" >&2
+          rm -f "$out"
+          continue
+        fi
         echo "OK  -> $out"
       else
         echo "FAIL -> $base_t / $base_n ($strategy)" >&2
         rm -f "$out"
       fi
     done
-  done
 done
 
 

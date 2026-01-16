@@ -90,6 +90,9 @@ void Scheduler::loadNetworkFromJSONFile(const std::string& file_path) {
         server.setInternalIdx(server_index);
         server_index++;
         servers.push_back(server);
+        if(server.getType() != ServerType::Mist) {
+            non_mist_servers_idxs.push_back(server.getInternalIdx());
+        }
     }
 
     utils::dbg << "Loaded " << servers.size() << " servers from " << file_path << "\n";

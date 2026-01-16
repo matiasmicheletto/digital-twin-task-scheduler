@@ -177,7 +177,7 @@ export const datToModel = (datString) => {
             tasks: {},
             memory: parseFloat(memory),
             u: parseFloat(u),
-            cost: parseFloat(cost),
+            cost: parseFloat(cost ? cost:1),
             links: [],
             position: {
                 x: 100 + i * 100,
@@ -316,21 +316,28 @@ export const datToModel = (datString) => {
             }
         }
     }
+
+    // MIST task usually are preallocated to MIST nodes.
+    // Therefore, we set the node type to MIST if a task is allocated to it and a task's mist flag to true if it is preallocated to a node.
+
     console.log(`Parsed ${connections.length} connections.\n`);
 
-    // If a node has a single incoming connection, set type MIST. If it has none outgoing connections, set to CLOUD
+    // If a task is allocated to a node, set that node to MIST
     nodes.forEach(node => {
-        const hasIncoming = connections.some(conn => conn.to === node.id);
-        const hasOutgoing = connections.some(conn => conn.from === node.id);
-        if(!hasIncoming) {
+        const isMistNode = tasks.some(task => task.processorId === node.id);
+        if(isMistNode) {
             node.type = "MIST";
-        }
-        if(!hasOutgoing){
-            node.type = "CLOUD";
         }
     });
 
-    // If a task has no precedences, set mist to true
+    tasks.forEach(task => {
+        if(task.processorId) {
+            task.mist = true;
+        }
+    });
+
+    /*
+    // ---OLD --- If a task has no precedences, set mist to true
     tasks.forEach(task => {
         const hasPrecedence = precedences.some(p => p.to === task.id);
         task.mist = !hasPrecedence;
@@ -342,6 +349,7 @@ export const datToModel = (datString) => {
             }
         }
     });
+    */
 
     const model = {
         nodes,

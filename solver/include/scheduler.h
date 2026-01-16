@@ -25,7 +25,7 @@ struct Candidate { // Structure to compute tasks allocation to servers
     std::vector<int> server_indices; // Server assigned to each task
     std::vector<double> priorities;   // Priority of each task to define order of execution
     Candidate(size_t task_count) {
-        server_indices.resize(task_count, -1);
+        server_indices.resize(task_count, -1); // -1 means unassigned
         priorities.resize(task_count, 0.0);
     }
 };
@@ -52,9 +52,11 @@ class Scheduler {
 
         inline size_t getTaskCount() const { return tasks.size(); }
         inline size_t getServerCount() const { return servers.size(); }
+        inline size_t getNonMISTServerCount() const { return non_mist_servers_idxs.size(); }
 
         inline const Task& getTask(size_t index) const { return tasks.at(index); }
         inline const Server& getServer(size_t index) const { return servers.at(index); }
+        inline const int getNonMISTServerIdx(size_t index) const { return non_mist_servers_idxs.at(index); }
 
         int getScheduleSpan() const;
 
@@ -72,6 +74,7 @@ class Scheduler {
     private:
         std::vector<Task> tasks;
         std::vector<Server> servers;
+        std::vector<int> non_mist_servers_idxs; // List of non-MIST servers (the MIST ones cannot host more than one task)
         std::vector<Connection> connections;
         std::vector<std::vector<int>> delay_matrix;
         std::string instance_name;
