@@ -34,6 +34,8 @@ void Scheduler::computeDelayMatrix() {
             }
         }
     }
+
+    utils::dbg << "Computed delay matrix:\n";
 }
 
 struct PQItem {

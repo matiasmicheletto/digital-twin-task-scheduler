@@ -72,6 +72,11 @@ inline NullBuffer null_buffer;
 inline std::ostream null_stream(&null_buffer);
 inline std::ostream& dbg = null_stream;
 
+// ANSI color codes for terminal output
+constexpr const char* red   = "\033[31m";
+constexpr const char* green = "\033[32m";
+constexpr const char* reset = "\033[0m";
+
 template<typename T>
 T require_type(const nlohmann::json&, const std::string&);
 

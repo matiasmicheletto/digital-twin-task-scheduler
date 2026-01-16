@@ -125,6 +125,8 @@ int main(int argc, char **argv) {
             config.print(); // Works if --dbg is enabled
             Solver solver(sch, config);
             solver.solve();
+        }else{
+            std::cout << utils::red << "Solve flag not set. Skipping solving step." << utils::reset << "\n";
         }
         
         sch.print(output_format);
