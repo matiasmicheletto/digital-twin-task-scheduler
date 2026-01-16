@@ -170,7 +170,10 @@ Network consists of nodes and connections represented in JSON format with the fo
 Optimization options can be specified in a YAML configuration file with the following structure:
 
 ```yaml
-
+tunning:
+  alpha: 1
+  beta: 1
+simulated_annealing:
   max_init_tries: 5000
   max_iterations: 3000
   timeout: 3600

@@ -151,6 +151,12 @@ ScheduleState Scheduler::schedule(const Candidate& candidate) {
 
         // Find assigned server
         int server_idx = t.hasFixedAllocation() ? t.getFixedAllocationInternalIdx() : candidate.server_indices[idx];
+
+        if(servers[server_idx].getType() == ServerType::Mist && !t.hasFixedAllocation()){
+            // MIST servers can only host fixed-allocation tasks
+            utils::dbg << "Task " << t.getLabel() << " cannot be assigned to MIST server " << servers[server_idx].getLabel() << ".\n";
+            return schedule_state = CANDIDATE_ERROR;
+        }
         
         if (server_idx < 0 || server_idx >= S){
             // invalid server index

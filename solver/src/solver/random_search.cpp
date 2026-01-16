@@ -7,7 +7,7 @@ Candidate Solver::randomSearchSolve() {
 
     int maxIterations = config.rs_maxIterations;
     bool breakOnFirstFeasible = config.rs_breakOnFirstFeasible;
-    
+
     int bestFitness = INT_MAX;
     Candidate curr(scheduler.getTaskCount());
     Candidate best(scheduler.getTaskCount());
@@ -53,6 +53,8 @@ Candidate Solver::randomSearchSolve() {
         obs = "No feasible schedule found";
         utils::dbg << "No feasible schedule found.\n";
     }
+
+    //best.print();
 
     writeLog(utils::getElapsed(start_time), maxIterations, scheduler.getScheduleSpan(), scheduler.getFinishTimeSum(), scheduler.getScheduleState(), obs);
     return best;

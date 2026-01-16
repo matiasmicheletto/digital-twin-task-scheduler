@@ -89,6 +89,9 @@ Network file:
 
 Optimization parameters file:
 
+tunning:
+  alpha: 1
+  beta: 1
 simulated_annealing:
   max_init_tries: 5000
   max_iterations: 3000

@@ -26,6 +26,8 @@ Candidate Solver::simulatedAnnealingSolve() {
     Candidate best = curr;
     int bestFitness = currFitness;
 
+    const size_t allocable_servers_count = scheduler.getNonMISTServerCount();
+
     double T = initialTemperature;
     Candidate next(scheduler.getTaskCount());
     for (int iter = 0; iter < maxIterations && T > minTemperature; ++iter) {
@@ -44,8 +46,10 @@ Candidate Solver::simulatedAnnealingSolve() {
                 size_t idx = rand() % scheduler.getTaskCount();
                 const Task& task = scheduler.getTask(idx);
 
-                if (!task.hasFixedAllocation())
-                    next.server_indices[idx] = rand() % scheduler.getServerCount();
+                if (!task.hasFixedAllocation()){
+                    //next.server_indices[idx] = rand() % scheduler.getServerCount();
+                    curr.server_indices[idx] = scheduler.getNonMISTServerIdx(rand() % allocable_servers_count);
+                }
                 next.priorities[idx] = static_cast<double>(rand()) / RAND_MAX;
             }
 

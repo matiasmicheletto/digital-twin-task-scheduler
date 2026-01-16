@@ -203,7 +203,7 @@ export const datToModel = (datString) => {
         tasks.push({
             id: taskId,
             type: "TASK",
-            label: `Task ${id}`,
+            label: isMist ? `Mst ${id}` : `Tsk ${id}`,
             mist: isMist,
             C: parseFloat(C),
             T: parseFloat(T),
@@ -323,14 +323,15 @@ export const datToModel = (datString) => {
     console.log(`Parsed ${connections.length} connections.\n`);
 
     // If a task is allocated to a node, set that node to MIST
-    nodes.forEach(node => {
+    nodes.forEach((node, index) => {
         const isMistNode = tasks.some(task => task.processorId === node.id);
         if(isMistNode) {
             node.type = "MIST";
+            node.label = `MIST ${index + 1}`;
         }
     });
 
-    tasks.forEach(task => {
+    tasks.forEach(task => { // No necessary
         if(task.processorId) {
             task.mist = true;
         }
