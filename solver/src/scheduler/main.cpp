@@ -9,7 +9,7 @@ Scheduler::Scheduler(std::string tasks_file, std::string network_file) {
     // Delay matrix is used to define start and finish times of tasks based on communication delays
     computeDelayMatrix();
     schedule_state = NOT_SCHEDULED;
-}
+};
 
 void Scheduler::computeDelayMatrix() {
     // Computes the delay matrix based on connections. If no direct connection, delay is computed by minimal paths.
@@ -36,7 +36,7 @@ void Scheduler::computeDelayMatrix() {
     }
 
     utils::dbg << "Computed delay matrix:\n";
-}
+};
 
 struct PQItem {
     double pr;
@@ -75,14 +75,6 @@ ScheduleState Scheduler::schedule(const Candidate& candidate) {
     for (int i = 0; i < N; ++i) {
         taskIdToInternalIdx[tasks[i].getInternalIdx()] = i;
     }
-
-    // Ensure delay matrix is available
-    //if (delay_matrix.empty()) computeDelayMatrix();
-    // Validate delay_matrix size vs servers
-    //if ((int)delay_matrix.size() != (int)servers.size()) {
-    //    utils::dbg << "Delay matrix size does not match number of servers.\n";
-    //    return schedule_state;
-    //}
 
     // 1) Compute indegree (number of predecessors) for each task
     std::vector<int> indeg(N, 0);
@@ -134,6 +126,7 @@ ScheduleState Scheduler::schedule(const Candidate& candidate) {
     // If not all tasks processed -> cycle
     if ((int)topo_order.size() != N){
         utils::dbg << "Cycle detected in task graph. Scheduling infeasible.\n";
+        utils::dbg << "Topological order size: " << topo_order.size() << ", Number of tasks: " << N << "\n";
         return schedule_state = CYCLE_ERROR;
     }
 
@@ -142,7 +135,7 @@ ScheduleState Scheduler::schedule(const Candidate& candidate) {
     const int S = (int)servers.size();
     std::vector<long long> server_ready(S, 0LL); // initially all servers ready at time 0
 
-    // Before assigning tasks, clear server assigned tasks (optional, but convenient)
+    // Before assigning tasks, clear server assigned tasks (except MIST tasks already allocated)
     for (auto &srv : servers) srv.clearTasks();
 
     // For each task in topological order compute earliest start
@@ -150,9 +143,7 @@ ScheduleState Scheduler::schedule(const Candidate& candidate) {
         Task &t = tasks[idx];
 
         // Find assigned server
-        int server_idx = t.hasFixedAllocation() ? 
-            t.getFixedAllocationInternalIdx()
-            : candidate.server_indices[idx];
+        const int server_idx = t.hasFixedAllocation() ? t.getFixedAllocationInternalIdx() : candidate.server_indices[idx]; 
 
         if (servers[server_idx].getType() == ServerType::Mist && !t.hasFixedAllocation()) {
             utils::dbg << "Task " << t.getLabel()
@@ -241,6 +232,11 @@ ScheduleState Scheduler::schedule(const Candidate& candidate) {
             utils::dbg << "Server " << servers[server_idx].getLabel() << " over-utilized after assigning task " << t.getLabel() << ". Available utilization: " << avail_u << "\n";
             return schedule_state = UTILIZATION_UNFEASIBLE; // over-utilization -> infeasible
         }
+        const int avail_mem = servers[server_idx].getAvailableMemory();
+        if (avail_mem < 0) {
+            utils::dbg << "Server " << servers[server_idx].getLabel() << " out of memory after assigning task " << t.getLabel() << ". Available memory: " << avail_mem << "\n";
+            return schedule_state = MEMORY_UNFEASIBLE; // out of memory -> infeasible
+        }
     }
 
     // All tasks scheduled successfully
@@ -264,7 +260,7 @@ ScheduleState Scheduler::schedule(const Candidate& candidate) {
     }
 
     return schedule_state = SCHEDULED;
-}
+};
 
 int Scheduler::getScheduleSpan() const {
     if (schedule_state != SCHEDULED) {
@@ -276,7 +272,7 @@ int Scheduler::getScheduleSpan() const {
         span = std::max(span, t.getFinishTime());
     }
     return span;
-}
+};
 
 int Scheduler::getFinishTimeSum() const {
     if (schedule_state != SCHEDULED) {
@@ -288,7 +284,7 @@ int Scheduler::getFinishTimeSum() const {
         finish_time_sum += t.getFinishTime();
     }
     return finish_time_sum;
-}
+};
 
 int Scheduler::getProcessorsCost() const {
     if (schedule_state != SCHEDULED) {
@@ -302,7 +298,7 @@ int Scheduler::getProcessorsCost() const {
         }
     }
     return total_cost;
-}
+};
 
 int Scheduler::getDelayCost() const {
     if (schedule_state != SCHEDULED) {
@@ -330,27 +326,19 @@ int Scheduler::getDelayCost() const {
         }
     }
     return total_delay;
-}
+};
 
 std::string Scheduler::printScheduleState() const {
     switch (schedule_state) {
-        case NOT_SCHEDULED:
-            return "NOT_SCHEDULED";
-        case SCHEDULED:
-            return "SCHEDULED";
-        case CANDIDATE_ERROR:
-            return "CANDIDATE_ERROR";
-        case PRECEDENCES_ERROR:
-            return "PRECEDENCES_ERROR";
-        case SUCCESSORS_ERROR:
-            return "SUCCESSORS_ERROR";
-        case CYCLE_ERROR:
-            return "CYCLE_ERROR";
-        case DEADLINE_MISSED:
-            return "DEADLINE_MISSED";
-        case UTILIZATION_UNFEASIBLE:
-            return "UTILIZATION_UNFEASIBLE";
-        default:
-            return "UNKNOWN_STATE";
+        case NOT_SCHEDULED: return "Not scheduled";
+        case SCHEDULED: return "Scheduled successfully";
+        case CANDIDATE_ERROR: return "Candidate error: invalid task-server assignments or priorities";
+        case PRECEDENCES_ERROR: return "Precedences error: invalid predecessor references or disconnected servers";
+        case SUCCESSORS_ERROR: return "Successors error: invalid successor references";
+        case CYCLE_ERROR: return "Cycle error: cycle detected in task graph";
+        case DEADLINE_MISSED: return "Deadline missed: one or more tasks miss their deadlines";
+        case UTILIZATION_UNFEASIBLE: return "Utilization unfeasible: one or more servers over-utilized";
+        case MEMORY_UNFEASIBLE: return "Memory unfeasible: one or more servers out of memory";
+        default: return "Unknown schedule state";
     }
-}
+};

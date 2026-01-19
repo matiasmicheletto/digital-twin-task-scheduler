@@ -142,19 +142,6 @@ void Scheduler::printJSON() const {
         j["delay_matrix"]["matrix"].push_back(jr);
     }   
 
-    if(schedule_state == SCHEDULED){
-        j["task_allocation"] = nlohmann::json::array();
-        for (const auto& server : servers) {
-            nlohmann::json js;
-            js["server_id"] = server.getId();
-            js["assigned_tasks"] = nlohmann::json::array();
-            for (const auto& task : server.getAssignedTasks()) {
-                js["assigned_tasks"].push_back(task.getId());
-            }
-            j["task_allocation"].push_back(js);
-        }
-    }
-
     std::cout << j.dump(4) << std::endl; // Pretty print with 4 spaces indent
 }
 

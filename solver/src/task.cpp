@@ -71,13 +71,25 @@ void Task::print() const {
     std::cout << "Utilization (u): " << u << "\n";
     
     bool hasSuccessors = successors.size() > 0;
-    std::cout << "Has successors: " << (hasSuccessors ? "Yes" : "No") << "\n";
     if (hasSuccessors) {
         std::cout << "Successors: ";
         for (const auto& succ : successors) {
             std::cout << succ << " ";
         }
         std::cout << "\n";
+    }else{
+        std::cout << "No successors.\n";
+    }
+
+    bool hasPredecessors = predecessors.size() > 0;
+    if (hasPredecessors) {
+        std::cout << "Predecessors: ";
+        for (const auto& pred : predecessors) {
+            std::cout << pred << " ";
+        }
+        std::cout << "\n";
+    }else{
+        std::cout << "No predecessors.\n";
     }
     std::cout << "Start time: " << start_time << "\n";
     std::cout << "Finish time: " << finish_time << "\n";

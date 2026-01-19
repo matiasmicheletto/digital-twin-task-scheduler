@@ -31,13 +31,15 @@ public:
     
     inline const std::deque<Task>& getAssignedTasks() const { return assigned_tasks; }
     inline std::deque<Task>& getAssignedTasks() { return assigned_tasks; }
-    inline void clearTasks() { assigned_tasks.clear(); available_utilization = utilization; }
 
     inline void setInternalIdx(int internal_idx_) { internal_idx = internal_idx_; }
 
-    inline void pushBackTask(const Task& task) { assigned_tasks.push_back(task); available_utilization -= task.getU(); }
-    inline void pushFrontTask(const Task& task) { assigned_tasks.push_front(task); available_utilization -= task.getU(); }
+    void pushBackTask(const Task& task);
+    void pushFrontTask(const Task& task);
+    void clearTasks();
+
     inline double getAvailableUtilization() const { return available_utilization; }
+    inline int getAvailableMemory() const { return available_memory; }
 
 private:
     std::string id;
@@ -45,9 +47,10 @@ private:
     ServerType type;
     std::string label;
     int memory; // Total memory
+    int available_memory; // Available memory for allocating tasks
     int cost; // Cost per use
-    double utilization; // 0..1
-    double available_utilization; // available utilization
+    double utilization; // 0..1, minimal utilization
+    double available_utilization; // available utilization for allocating tasks
     int last_slot; // Last slot occupied by a task
     std::deque<Task> assigned_tasks;
 };

@@ -34,13 +34,13 @@ void Scheduler::loadTasksFromJSONFile(const std::string& file_path) {
         }
     }
 
-    // Compute predecessors from precedences
+    // Compute predecessors from precedences (successors are already in tasks)
     if (j.contains("precedences") && j.at("precedences").is_array()) {
         for (const auto& jp : j.at("precedences")) {
             std::string from_id = utils::require_type<std::string>(jp, "from");
             std::string to_id = utils::require_type<std::string>(jp, "to");
 
-            // Add predecessor adnd successor
+            // Add predecessor
             auto from_it = std::find_if(tasks.begin(), tasks.end(), [&](const Task& t) {
                 return t.getId() == from_id;
             });
@@ -55,9 +55,6 @@ void Scheduler::loadTasksFromJSONFile(const std::string& file_path) {
 
             int pred_internal = from_it->getInternalIdx();   // PREDECESSOR is FROM
             to_it->addPredecessor(from_id, pred_internal);
-
-            int succ_internal = to_it->getInternalIdx();     // SUCCESSOR is TO
-            from_it->addSuccessor(to_id, succ_internal);
         }
     }
 }

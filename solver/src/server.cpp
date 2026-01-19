@@ -30,7 +30,27 @@ Server Server::fromJSON(const nlohmann::json& j) {
     server.internal_idx = -1; // Default value
 
     return server;
-}
+};
+
+void Server::pushBackTask(const Task& task) { 
+    assigned_tasks.push_back(task); 
+    available_utilization -= task.getU(); 
+    available_memory -= task.getM(); 
+    last_slot = task.getFinishTime(); 
+};
+
+void Server::pushFrontTask(const Task& task) { 
+    assigned_tasks.push_front(task); 
+    available_utilization -= task.getU(); 
+    available_memory -= task.getM();
+    last_slot = std::max(last_slot, task.getFinishTime()); 
+};
+
+void Server::clearTasks() { 
+    assigned_tasks.clear(); 
+    available_utilization = utilization;
+    available_memory = memory;
+};
 
 void Server::print() const {
     std::cout << "Server ID: " << id << "\n";
@@ -52,4 +72,4 @@ void Server::print() const {
     std::cout << "Utilization: " << utilization << "\n";
     std::cout << "Last Slot: " << last_slot << "\n";
     std::cout << "Assigned Tasks: " << assigned_tasks.size() << "\n";
-}
+};

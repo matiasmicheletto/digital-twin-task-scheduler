@@ -44,7 +44,8 @@ enum ScheduleState {
     SUCCESSORS_ERROR, // invalid successors
     CYCLE_ERROR, // cycle detected in task graph
     DEADLINE_MISSED, // task misses deadline
-    UTILIZATION_UNFEASIBLE // server over-utilized
+    UTILIZATION_UNFEASIBLE, // server over-utilized
+    MEMORY_UNFEASIBLE // server out of memory
 };
 
 class Scheduler {
@@ -81,7 +82,7 @@ class Scheduler {
         std::vector<Task> tasks;
         std::vector<Server> servers;
         std::vector<int> non_mist_servers_idxs; // List of non-MIST servers (the MIST ones cannot host more than one task)
-        std::vector<Connection> connections;
+        std::vector<Connection> connections; // Connections are duplicated for bidirectional links
         std::vector<std::vector<int>> delay_matrix;
         std::string instance_name;
 

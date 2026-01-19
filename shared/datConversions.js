@@ -166,15 +166,15 @@ export const datToModel = (datString) => {
     const nodeIdMap = {}; // Map numeric IDs to generated UUIDs
 
     for (let i = 0; i < numNodes; i++) {
-        const [id, memory, u, cost] = lines[lineIndex++].split('\t').map(val => val.trim());
+        const [nodeIndex, memory, u, cost] = lines[lineIndex++].split('\t').map(val => val.trim());
         const nodeId = generateUUID8();
-        nodeIdMap[id] = nodeId;
+        nodeIdMap[nodeIndex] = nodeId;
 
         nodes.push({
             id: nodeId,
             type: "EDGE",
-            label: `Node ${id}`,
-            tasks: {},
+            label: `Node ${nodeIndex}`,
+            allocatedTasks: [],
             memory: parseFloat(memory),
             u: parseFloat(u),
             cost: parseFloat(cost ? cost:1),
@@ -189,21 +189,22 @@ export const datToModel = (datString) => {
 
     // Parse tasks
     console.log("Parsing tasks...");
-    const numTasks = parseInt(lines[lineIndex++]); // Tasks start from 0
+    const lastTaskIndex = parseInt(lines[lineIndex++]);
+    const taskCount = lastTaskIndex + 1;
     const tasks = [];
     const taskIdMap = {}; // Map numeric IDs to generated UUIDs
 
-    for (let i = 0; i < numTasks; i++) {
-        const [id, C, T, D, a, M, allocatedNode] = lines[lineIndex++].split('\t').map(val => val.trim());
+    for (let i = 0; i < taskCount; i++) {
+        const [taskIndex, C, T, D, a, M, allocatedNode] = lines[lineIndex++].split('\t').map(val => val.trim());
         const taskId = generateUUID8();
-        taskIdMap[id] = taskId;
+        taskIdMap[taskIndex] = taskId;
 
         const isMist = allocatedNode !== '0' && allocatedNode !== '';
 
         tasks.push({
             id: taskId,
             type: "TASK",
-            label: isMist ? `Mst ${id}` : `Tsk ${id}`,
+            label: isMist ? `Mst ${taskIndex}` : `Tsk ${taskIndex}`,
             mist: isMist,
             C: parseFloat(C),
             T: parseFloat(T),
@@ -217,33 +218,38 @@ export const datToModel = (datString) => {
                 y: 200 + i * 60
             }
         });
+
+        if(isMist) {
+            nodes[parseInt(allocatedNode) - 1].allocatedTasks.push(taskId);
+        }
     }
     console.log(`Parsed ${tasks.length} tasks.\n`);
 
     // Parse precedences
     console.log("Parsing precedences...");
-    const numPrecedences = parseInt(lines[lineIndex++]); // Should be M x M
+    const precedencesCount = parseInt(lines[lineIndex++]); // Should be M x M
     const precedences = [];
 
-    for (let i = 0; i < numPrecedences; i++) {
-        const [fromId, toId, exists] = lines[lineIndex++].split('\t').map(val => val.trim());
+    for (let i = 0; i < precedencesCount; i++) {
+        const [fromTaskIndex, toTaskIndex, exists] = lines[lineIndex++].split('\t').map(val => val.trim());
 
         if (exists === '1') {
-            const fromUuid = taskIdMap[fromId];
-            const toUuid = taskIdMap[toId];
+            const fromUuid = taskIdMap[fromTaskIndex];
+            const toUuid = taskIdMap[toTaskIndex];
 
             precedences.push({
-                id: `${fromUuid}_${toUuid}`,
+                id: `From ${fromTaskIndex} to ${toTaskIndex}`,
                 from: fromUuid,
                 to: toUuid,
                 bidirectional: false
             });
 
-            // Add to successors list of from task
-            const fromTask = tasks.find(t => t.id === fromUuid);
+            // Add to successors list of from task if not already present
+            const fromTask = taskIdMap[fromTaskIndex] ? tasks[parseInt(fromTaskIndex)] : null;
             if (fromTask && !fromTask.successors.includes(toUuid)) {
                 fromTask.successors.push(toUuid);
             }
+            
         }
     }
     console.log(`Parsed ${precedences.length} precedences.\n`);
@@ -251,17 +257,18 @@ export const datToModel = (datString) => {
     // Parse connections
     console.log("Parsing connections...");
 
-    const numConnections = parseInt(lines[lineIndex++]);
+    const connectionCount = parseInt(lines[lineIndex++]);
     const connections = [];
 
-    for (let i = 0; i < numConnections; i++) {
+    for (let i = 0; i < connectionCount; i++) {
 
         const [fromId, toId, delay] = lines[lineIndex++].split('\t').map(val => val.trim());
 
         if (delay !== '0' && delay !== '' && delay !== '1000') { // Ignore self-connections and infinite delays
             const fromUuid = nodeIdMap[fromId];
             const toUuid = nodeIdMap[toId];
-            const fromNode = nodes.find(n => n.id === fromUuid);
+            //const fromNode = nodes.find(n => n.id === fromUuid); // slow
+            const fromNode = nodeIdMap[fromId] ? nodes[parseInt(fromId) - 1] : null; // faster
 
             const connection = {
                 id: `${fromUuid}_${toUuid}`,
@@ -271,35 +278,6 @@ export const datToModel = (datString) => {
                 delay: parseFloat(delay),
                 bidirectional: false
             };
-
-            // Check if there is already a connection between fromId and toId in the opposite direction
-            /*
-            const existingConnection = connections.findIndex(conn => conn.from === toUuid && conn.to === fromUuid);
-            if(existingConnection !== -1) {
-                connections[existingConnection].delay = Math.min(connections[existingConnection].delay, parseFloat(delay));
-                connections[existingConnection].label = `Node ${fromId} <--> Node ${toId}`;
-                connections[existingConnection].bidirectional = true;
-
-                // Update link in fromNode and toNode
-                const connectionId = connections[existingConnection].id;
-                const toNode = nodes.find(n => n.id === toUuid);
-                if (fromNode && toNode) {
-                    const linkFromIndex = fromNode.links.findIndex(l => l.id === connectionId);
-                    const linkToIndex = toNode.links.findIndex(l => l.id === connectionId);
-                    if(linkFromIndex !== -1) {
-                        fromNode.links[linkFromIndex].delay = Math.min(fromNode.links[linkFromIndex].delay, parseFloat(delay));
-                        fromNode.links[linkFromIndex].label = `Node ${fromId} <--> Node ${toId}`;
-                        fromNode.links[linkFromIndex].bidirectional = true;
-                    }
-                    if(linkToIndex !== -1) {
-                        toNode.links[linkToIndex].delay = Math.min(toNode.links[linkToIndex].delay, parseFloat(delay));
-                        toNode.links[linkToIndex].label = `Node ${fromId} <--> Node ${toId}`;
-                        toNode.links[linkToIndex].bidirectional = true;
-                    }
-                }
-                continue; // Skip adding a new connection
-            }
-            */
 
             connections.push(connection);
 
@@ -331,26 +309,11 @@ export const datToModel = (datString) => {
         }
     });
 
-    tasks.forEach(task => { // No necessary
+    tasks.forEach(task => { // Redundant?
         if(task.processorId) {
             task.mist = true;
         }
     });
-
-    /*
-    // ---OLD --- If a task has no precedences, set mist to true
-    tasks.forEach(task => {
-        const hasPrecedence = precedences.some(p => p.to === task.id);
-        task.mist = !hasPrecedence;
-        // If is preallocated, set that node to mist
-        if(task.processorId) {
-            const node = nodes.find(n => n.id === task.processorId);
-            if(node) {
-                node.type = "MIST";
-            }
-        }
-    });
-    */
 
     const model = {
         nodes,
