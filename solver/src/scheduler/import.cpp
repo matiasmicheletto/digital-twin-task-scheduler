@@ -4,6 +4,7 @@ void Scheduler::loadTasksFromJSONFile(const std::string& file_path) {
 
     std::ifstream file(file_path);
     if (!file.is_open()) {
+        std::cerr << "Could not open file: " + file_path << std::endl;
         throw std::runtime_error("Could not open file: " + file_path);
     }
 
@@ -53,8 +54,14 @@ void Scheduler::loadTasksFromJSONFile(const std::string& file_path) {
             if (to_it == tasks.end()) 
                 throw std::runtime_error("Invalid to_id in precedence: " + to_id);
 
-            int pred_internal = from_it->getInternalIdx();   // PREDECESSOR is FROM
-            to_it->addPredecessor(from_id, pred_internal);
+            int from_internal = from_it->getInternalIdx();
+            int to_internal = to_it->getInternalIdx();
+            
+            // Add predecessor to the 'to' task
+            to_it->addPredecessor(from_id, from_internal);
+            
+            // ADD THIS: Add successor to the 'from' task
+            from_it->addSuccessor(to_id, to_internal);
         }
     }
 }
@@ -64,6 +71,7 @@ void Scheduler::loadNetworkFromJSONFile(const std::string& file_path) {
 
     std::ifstream file(file_path);
     if (!file.is_open()) {
+        std::cerr << "Could not open file: " + file_path << std::endl;
         throw std::runtime_error("Could not open file: " + file_path);
     }
 

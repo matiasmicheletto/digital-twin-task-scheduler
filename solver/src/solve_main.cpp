@@ -127,20 +127,28 @@ int main(int argc, char **argv) {
             Candidate c = solver.solve();
             
             // Print if text mode and feasible
-            if(sch.getScheduleState() == SCHEDULED && output_format == utils::PRINT_TYPE::PLAIN_TEXT) {
-                sch.print(output_format);
-                std::cout << std::endl << "####################" << std::endl;
-                std::cout << "Best candidate:" << std::endl;
-                c.print();
-                return 0;
+            if(sch.getScheduleState() == SCHEDULED){ 
+                if(output_format == utils::PRINT_TYPE::PLAIN_TEXT) {
+                    sch.print(output_format);
+                    std::cout << std::endl << "####################" << std::endl;
+                    std::cout << "Best candidate:" << std::endl;
+                    c.print();
+                    return 0;
+                }else{
+                    sch.print(output_format);
+                    return 0;
+                }
             } else {
                 utils::dbg << "No feasible solution could be scheduled.\n";
+                std::cout << "Scheduling failed with state: " << sch.printScheduleState() << std::endl;
+                return 1;
             }
         }else{
-            std::cout << utils::red << "Solve flag not set. Skipping solving step." << utils::reset << "\n";
+            if(output_format != utils::PRINT_TYPE::SCHEDULE_CSV) {    
+                std::cout << utils::red << "Solve flag not set. Skipping solving step." << utils::reset << "\n";
+                return 0;
+            }
         }
-        
-        sch.print(output_format);
         
     } catch (const std::exception& e) {
         utils::dbg << "Error: " << e.what() << "\n";

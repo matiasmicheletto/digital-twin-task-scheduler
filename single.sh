@@ -18,7 +18,7 @@ node data/dat-to-json.js -d "instances/dat/${INSTANCE}.dat" -t "instances/tasks/
 
 echo "Solving instance..."
 make solver
-./solver/bin/solve -t "../data/instances/tasks/t_${INSTANCE}.json" -n "data/instances/networks/n_${INSTANCE}.json" -o csv > "data/results/csv/res_${INSTANCE}.csv"
+./solver/bin/solve -t "data/instances/tasks/t_${INSTANCE}.json" -n "data/instances/networks/n_${INSTANCE}.json" -s random -o csv > "data/results/csv/res_${INSTANCE}.csv"
 
 if [ ! -s "data/results/csv/res_${INSTANCE}.csv" ]; then
   echo "Error: Result file not created or empty!"

@@ -79,6 +79,7 @@ ScheduleState Scheduler::schedule(const Candidate& candidate) {
     // 1) Compute indegree (number of predecessors) for each task
     std::vector<int> indeg(N, 0);
     for (int i = 0; i < N; ++i) {
+        /*
         const auto &pred_ids = tasks[i].getPredecessorInternalIdxs();
         for (int pid : pred_ids) {
             auto it = taskIdToInternalIdx.find(pid);
@@ -88,7 +89,8 @@ ScheduleState Scheduler::schedule(const Candidate& candidate) {
                 return schedule_state = PRECEDENCES_ERROR;
             }
             ++indeg[i];
-        }
+        }*/
+        indeg[i] = (int)tasks[i].getPredecessorInternalIdxs().size();
     }
 
     // 2) Kahn's algorithm with priority tie-breaker:
