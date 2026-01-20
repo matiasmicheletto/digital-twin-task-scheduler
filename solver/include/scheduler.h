@@ -22,7 +22,7 @@ struct Connection { // Used to compute delay matrix
 };
 
 struct Candidate { // Structure to compute tasks allocation to servers
-    std::vector<size_t> server_indices; // Server assigned to each task
+    std::vector<int> server_indices; // Server assigned to each task
     std::vector<double> priorities;   // Priority of each task to define order of execution
     Candidate(size_t task_count) {
         server_indices.resize(task_count, -1); // -1 means unassigned
