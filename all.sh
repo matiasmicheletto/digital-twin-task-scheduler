@@ -1,14 +1,26 @@
 #!/usr/bin/env bash
+
+##
+# Script to process all instances: convert, solve with multiple methods, and plot.
+# Usage: ./all.sh
+##
+
 set -euo pipefail # Strict mode
 
+# Instances directories
+# Task and network JSON files will be generated from DAT files
+DAT_DIR="data/instances/dat"
 TASKS_DIR="data/instances/tasks"
 NETS_DIR="data/instances/networks"
-DAT_DIR="data/instances/dat"
 
 RESULTS_CSV_DIR="data/results/csv"
 RESULTS_CPLEX_DIR="data/results/cplex"
 RESULTS_AMPL_DIR="data/results/ampl"
 CHARTS_DIR="data/charts"
+
+# Flags to enable/disable ILP solvers
+RUN_CPLEX=false
+RUN_AMPL=false
 
 VENV_PATH="data/venv"
 RUNTIME_FILE="data/results/runtimes.txt"
@@ -27,7 +39,7 @@ mkdir -p \
   "$NETS_DIR"
 
 : > "$RUNTIME_FILE"
-
+# Clear solver log if exists
 if [ -f "./solver/bin/solver_log.csv" ]; then
   rm ./solver/bin/solver_log.csv
 fi
@@ -45,11 +57,10 @@ echo "=========================================="
 make solver
 
 
-
 echo "=========================================="
 echo "Converting DAT to JSON and solving instances"
 echo "=========================================="
-for dat_file in "$DAT_DIR"/*.dat; do
+for dat_file in "$DAT_DIR"/*.dat; do # For each instance DAT file
     
     # Extract the filename without the path and extension (e.g., "40")
     filename=$(basename "$dat_file" .dat)
@@ -61,14 +72,16 @@ for dat_file in "$DAT_DIR"/*.dat; do
     net_output=$(realpath "$NETS_DIR")/net${filename}.json
     task_output=$(realpath "$TASKS_DIR")/sched${filename}.json
 
-    # Execute the node command
+    # Execute the node command to convert DAT to JSON
     node data/dat-to-json.js -d "$dat_abs" -n "$net_output" -t "$task_output"
 
+    # Prepare absolute paths for solver input
     base_t="sched${filename}"
     base_n="net${filename}"
     t_abs=$(realpath "$TASKS_DIR/$base_t.json")
     n_abs=$(realpath "$NETS_DIR/$base_n.json")
 
+    # Now run the solver with different strategies
     for strategy in random annealing genetic; do
       out="$RESULTS_CSV_DIR/${base_t}__${base_n}_${strategy}.csv"
 
@@ -96,22 +109,23 @@ for dat_file in "$DAT_DIR"/*.dat; do
     done
 done
 
+# Run AMPL solver for each instance if enabled
+if [[ "${RUN_AMPL:-false}" == true ]]; then
+  echo "=========================================="
+  echo "Running AMPL solver"
+  echo "=========================================="
 
+  # Check if AMPL is installed
+  if command -v ampl >/dev/null 2>&1; then
+    for dat in "$DAT_DIR"/*.dat; do
+      base=$(basename "$dat" .dat)
+      out="$RESULTS_AMPL_DIR/${base}_ampl.out"
 
-echo "=========================================="
-echo "Running AMPL solver"
-echo "=========================================="
+      echo "AMPL: $base"
 
-if command -v ampl >/dev/null 2>&1; then
-  for dat in "$DAT_DIR"/*.dat; do
-    base=$(basename "$dat" .dat)
-    out="$RESULTS_AMPL_DIR/${base}_ampl.out"
+      start=$(date +%s)
 
-    echo "AMPL: $base"
-
-    start=$(date +%s)
-
-    if ampl <<EOF > "$out"; then
+      if ampl <<EOF > "$out"; then
 model ampl/model.mod;
 data $dat;
 
@@ -121,52 +135,53 @@ option gurobi_options "timelimit=180";
 solve;
 display s, f, L;
 EOF
-      end=$(date +%s)
-      echo "ampl $base $((end - start))s" >> "$RUNTIME_FILE"
-      echo "OK  -> $out"
-    else
-      echo "FAIL -> AMPL $base" >&2
-      rm -f "$out"
-    fi
-  done
-else
-  echo "AMPL not found — skipping"
+        end=$(date +%s)
+        echo "ampl $base $((end - start))s" >> "$RUNTIME_FILE"
+        echo "OK  -> $out"
+      else
+        echo "FAIL -> AMPL $base" >&2
+        rm -f "$out"
+      fi
+    done
+  else
+    echo "AMPL not found — skipping"
+  fi
 fi
 
+# Run CPLEX solver for each instance if enabled
+if [[ "${RUN_CPLEX:-false}" == true ]]; then
+  echo "=========================================="
+  echo "Running CPLEX solver"
+  echo "=========================================="
 
+  if command -v cplex >/dev/null 2>&1; then
+    for dat in "$DAT_DIR"/*.dat; do
+      base=$(basename "$dat" .dat)
+      sol="$RESULTS_CPLEX_DIR/${base}_cplex.sol"
 
-echo "=========================================="
-echo "Running CPLEX solver"
-echo "=========================================="
+      echo "CPLEX: $base"
 
-if command -v cplex >/dev/null 2>&1; then
-  for dat in "$DAT_DIR"/*.dat; do
-    base=$(basename "$dat" .dat)
-    sol="$RESULTS_CPLEX_DIR/${base}_cplex.sol"
+      start=$(date +%s)
 
-    echo "CPLEX: $base"
-
-    start=$(date +%s)
-
-    if cplex -c \
-        "read $dat" \
-        "optimize" \
-        "write $sol sol" \
-        "quit"; then
-      end=$(date +%s)
-      echo "cplex $base $((end - start))s" >> "$RUNTIME_FILE"
-      echo "OK  -> $sol"
-    else
-      echo "FAIL -> CPLEX $base" >&2
-      rm -f "$sol"
-    fi
-  done
-else
-  echo "CPLEX not found — skipping"
+      if cplex -c \
+          "read $dat" \
+          "optimize" \
+          "write $sol sol" \
+          "quit"; then
+        end=$(date +%s)
+        echo "cplex $base $((end - start))s" >> "$RUNTIME_FILE"
+        echo "OK  -> $sol"
+      else
+        echo "FAIL -> CPLEX $base" >&2
+        rm -f "$sol"
+      fi
+    done
+  else
+    echo "CPLEX not found — skipping"
+  fi
 fi
 
-
-
+# Parse CPLEX and AMPL outputs to CSV with node scripts
 echo "=========================================="
 echo "Converting CPLEX solutions to CSV"
 echo "=========================================="
@@ -193,7 +208,7 @@ while read -r file; do
 done
 
 
-
+# Generate Gantt charts from all CSV results
 echo "=========================================="
 echo "Generating charts"
 echo "=========================================="
@@ -222,6 +237,5 @@ for r in \
 done
 
 deactivate
-
 
 echo "DONE"
