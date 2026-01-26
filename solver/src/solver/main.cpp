@@ -1,7 +1,7 @@
 #include "solver.h"
 
 double Solver::computeObjective() const {
-    if (scheduler.getScheduleState() != SCHEDULED) {
+    if (scheduler.getScheduleState() != ScheduleState::SCHEDULED) {
         utils::dbg << "Schedule not computed yet.\n";
         return -1.0;
     }
@@ -14,64 +14,37 @@ double Solver::computeObjective() const {
                      + config.beta * delay_cost
                      + config.gamma * static_cast<double>(processors_cost);
     return objective;
-}
+};
 
-Candidate Solver::solve() {
+SolverResult Solver::solve() {
     srand(static_cast<unsigned int>(time(nullptr)));
+    SolverResult result;
     switch(config.solverMethod) {
         case SolverMethod::RANDOM_SEARCH:
-            return randomSearchSolve();
+            result = randomSearchSolve();
+            break;
         case SolverMethod::GENETIC_ALGORITHM:
-            return geneticAlgorithmSolve();
+            result =  geneticAlgorithmSolve();
+            break;
         case SolverMethod::SIMULATED_ANNEALING:
-            return simulatedAnnealingSolve();
+            result =  simulatedAnnealingSolve();
+            break;
         default:
             utils::dbg << "Unknown solver method.\n";
-            return Candidate(scheduler.getTaskCount());
+            result.status = SolverResult::SolverStatus::ERROR;
+            return result;
     }
-}
+    // Write CSV log output (separated to avoid potential optimization issues)
+    if (config.log) {
+        std::string csv_output = result.print(utils::PRINT_FORMAT::CSV);
+        (*config.log) << csv_output;
+    }else{
+        utils::dbg << "No log stream defined in SolverConfig; skipping CSV log output.\n";
+        exit(1);
+    }
+    return result;
+};
 
 std::string Solver::getSolverMethodName() const {
-    switch(config.solverMethod) {
-        case SolverMethod::RANDOM_SEARCH:
-            return "Random Search";
-        case SolverMethod::GENETIC_ALGORITHM:
-            return "Genetic Algorithm";
-        case SolverMethod::SIMULATED_ANNEALING:
-            return "Simulated Annealing";
-        default:
-            return "Unknown Method";
-    }
-}
-
-void Solver::writeLog(int runtime, int iterations, int scheduleSpan, int finishTimeSum, ScheduleState state, std::string obs) {
-    // Prints optimization results in csv format to the log stream
-    std::string timestamp = utils::currentDateTime();
-    std::string instanceName = scheduler.getInstanceName();
-    std::string solverMethodName;
-    switch(config.solverMethod) {
-        case SolverMethod::RANDOM_SEARCH:
-            solverMethodName = "Random Search";
-            break;
-        case SolverMethod::GENETIC_ALGORITHM:
-            solverMethodName = "Genetic Algorithm";
-            break;
-        case SolverMethod::SIMULATED_ANNEALING:
-            solverMethodName = "Simulated Annealing";
-            break;
-        default:
-            solverMethodName = "Unknown Method";
-    }
-
-    std::string scheduleStateStr = scheduler.printScheduleState();
-
-    (*config.log) << timestamp << "," 
-        << instanceName << "," 
-        << solverMethodName << "," 
-        << runtime << "," 
-        << iterations << "," 
-        << scheduleSpan << "," 
-        << finishTimeSum << "," 
-        << scheduleStateStr << (obs.empty() ? "" : ("," + obs))
-        << "\n";
-}
+    return ::solverMethodToString(config.solverMethod);
+};

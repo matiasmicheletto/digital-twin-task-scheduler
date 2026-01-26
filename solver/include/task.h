@@ -49,7 +49,7 @@ class Task {
         ~Task() = default;
 
         static Task fromJSON(const nlohmann::json& j);
-        void print() const;
+        std::string print() const;
 
         // Setters
         inline void setStartTime(int start) { start_time = start; finish_time = start_time + C; }

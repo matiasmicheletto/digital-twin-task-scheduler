@@ -118,7 +118,7 @@ std::string currentDateTime() {
     return std::string(buf);
 }
 
-int getElapsed(const std::chrono::high_resolution_clock::time_point& start_time) {
+int getElapsedMs(const std::chrono::high_resolution_clock::time_point& start_time) {
     auto end_time = std::chrono::high_resolution_clock::now();
     return static_cast<int>(std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time).count());
 }

@@ -1,23 +1,50 @@
 #include "scheduler.h"
 
-void Scheduler::printText() const {
-    std::cout << "Scheduler Information:\n";
+
+std::string Candidate::print() const {
+    std::ostringstream oss;
+    for (size_t i = 0; i < server_indices.size(); ++i) {
+        oss << "  Task " << i << ": Server " << server_indices[i] << ", Priority " << std::fixed << std::setprecision(4) << priorities[i] << "\n";
+    }
+    return oss.str();
+};
+
+std::string ScheduleState::toString() const {
+    switch (schedule_state) {
+        case NOT_SCHEDULED: return "Not scheduled";
+        case SCHEDULED: return "Scheduled successfully";
+        case CANDIDATE_ERROR: return "Candidate error: invalid task-server assignments or priorities";
+        case PRECEDENCES_ERROR: return "Precedences error: invalid predecessor references or disconnected servers";
+        case SUCCESSORS_ERROR: return "Successors error: invalid successor references";
+        case CYCLE_ERROR: return "Cycle error: cycle detected in task graph";
+        case DEADLINE_MISSED: return "Deadline missed: one or more tasks miss their deadlines";
+        case UTILIZATION_UNFEASIBLE: return "Utilization unfeasible: one or more servers over-utilized";
+        case MEMORY_UNFEASIBLE: return "Memory unfeasible: one or more servers out of memory";
+        default: return "Unknown schedule state";
+    }
+};
+
+std::string Scheduler::printTxt() const {
+
+    std::ostringstream oss;
+
+    oss << "Scheduler Information:\n";
     
-    std::cout << "Tasks (" << tasks.size() << "):\n";
+    oss << "Tasks (" << tasks.size() << "):\n";
     for (const auto& task : tasks) {
-        task.print();
-        std::cout << "---------------------\n";
+        oss << task.print();
+        oss << "---------------------\n";
     }
 
-    std::cout << "\n" << "####################\n";
-    std::cout << "Servers (" << servers.size() << "):\n";
+    oss << "\n" << "####################\n";
+    oss << "Servers (" << servers.size() << "):\n";
     for (const auto& server : servers) {
-        server.print();
-        std::cout << "---------------------\n";
+        oss << server.print();
+        oss << "---------------------\n";
     }
 
-    std::cout << "\n" << "####################\n";
-    std::cout << "Connections (" << connections.size() << "):\n";
+    oss << "\n" << "####################\n";
+    oss << "Connections (" << connections.size() << "):\n";
     for (const auto& conn : connections) {
         std::string fromServerLabel = "";
         std::string toServerLabel = "";
@@ -29,53 +56,55 @@ void Scheduler::printText() const {
                 toServerLabel = server.getLabel();
             }
         }
-        std::cout << "Connection ID: " << conn.id << "\n";
-        std::cout << "From Server ID: " << conn.from_server_id << " (" << fromServerLabel << ")\n";
-        std::cout << "To Server ID: " << conn.to_server_id << " (" << toServerLabel << ")\n";
-        std::cout << "Delay: " << conn.delay << "\n";
-        std::cout << "Bidirectional: " << (conn.bidirectional ? "Yes" : "No") << "\n";
-        std::cout << "---------------------\n";
+        oss << "Connection ID: " << conn.id << "\n";
+        oss << "From Server ID: " << conn.from_server_id << " (" << fromServerLabel << ")\n";
+        oss << "To Server ID: " << conn.to_server_id << " (" << toServerLabel << ")\n";
+        oss << "Delay: " << conn.delay << "\n";
+        oss << "Bidirectional: " << (conn.bidirectional ? "Yes" : "No") << "\n";
+        oss << "---------------------\n";
     }
 
-    std::cout << "\n" << "####################\n";
-    std::cout << "Delay Matrix:\n";
+    oss << "\n" << "####################\n";
+    oss << "Delay Matrix:\n";
     // Print column headers
-    std::cout << std::setw(12) << " ";  // Space for row headers
+    oss << std::setw(12) << " ";  // Space for row headers
     for (size_t j = 0; j < servers.size(); ++j) {
-        //std::cout << std::setw(8) << servers[j].getId().substr(0,4);
-        std::cout << std::setw(8) << servers[j].getLabel();
+        //oss << std::setw(8) << servers[j].getId().substr(0,4);
+        oss << std::setw(8) << servers[j].getLabel();
     }
-    std::cout << "\n";
+    oss << "\n";
     // Print matrix with row headers
     for (size_t i = 0; i < delay_matrix.size(); ++i) {
-        //std::cout << std::setw(12) << servers[i].getId().substr(0,4);  // Row header
-        std::cout << std::setw(12) << servers[i].getLabel();  // Row header
+        //oss << std::setw(12) << servers[i].getId().substr(0,4);  // Row header
+        oss << std::setw(12) << servers[i].getLabel();  // Row header
         for (size_t j = 0; j < delay_matrix[i].size(); ++j) {
             if (delay_matrix[i][j] == INT_MAX) {
-                std::cout << std::setw(8) << "INF";
+                oss << std::setw(8) << "INF";
             } else {
-                std::cout << std::setw(8) << delay_matrix[i][j];
+                oss << std::setw(8) << delay_matrix[i][j];
             }
         }
-        std::cout << "\n";
+        oss << "\n";
     }
 
-    if(schedule_state == SCHEDULED) {
-        std::cout << "\n" << "####################\n";
-        std::cout << "Tasks allocation:\n";
+    if(state == ScheduleState::SCHEDULED) {
+        oss << "\n" << "####################\n";
+        oss << "Tasks allocation:\n";
         for (const auto& server : servers) {
-            std::cout << "Server: " << server.getLabel() << " (" << server.getId() << ")\n";
-            std::cout << "Assigned Tasks: ";
+            oss << "Server: " << server.getLabel() << " (" << server.getId() << ")\n";
+            oss << "Assigned Tasks: ";
             for (const auto& task : server.getAssignedTasks()) {
-                //std::cout << task.getId() << " ";
-                std::cout << task.getLabel() << " ";
+                //oss << task.getId() << " ";
+                oss << task.getLabel() << " ";
             }
-            std::cout << "\n---------------------\n";
+            oss << "\n---------------------\n";
         }
     }
-}
 
-void Scheduler::printJSON() const {
+    return oss.str();
+};
+
+std::string Scheduler::printJSON() const {
     nlohmann::json j;
 
     j["tasks"] = nlohmann::json::array();
@@ -142,39 +171,44 @@ void Scheduler::printJSON() const {
         j["delay_matrix"]["matrix"].push_back(jr);
     }   
 
-    std::cout << j.dump(4) << std::endl; // Pretty print with 4 spaces indent
+    return j.dump(4);
 }
 
-void Scheduler::exportScheduleToCSV() const {
-    if (schedule_state != SCHEDULED) {
+std::string Scheduler::printCSV() const {
+
+    if (state != ScheduleState::SCHEDULED) {
         throw std::runtime_error("Schedule not computed yet. Cannot export.");
     }
 
-    std::cout << "task,server,start,finish\n";
+    std::ostringstream oss;
+
+    oss << "task,server,start,finish\n";
 
     for (const auto& server : servers) {
         const auto& tasks = server.getAssignedTasks();
         for (const auto& task : tasks) {
-            std::cout << task.getLabel() << ","
+            oss << task.getLabel() << ","
                 << server.getLabel() << ","
                 << task.getStartTime() << ","
                 << task.getFinishTime() << "\n";
         }
     }
-}
 
-void Scheduler::print(utils::PRINT_TYPE format) const {
+    return oss.str();
+};
+
+std::string Scheduler::print(utils::PRINT_FORMAT format) const {
     switch(format) {
-        case utils::PRINT_TYPE::PLAIN_TEXT:
-            printText();
+        case utils::PRINT_FORMAT::TXT:
+            return printTxt();
             break;
-        case utils::PRINT_TYPE::JSON: 
-            printJSON();
+        case utils::PRINT_FORMAT::JSON: 
+            return printJSON();
             break;
-        case utils::PRINT_TYPE::SCHEDULE_CSV:
-            exportScheduleToCSV();
+        case utils::PRINT_FORMAT::CSV:
+            return printCSV();
             break;
         default: 
             throw std::runtime_error("Unknown print format");
     }
-}
+};

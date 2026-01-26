@@ -37,11 +37,9 @@
  * 
  */
 
-
-
 namespace utils { // Utility functions
 
-enum PRINT_TYPE { PLAIN_TEXT, JSON, SCHEDULE_CSV };
+enum PRINT_FORMAT { TXT, JSON, CSV };
 
 // Get directory of the executable (to load the manual file if not specified)
 std::filesystem::path getBinaryDir();
@@ -56,7 +54,7 @@ void printHelp(const char* file, const char* message = defaultMessage);
 
 std::string currentDateTime();
 
-int getElapsed(const std::chrono::high_resolution_clock::time_point& start_time);
+int getElapsedMs(const std::chrono::high_resolution_clock::time_point& start_time);
 
 // Random number generator
 static std::random_device rd;

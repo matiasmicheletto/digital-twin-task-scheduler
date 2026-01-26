@@ -8,7 +8,7 @@ Scheduler::Scheduler(std::string tasks_file, std::string network_file) {
     loadNetworkFromJSONFile(network_file);
     // Delay matrix is used to define start and finish times of tasks based on communication delays
     computeDelayMatrix();
-    schedule_state = NOT_SCHEDULED;
+    state = ScheduleState::NOT_SCHEDULED;
 };
 
 void Scheduler::computeDelayMatrix() {
@@ -58,18 +58,17 @@ ScheduleState Scheduler::schedule(const Candidate& candidate) {
     // - server_indices: vector<int> of size N (number of tasks), server index assigned to each task
     // - priorities: vector<double> of size N, priority value for
 
-    schedule_state = NOT_SCHEDULED;
+    state = ScheduleState::NOT_SCHEDULED;
 
     const int N = (int)tasks.size();
     if ((int)candidate.server_indices.size() != N || (int)candidate.priorities.size() != N) {
         // invalid candidate size
         utils::dbg << "Candidate size does not match number of tasks.\n";
-        return schedule_state = CANDIDATE_ERROR;
+        return state = ScheduleState::CANDIDATE_ERROR;
     }
 
     // Build mapping from internal_idx -> index in tasks vector
 
-    utils::dbg << "Starting scheduling of " << N << " tasks.\n";
     std::unordered_map<int,int> taskIdToInternalIdx;
     taskIdToInternalIdx.reserve(N);
     for (int i = 0; i < N; ++i) {
@@ -79,17 +78,6 @@ ScheduleState Scheduler::schedule(const Candidate& candidate) {
     // 1) Compute indegree (number of predecessors) for each task
     std::vector<int> indeg(N, 0);
     for (int i = 0; i < N; ++i) {
-        /*
-        const auto &pred_ids = tasks[i].getPredecessorInternalIdxs();
-        for (int pid : pred_ids) {
-            auto it = taskIdToInternalIdx.find(pid);
-            if (it == taskIdToInternalIdx.end()) {
-                // unknown predecessor reference -> infeasible input
-                utils::dbg << "Task " << tasks[i].getLabel() << " has unknown predecessor internal index " << pid << "\n";
-                return schedule_state = PRECEDENCES_ERROR;
-            }
-            ++indeg[i];
-        }*/
         indeg[i] = (int)tasks[i].getPredecessorInternalIdxs().size();
     }
 
@@ -116,7 +104,7 @@ ScheduleState Scheduler::schedule(const Candidate& candidate) {
             if (jt == taskIdToInternalIdx.end()) {
                 // unknown successor reference -> infeasible input
                 utils::dbg << "Task " << tasks[u].getId() << " has unknown successor internal index " << succ_internal << "\n";
-                return schedule_state = SUCCESSORS_ERROR;
+                return state = ScheduleState::SUCCESSORS_ERROR;
             }
             int v = jt->second;
             if (--indeg[v] == 0) {
@@ -129,7 +117,7 @@ ScheduleState Scheduler::schedule(const Candidate& candidate) {
     if ((int)topo_order.size() != N){
         utils::dbg << "Cycle detected in task graph. Scheduling infeasible.\n";
         utils::dbg << "Topological order size: " << topo_order.size() << ", Number of tasks: " << N << "\n";
-        return schedule_state = CYCLE_ERROR;
+        return state = ScheduleState::CYCLE_ERROR;
     }
 
     // 3) Schedule tasks in topo order.
@@ -151,13 +139,13 @@ ScheduleState Scheduler::schedule(const Candidate& candidate) {
             utils::dbg << "Task " << t.getLabel()
                     << " cannot be assigned to MIST server "
                     << servers[server_idx].getLabel() << ".\n";
-            return schedule_state = CANDIDATE_ERROR;
+            return state = ScheduleState::CANDIDATE_ERROR;
         }
         
         if (server_idx < 0 || server_idx >= S){
             // invalid server index
             utils::dbg << "Task " << t.getLabel() << " assigned to invalid server index " << server_idx << "\n";
-            return schedule_state = CANDIDATE_ERROR;
+            return state = ScheduleState::CANDIDATE_ERROR;
         }
 
         // earliest start considering activation time a
@@ -170,7 +158,7 @@ ScheduleState Scheduler::schedule(const Candidate& candidate) {
             if (it == taskIdToInternalIdx.end()){ 
                 // unknown predecessor reference -> infeasible input
                 utils::dbg << "Task " << t.getId() << " has unknown predecessor internal index " << pred_internal << "\n";
-                return schedule_state = PRECEDENCES_ERROR;
+                return state = ScheduleState::PRECEDENCES_ERROR;
             }
             int pidx = it->second;
             const Task &pt = tasks[pidx];
@@ -188,7 +176,7 @@ ScheduleState Scheduler::schedule(const Candidate& candidate) {
                 if (delay == INT_MAX) {
                     // disconnected servers -> infeasible
                     utils::dbg << "Task " << t.getLabel() << " predecessor " << pt.getLabel() << " on disconnected servers.\n";
-                    return schedule_state = PRECEDENCES_ERROR;
+                    return state = ScheduleState::PRECEDENCES_ERROR;
                 }
                 long long candidate_start = pred_finish + (long long)delay;
                 earliest = std::max(earliest, candidate_start);
@@ -201,7 +189,7 @@ ScheduleState Scheduler::schedule(const Candidate& candidate) {
         // Now set start time (cast to int safely, but check overflow)
         if (earliest > INT_MAX){
             utils::dbg << "Task " << t.getLabel() << " earliest start time overflow: " << earliest << "\n";
-            return schedule_state = CANDIDATE_ERROR; // too large
+            return state = ScheduleState::CANDIDATE_ERROR; // too large
         }
         t.setStartTime((int)earliest); // setStartTime updates finish_time = start + C (internally)
 
@@ -212,7 +200,7 @@ ScheduleState Scheduler::schedule(const Candidate& candidate) {
             if ((long long)t.getFinishTime() > latest_allowed_finish) {
                 // misses deadline -> infeasible
                 utils::dbg << "Task " << t.getId() << " misses deadline. Finish: " << t.getFinishTime() << ", Allowed: " << latest_allowed_finish << "\n";
-                return schedule_state = DEADLINE_MISSED;
+                return state = ScheduleState::DEADLINE_MISSED;
             }
         }
         
@@ -223,7 +211,7 @@ ScheduleState Scheduler::schedule(const Candidate& candidate) {
             if (!servers[server_idx].getAssignedTasks().empty()) {
                 utils::dbg << "Mist server " << servers[server_idx].getLabel()
                         << " already has a task assigned.\n";
-                return schedule_state = CANDIDATE_ERROR;
+                return state = ScheduleState::CANDIDATE_ERROR;
             }
         }
 
@@ -232,40 +220,21 @@ ScheduleState Scheduler::schedule(const Candidate& candidate) {
         const double avail_u = servers[server_idx].getAvailableUtilization();
         if (avail_u < 0.0) {
             utils::dbg << "Server " << servers[server_idx].getLabel() << " over-utilized after assigning task " << t.getLabel() << ". Available utilization: " << avail_u << "\n";
-            return schedule_state = UTILIZATION_UNFEASIBLE; // over-utilization -> infeasible
+            return state = ScheduleState::UTILIZATION_UNFEASIBLE; // over-utilization -> infeasible
         }
         const int avail_mem = servers[server_idx].getAvailableMemory();
         if (avail_mem < 0) {
             utils::dbg << "Server " << servers[server_idx].getLabel() << " out of memory after assigning task " << t.getLabel() << ". Available memory: " << avail_mem << "\n";
-            return schedule_state = MEMORY_UNFEASIBLE; // out of memory -> infeasible
+            return state = ScheduleState::MEMORY_UNFEASIBLE; // out of memory -> infeasible
         }
     }
 
-    // All tasks scheduled successfully
-    utils::dbg << "All tasks scheduled successfully.\n";
-    utils::dbg << "Final server utilizations:\n";
-
-    // Check if dbg is enabled before looping
-    if(utils::dbg.rdbuf() != utils::null_stream.rdbuf()) {
-        for (int sidx = 0; sidx < S; ++sidx) {
-            utils::dbg << "  Server " << servers[sidx].getLabel() << ": Utilization " << (1.0 - servers[sidx].getAvailableUtilization()) << "\n";
-        }
-        utils::dbg << "Tasks allocation:" << "\n";
-        for (int sidx = 0; sidx < S; ++sidx) {
-            const auto& assigned = servers[sidx].getAssignedTasks();
-            utils::dbg << "  Server " << servers[sidx].getLabel() << ": ";
-            for (const auto& tsk : assigned) {
-                utils::dbg << tsk.getLabel() << " (Start: " << tsk.getStartTime() << ", Finish: " << tsk.getFinishTime() << "); ";
-            }
-            utils::dbg << "\n";
-        }
-    }
-
-    return schedule_state = SCHEDULED;
+    return state = ScheduleState::SCHEDULED;
 };
 
 int Scheduler::getScheduleSpan() const {
-    if (schedule_state != SCHEDULED) {
+    // Returns the schedule span (makespan), i.e., the finish time of the last finishing task
+    if (state != ScheduleState::SCHEDULED) {
         utils::dbg << "Schedule not computed yet.\n";
         return -1;
     }
@@ -277,7 +246,8 @@ int Scheduler::getScheduleSpan() const {
 };
 
 int Scheduler::getFinishTimeSum() const {
-    if (schedule_state != SCHEDULED) {
+    // Returns the sum of finish times of all tasks in the schedule
+    if (state != ScheduleState::SCHEDULED) {
         utils::dbg << "Schedule not computed yet.\n";
         return -1;
     }
@@ -289,21 +259,20 @@ int Scheduler::getFinishTimeSum() const {
 };
 
 int Scheduler::getProcessorsCost() const {
-    if (schedule_state != SCHEDULED) {
+    // Returns the total cost of used processors in the schedule
+    if (state != ScheduleState::SCHEDULED) {
         utils::dbg << "Schedule not computed yet.\n";
         return -1;
     }
     int total_cost = 0;
     for (const auto& srv : servers) {
-        if (!srv.getAssignedTasks().empty()) {
-            total_cost += srv.getCost();
-        }
+        total_cost += srv.getCost() * (int)srv.getAssignedTasks().size();
     }
     return total_cost;
 };
 
 int Scheduler::getDelayCost() const {
-    if (schedule_state != SCHEDULED) {
+    if (state != ScheduleState::SCHEDULED) {
         utils::dbg << "Schedule not computed yet.\n";
         return -1;
     }
@@ -329,18 +298,9 @@ int Scheduler::getDelayCost() const {
     }
     return total_delay;
 };
-
-std::string Scheduler::printScheduleState() const {
-    switch (schedule_state) {
-        case NOT_SCHEDULED: return "Not scheduled";
-        case SCHEDULED: return "Scheduled successfully";
-        case CANDIDATE_ERROR: return "Candidate error: invalid task-server assignments or priorities";
-        case PRECEDENCES_ERROR: return "Precedences error: invalid predecessor references or disconnected servers";
-        case SUCCESSORS_ERROR: return "Successors error: invalid successor references";
-        case CYCLE_ERROR: return "Cycle error: cycle detected in task graph";
-        case DEADLINE_MISSED: return "Deadline missed: one or more tasks miss their deadlines";
-        case UTILIZATION_UNFEASIBLE: return "Utilization unfeasible: one or more servers over-utilized";
-        case MEMORY_UNFEASIBLE: return "Memory unfeasible: one or more servers out of memory";
-        default: return "Unknown schedule state";
+void Scheduler::clearAllServerTasks() {
+    // Clears all assigned tasks from all servers to prevent accessing corrupted data
+    for (auto& server : servers) {
+        server.clearTasks();
     }
 };

@@ -59,38 +59,48 @@ Task Task::fromJSON(const nlohmann::json& j) {
     return task;
 }
 
-void Task::print() const {
-    std::cout << "Task ID: " << id << "\n";
-    std::cout << "Label: " << label << "\n";
-    std::cout << "Type: " << (type == TaskType::Mist ? "MIST" : "REGULAR") << "\n";
-    std::cout << "Computation time (C): " << C << "\n";
-    std::cout << "Activation time (a): " << a << "\n";
-    std::cout << "Period (T): " << T << "\n";
-    std::cout << "Deadline (D): " << D << "\n";
-    std::cout << "Memory requirement (M): " << M << "\n";
-    std::cout << "Utilization (u): " << u << "\n";
+std::string Task::print() const {
+    std::ostringstream oss;
+
+    oss << "Task ID: " << id << "\n";
+    oss << "Label: " << label << "\n";
+    oss << "Type: " << (type == TaskType::Mist ? "MIST" : "REGULAR") << "\n";
+    oss << "Computation time (C): " << C << "\n";
+    oss << "Activation time (a): " << a << "\n";
+    oss << "Period (T): " << T << "\n";
+    oss << "Deadline (D): " << D << "\n";
+    oss << "Memory requirement (M): " << M << "\n";
+    oss << "Utilization (u): " << u << "\n";
     
     bool hasSuccessors = successors.size() > 0;
     if (hasSuccessors) {
-        std::cout << "Successors: ";
+        oss << "Successors: ";
         for (const auto& succ : successors) {
-            std::cout << succ << " ";
+            oss << succ << " ";
         }
-        std::cout << "\n";
+        oss << "\n";
     }else{
-        std::cout << "No successors.\n";
+        oss << "No successors.\n";
     }
 
     bool hasPredecessors = predecessors.size() > 0;
     if (hasPredecessors) {
-        std::cout << "Predecessors: ";
+        oss << "Predecessors: ";
         for (const auto& pred : predecessors) {
-            std::cout << pred << " ";
+            oss << pred << " ";
         }
-        std::cout << "\n";
+        oss << "\n";
     }else{
-        std::cout << "No predecessors.\n";
+        oss << "No predecessors.\n";
     }
-    std::cout << "Start time: " << start_time << "\n";
-    std::cout << "Finish time: " << finish_time << "\n";
+    oss << "Start time: " << start_time << "\n";
+    oss << "Finish time: " << finish_time << "\n";
+
+    if (fixedAllocation) {
+        oss << "Fixed Allocation: Yes, to " << fixedAllocationId << "\n";
+    } else {
+        oss << "Fixed Allocation: No\n";
+    }
+
+    return oss.str();
 }

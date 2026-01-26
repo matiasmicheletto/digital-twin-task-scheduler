@@ -28,24 +28,42 @@ struct Candidate { // Structure to compute tasks allocation to servers
         server_indices.resize(task_count, -1); // -1 means unassigned
         priorities.resize(task_count, 0.0);
     }
-    void print() const {
-        std::cout << "Candidate:\n";
-        for (size_t i = 0; i < server_indices.size(); ++i) {
-            std::cout << "  Task " << i << ": Server " << server_indices[i] << ", Priority " << std::fixed << std::setprecision(4) << priorities[i] << "\n";
-        }
+    std::string print() const;
+
+    bool operator==(const Candidate& other) const {
+        return server_indices == other.server_indices && priorities == other.priorities;
+    }
+
+    bool operator!=(const Candidate& other) const {
+        return !(*this == other);
     }
 };
 
-enum ScheduleState {
-    SCHEDULED, // success
-    NOT_SCHEDULED, // not yet scheduled
-    CANDIDATE_ERROR, // invalid candidate
-    PRECEDENCES_ERROR, // invalid precedences
-    SUCCESSORS_ERROR, // invalid successors
-    CYCLE_ERROR, // cycle detected in task graph
-    DEADLINE_MISSED, // task misses deadline
-    UTILIZATION_UNFEASIBLE, // server over-utilized
-    MEMORY_UNFEASIBLE // server out of memory
+struct ScheduleState {
+public:
+    enum State {
+        SCHEDULED, // success
+        NOT_SCHEDULED, // not yet scheduled
+        CANDIDATE_ERROR, // invalid candidate
+        PRECEDENCES_ERROR, // invalid precedences
+        SUCCESSORS_ERROR, // invalid successors
+        CYCLE_ERROR, // cycle detected in task graph
+        DEADLINE_MISSED, // task misses deadline
+        UTILIZATION_UNFEASIBLE, // server over-utilized
+        MEMORY_UNFEASIBLE, // server out of memory
+    } schedule_state;
+
+    ScheduleState(State state = NOT_SCHEDULED) : schedule_state(state) {}
+
+    std::string toString() const;
+    
+    bool operator==(const ScheduleState& other) const {
+        return schedule_state == other.schedule_state;
+    }
+
+    bool operator!=(const ScheduleState& other) const {
+        return schedule_state != other.schedule_state;
+    }
 };
 
 class Scheduler {
@@ -53,7 +71,7 @@ class Scheduler {
         Scheduler(std::string tasks_file, std::string network_file);
         
         ScheduleState schedule(const Candidate& candidate);
-        inline ScheduleState getScheduleState() const { return schedule_state; }
+        inline ScheduleState getScheduleState() const { return state; }
 
         std::string getInstanceName() const { return instance_name; }
 
@@ -73,10 +91,9 @@ class Scheduler {
 
         int getDelayCost() const;
         
-        void print(utils::PRINT_TYPE format = utils::PRINT_TYPE::PLAIN_TEXT) const;
-        std::string printScheduleState() const;
+        void clearAllServerTasks();
         
-        void exportScheduleToCSV() const;
+        std::string print(utils::PRINT_FORMAT format = utils::PRINT_FORMAT::TXT) const;
 
     private:
         std::vector<Task> tasks;
@@ -86,14 +103,15 @@ class Scheduler {
         std::vector<std::vector<int>> delay_matrix;
         std::string instance_name;
 
-        ScheduleState schedule_state;
+        ScheduleState state;
 
         void loadTasksFromJSONFile(const std::string& file_path);
         void loadNetworkFromJSONFile(const std::string& file_path);
         void computeDelayMatrix();
 
-        void printText() const;
-        void printJSON() const;
+        std::string printTxt() const;
+        std::string printJSON() const;
+        std::string printCSV() const;
 };
 
 #endif // SCHEDULER_H

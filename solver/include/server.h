@@ -18,7 +18,7 @@ public:
     Server() = default;
 
     static Server fromJSON(const nlohmann::json& j);
-    void print() const;
+    std::string print() const;
 
     inline std::string getId() const { return id; }
     inline int getInternalIdx() const { return internal_idx; }

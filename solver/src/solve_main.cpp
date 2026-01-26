@@ -15,10 +15,9 @@ int main(int argc, char **argv) {
     std::string tsk_filename; // Tasks file (json)
     std::string nw_filename; // Network file (json)
     std::string cfg_filename; // Solver config file (yaml)
-    utils::PRINT_TYPE output_format = utils::PRINT_TYPE::PLAIN_TEXT;
+    utils::PRINT_FORMAT output_format = utils::PRINT_FORMAT::TXT;
     SolverMethod method = SolverMethod::RANDOM_SEARCH;
     bool solve = false;
-    std::string log_file_name = "solver_log.csv";
 
     for(int i = 0; i < argc; i++) {  
         if(argc == 1) {
@@ -82,24 +81,17 @@ int main(int argc, char **argv) {
             if(i+1 < argc) {
                 const char* format = argv[i+1];
                 if(strcmp(format, "text") == 0) {
-                    output_format = utils::PRINT_TYPE::PLAIN_TEXT;
+                    output_format = utils::PRINT_FORMAT::TXT;
                 } else if (strcmp(format, "json") == 0) {
-                    output_format = utils::PRINT_TYPE::JSON;
+                    output_format = utils::PRINT_FORMAT::JSON;
                 } else if (strcmp(format, "csv") == 0) {
-                    output_format = utils::PRINT_TYPE::SCHEDULE_CSV;
+                    output_format = utils::PRINT_FORMAT::CSV;
                 } else {
                     utils::printHelp(MANUAL, "Error in argument -o (--output). Supported formats are: text, json");
                 }
             }else{
                 utils::printHelp(MANUAL, "Error in argument -o (--output). An output format must be provided");
             }   
-        }
-
-        if(strcmp(argv[i], "--log") == 0) {
-            if(i+1 < argc) {
-                const char* file = argv[i+1];
-                log_file_name = std::string(file);
-            }
         }
 
         if(strcmp(argv[i], "--dbg") == 0) {
@@ -121,33 +113,28 @@ int main(int argc, char **argv) {
                 utils::dbg << "Using default solver configuration.\n";
             }
             config.solverMethod = method;
-            config.setLogFile(log_file_name);
-            config.print(); // Works if --dbg is enabled
+            utils::dbg << config.print();
             Solver solver(sch, config);
-            Candidate c = solver.solve();
+            SolverResult result = solver.solve();
             
-            // Print if text mode and feasible
-            if(sch.getScheduleState() == SCHEDULED){ 
-                if(output_format == utils::PRINT_TYPE::PLAIN_TEXT) {
-                    sch.print(output_format);
-                    std::cout << std::endl << "####################" << std::endl;
-                    std::cout << "Best candidate:" << std::endl;
-                    c.print();
+            if(sch.getScheduleState() != ScheduleState::SCHEDULED){
+                // Clear assigned tasks from servers to avoid accessing corrupted data when printing
+                sch.clearAllServerTasks();
+                std::cout << "No feasible schedule found. Schedule State: " << sch.getScheduleState().toString() << "\n";
+                return 1;
+            }else{
+                if(output_format == utils::PRINT_FORMAT::TXT){
+                    std::cout << "Feasible schedule found:\n";
+                    std::cout << result.print(output_format);
                     return 0;
                 }else{
-                    sch.print(output_format);
+                    std::cout << sch.print(output_format);
                     return 0;
                 }
-            } else {
-                utils::dbg << "No feasible solution could be scheduled.\n";
-                std::cout << "Scheduling failed with state: " << sch.printScheduleState() << std::endl;
-                return 1;
             }
         }else{
-            if(output_format != utils::PRINT_TYPE::SCHEDULE_CSV) {    
-                std::cout << utils::red << "Solve flag not set. Skipping solving step." << utils::reset << "\n";
-                return 0;
-            }
+            std::cout << sch.print(output_format);
+            return 0;
         }
         
     } catch (const std::exception& e) {

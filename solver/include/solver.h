@@ -6,20 +6,22 @@
 #include "utils.h"
 #include "scheduler.h"
 
-enum class SolverMethod {
+enum PriorityRefinementMethod {
+    NORMAL_PERTURBATION,
+    PARTICLE_SWARM_OPTIMIZATION
+};
+
+enum SolverMethod {
     RANDOM_SEARCH,
     GENETIC_ALGORITHM,
     SIMULATED_ANNEALING
 };
 
-enum class PriorityRefinementMethod {
-    NORMAL_PERTURBATION,
-    PARTICLE_SWARM_OPTIMIZATION
-};
+std::string solverMethodToString(SolverMethod method);
 
 class SolverConfig { // Configuration parameters for the solver
 public:
-    SolverConfig() = default;
+    SolverConfig() : log(&utils::dbg) {}
 
     // General solver parameters
     SolverMethod solverMethod = SolverMethod::RANDOM_SEARCH;
@@ -32,6 +34,7 @@ public:
     int sa_maxInitTries = 3000;
     int sa_maxIterations = 3000;
     int sa_timeout = 3600;
+    double sa_stagnationThreshold = 1e-6;
     int sa_stagnationLimit = 200; // Number of iterations without improvement before stopping
     int sa_maxNeighborTries = 20; // Number of neighbor solutions to try at each temperature
     double sa_initialTemperature = 100.0;
@@ -51,6 +54,7 @@ public:
     // Parameters for Random Search
     int rs_maxIterations = 1000;
     int rs_timeout = 3600;
+    double rs_stagnationThreshold = 1e-6;
     int rs_stagnationLimit = 200;
     bool rs_breakOnFirstFeasible = false;
 
@@ -61,6 +65,7 @@ public:
     int ga_maxGenerations = 500;
     int ga_timeout = 3600;
     size_t ga_eliteCount = 5;
+    double ga_stagnationThreshold = 1e-6;
     int ga_stagnationLimit = 50;
     double ga_mutationRate = 0.1;
     double ga_crossoverRate = 0.7;
@@ -70,20 +75,94 @@ public:
     void setLogFile(const std::string& file_path);
     std::ostream* log;
 
-    void print() const;
+    std::string print() const;
 
 private:
-    
     std::ofstream log_file_stream;
+};
+
+
+class SolverResult {
+public:
+    enum class SolverStatus {
+        NOT_STARTED,
+        COMPLETED,
+        TIMEOUT,
+        STAGNATION,
+        ERROR
+    } status;
+
+    std::string instanceName;
+
+    SolverMethod usedMethod;
+    ScheduleState scheduleState;
+    Candidate bestCandidate;
+
+    int runtime_ms;
+    int iterations;
+    int scheduleSpan;
+    int finishTimeSum;
+    int processorsCost;
+    int delayCost;
+    std::string observations;
+
+    std::string print(utils::PRINT_FORMAT = utils::PRINT_FORMAT::TXT) const;
+
+    SolverResult() : 
+        status(SolverStatus::NOT_STARTED),
+        instanceName(""),
+        usedMethod(SolverMethod::RANDOM_SEARCH),
+        scheduleState(ScheduleState::NOT_SCHEDULED),
+        bestCandidate(Candidate(0)),
+        runtime_ms(0), 
+        iterations(0), 
+        scheduleSpan(0), 
+        finishTimeSum(0), 
+        processorsCost(0), 
+        delayCost(0),
+        observations("")
+    {}
+
+    SolverResult(
+        SolverStatus status,
+        std::string instanceName,
+        SolverMethod usedMethod,
+        ScheduleState scheduleState,
+        const Candidate& bestCandidate,
+        int runtime_ms,
+        int iterations,
+        int scheduleSpan,
+        int finishTimeSum,
+        int processorsCost,
+        int delayCost,
+        std::string observations
+    ) : 
+        status(status), 
+        instanceName(instanceName),
+        usedMethod(usedMethod),
+        scheduleState(scheduleState),
+        bestCandidate(bestCandidate),
+        runtime_ms(runtime_ms), 
+        iterations(iterations), 
+        scheduleSpan(scheduleSpan), 
+        finishTimeSum(finishTimeSum), 
+        processorsCost(processorsCost), 
+        delayCost(delayCost),
+        observations(observations)
+    {}
+private: 
+    std::string printCSV() const;
+    std::string printTxt() const;
 };
 
 class Solver {
 public:
     Solver(Scheduler& sch, SolverConfig& config) : 
         scheduler(sch), 
-        config(config) {}
+        config(config)
+    {}
 
-    Candidate solve();
+    SolverResult solve();
 
     SolverConfig& getConfig() { return config; }
 
@@ -94,12 +173,10 @@ private:
     SolverConfig& config;
 
     double computeObjective() const;
-    
-    void writeLog(int runtime, int iterations, int scheduleSpan, int finishTimeSum, ScheduleState state, std::string obs = ""); 
 
-    Candidate randomSearchSolve();
-    Candidate geneticAlgorithmSolve();
-    Candidate simulatedAnnealingSolve();
+    SolverResult randomSearchSolve();
+    SolverResult geneticAlgorithmSolve();
+    SolverResult simulatedAnnealingSolve();
 
     void refinePrioritiesNormal(Candidate& curr, int currFitness, double T);
     void refinePrioritiesPSO(Candidate& curr, int currFitness, double T);

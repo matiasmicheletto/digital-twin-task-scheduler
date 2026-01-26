@@ -52,24 +52,32 @@ void Server::clearTasks() {
     available_memory = memory;
 };
 
-void Server::print() const {
-    std::cout << "Server ID: " << id << "\n";
-    std::cout << "Label: " << label << "\n";
-    std::cout << "Type: ";
+std::string Server::print() const {
+    std::ostringstream oss;
+
+    oss << "Server ID: " << id << "\n";
+    oss << "Label: " << label << "\n";
+    oss << "Type: ";
     switch (type) {
         case ServerType::Mist:
-            std::cout << "MIST\n";
+            oss << "MIST\n";
             break;
         case ServerType::Edge:
-            std::cout << "EDGE\n";
+            oss << "EDGE\n";
             break;
         case ServerType::Cloud:
-            std::cout << "CLOUD\n";
+            oss << "CLOUD\n";
             break;
     }
-    std::cout << "Memory: " << memory << "\n";
-    std::cout << "Cost: " << cost << "\n";
-    std::cout << "Utilization: " << utilization << "\n";
-    std::cout << "Last Slot: " << last_slot << "\n";
-    std::cout << "Assigned Tasks: " << assigned_tasks.size() << "\n";
+    oss << "Memory: " << memory << "\n";
+    oss << "Cost: " << cost << "\n";
+    oss << "Utilization: " << utilization << "\n";
+    oss << "Last Slot: " << last_slot << "\n";
+    
+    oss << "Assigned Tasks: " << assigned_tasks.size() << "\n";
+    for (const auto& task : assigned_tasks) {
+        oss << "  - " << task.getLabel() << " (ID: " << task.getId() << ", Start: " << task.getStartTime() << ", Finish: " << task.getFinishTime() << ")\n";
+    }
+
+    return oss.str();
 };
