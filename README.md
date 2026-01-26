@@ -68,6 +68,14 @@ To save a csv file, use `-o csv` instead of `-o json`:
 ./solve -t tasks.json -n network.json -c config.yaml -s annealing -o csv > ../../data/schedule.csv
 ``` 
 
+To override specific parameters from the command line, use the `--set` flag followed by `key=value` pairs. For example:
+```bash
+solver -t tasks.json -n network.json -s annealing -o csv \
+         --set simulated_annealing.max_iterations=8000 \
+         --set tunning.alpha=2 \
+         --set genetic_algorithm.population_size=300
+```
+
 5. Visualize schedule. Run solver with `-o csv`, then:
 ```bash
 cd data
@@ -213,7 +221,7 @@ genetic_algorithm: # GA
   crossover_rate: 0.75 # Probability of crossover between pairs of individuals
 
 misc: # Miscellaneous settings
-  log_file: "solver_log.csv" # File to log solver results
+  log_file: solver_log.csv # File to log solver results
 ```
 
 ### CPLEX Integration

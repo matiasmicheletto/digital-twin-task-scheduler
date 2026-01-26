@@ -71,6 +71,7 @@ public:
     double ga_crossoverRate = 0.7;
 
     void fromYaml(const std::string& file_path);
+    void applyOverride(const std::string& override_str); // Override parameter from "key=value" string
     
     void setLogFile(const std::string& file_path);
     std::ostream* log;

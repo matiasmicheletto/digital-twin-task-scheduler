@@ -34,14 +34,15 @@ SolverResult Solver::solve() {
             result.status = SolverResult::SolverStatus::ERROR;
             return result;
     }
+
     // Write CSV log output (separated to avoid potential optimization issues)
+    
     if (config.log) {
-        std::string csv_output = result.print(utils::PRINT_FORMAT::CSV);
-        (*config.log) << csv_output;
+        (*config.log) << result.print(utils::PRINT_FORMAT::CSV);
     }else{
-        utils::dbg << "No log stream defined in SolverConfig; skipping CSV log output.\n";
-        exit(1);
+        std::cout << "No log stream defined in SolverConfig; skipping CSV log output.\n\n\n";
     }
+    
     return result;
 };
 

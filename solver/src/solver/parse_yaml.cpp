@@ -6,6 +6,12 @@ void SolverConfig::fromYaml(const std::string& file_path) {
 
     YAML::Node root = YAML::LoadFile(file_path);
 
+    // --- Check if file loaded correctly ---
+    if (!root) {
+        utils::dbg << "Failed to load YAML config file: " << file_path << "\n";
+        utils::dbg << "Using default solver configuration parameters.\n";
+    }
+
     // --- Tunning Parameters --- 
     if( auto tunning = root["tunning"] ) {
         if (tunning["alpha"])  alpha = tunning["alpha"].as<double>();
@@ -69,9 +75,88 @@ void SolverConfig::fromYaml(const std::string& file_path) {
         if (misc["log_file"]) {
             std::string log_file = misc["log_file"].as<std::string>();
             setLogFile(log_file);
+        }else{
+            log = &utils::dbg;
         }
     }
-}   
+};
+
+void SolverConfig::applyOverride(const std::string& override_str) {
+
+    auto pos = override_str.find('=');
+    if (pos == std::string::npos)
+        throw std::runtime_error("Invalid override (expected key=value): " + override_str);
+
+    std::string key = override_str.substr(0, pos);
+    std::string val = override_str.substr(pos + 1);
+
+    auto asBool = [&](const std::string& v) {
+        if (v == "true" || v == "1") return true;
+        if (v == "false" || v == "0") return false;
+        throw std::runtime_error("Invalid bool: " + v);
+    };
+
+    // ---- TUNNING ----
+    if (key == "tunning.alpha") alpha = std::stod(val);
+    else if (key == "tunning.beta") beta = std::stod(val);
+    else if (key == "tunning.gamma") gamma = std::stod(val);
+
+    // ---- SIMULATED ANNEALING ----
+    else if (key == "simulated_annealing.max_init_tries") sa_maxInitTries = std::stoi(val);
+    else if (key == "simulated_annealing.max_iterations") sa_maxIterations = std::stoi(val);
+    else if (key == "simulated_annealing.timeout") sa_timeout = std::stoi(val);
+    else if (key == "simulated_annealing.stagnation_threshold") sa_stagnationThreshold = std::stod(val);
+    else if (key == "simulated_annealing.stagnation_limit") sa_stagnationLimit = std::stoi(val);
+    else if (key == "simulated_annealing.max_neighbor_tries") sa_maxNeighborTries = std::stoi(val);
+    else if (key == "simulated_annealing.initial_temperature") sa_initialTemperature = std::stod(val);
+    else if (key == "simulated_annealing.cooling_rate") sa_coolingRate = std::stod(val);
+    else if (key == "simulated_annealing.min_temperature") sa_minTemperature = std::stod(val);
+
+    else if (key == "simulated_annealing.refinement_priority_method") {
+        if (val == "NORMAL")
+            sa_priorityRefinementMethod = PriorityRefinementMethod::NORMAL_PERTURBATION;
+        else if (val == "PSO")
+            sa_priorityRefinementMethod = PriorityRefinementMethod::PARTICLE_SWARM_OPTIMIZATION;
+        else
+            throw std::runtime_error("Invalid refinement_priority_method: " + val);
+    }
+
+    else if (key == "simulated_annealing.refinement_sigma_max") sa_sigmaMax = std::stod(val);
+    else if (key == "simulated_annealing.refinement_sigma_min") sa_sigmaMin = std::stod(val);
+    else if (key == "simulated_annealing.refinement_iterations") sa_refinementIterations = std::stoi(val);
+    else if (key == "simulated_annealing.pso_swarm_size") sa_pso_swarmSize = std::stoi(val);
+    else if (key == "simulated_annealing.refinement_pso_velocity_clamp") sa_pso_velocityClamp = std::stoi(val);
+    else if (key == "simulated_annealing.refinement_pso_inertia_weight") sa_pso_inertiaWeight = std::stod(val);
+    else if (key == "simulated_annealing.refinement_pso_cognitive_coef") sa_pso_cognitiveCoefficient = std::stod(val);
+    else if (key == "simulated_annealing.refinement_pso_social_coef") sa_pso_socialCoefficient = std::stod(val);
+
+    // ---- RANDOM SEARCH ----
+    else if (key == "random_search.max_iterations") rs_maxIterations = std::stoi(val);
+    else if (key == "random_search.timeout") rs_timeout = std::stoi(val);
+    else if (key == "random_search.stagnation_threshold") rs_stagnationThreshold = std::stod(val);
+    else if (key == "random_search.stagnation_limit") rs_stagnationLimit = std::stoi(val);
+    else if (key == "random_search.break_on_first_feasible") rs_breakOnFirstFeasible = asBool(val);
+
+    // ---- GENETIC ALGORITHM ----
+    else if (key == "genetic_algorithm.population_size") ga_populationSize = std::stoul(val);
+    else if (key == "genetic_algorithm.max_generations") ga_maxGenerations = std::stoi(val);
+    else if (key == "genetic_algorithm.timeout") ga_timeout = std::stoi(val);
+    else if (key == "genetic_algorithm.elite_count") ga_eliteCount = std::stoul(val);
+    else if (key == "genetic_algorithm.stagnation_threshold") ga_stagnationThreshold = std::stod(val);
+    else if (key == "genetic_algorithm.stagnation_limit") ga_stagnationLimit = std::stoi(val);
+    else if (key == "genetic_algorithm.mutation_rate") ga_mutationRate = std::stod(val);
+    else if (key == "genetic_algorithm.crossover_rate") ga_crossoverRate = std::stod(val);
+
+    // ---- MISC ----
+    else if (key == "misc.log_file") setLogFile(val);
+
+    else {
+        throw std::runtime_error("Unknown config key: " + key);
+    }
+
+    (*log) << "Override applied: " << key << "=" << val << "\n";
+};
+
 
 void SolverConfig::setLogFile(const std::string& file_path) {
     if (file_path.empty())
@@ -98,4 +183,6 @@ void SolverConfig::setLogFile(const std::string& file_path) {
     }
 
     log = &log_file_stream;
+
+    utils::dbg << "Logging solver output to file: " << file_path_str << "\n";
 } 

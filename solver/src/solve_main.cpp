@@ -3,6 +3,7 @@
 #include <iostream>
 #include <cstring>
 #include <fstream>
+#include <vector>
 
 #include "../include/json.hpp"
 #include "../include/utils.h"
@@ -14,10 +15,11 @@ int main(int argc, char **argv) {
 
     std::string tsk_filename; // Tasks file (json)
     std::string nw_filename; // Network file (json)
-    std::string cfg_filename; // Solver config file (yaml)
+    std::string cfg_filename = "default_config.yaml"; // Solver config file (yaml)
     utils::PRINT_FORMAT output_format = utils::PRINT_FORMAT::TXT;
     SolverMethod method = SolverMethod::RANDOM_SEARCH;
     bool solve = false;
+    std::vector<std::string> cfg_overrides; // Configuration overrides from command line
 
     for(int i = 0; i < argc; i++) {  
         if(argc == 1) {
@@ -94,6 +96,14 @@ int main(int argc, char **argv) {
             }   
         }
 
+        if(strcmp(argv[i], "--set") == 0) {
+            if(i + 1 < argc) {
+                cfg_overrides.emplace_back(argv[i+1]);
+            } else {
+                utils::printHelp(MANUAL, "Error in --set. Use --set key=value");
+            }
+        }
+
         if(strcmp(argv[i], "--dbg") == 0) {
             utils::dbg.rdbuf(std::cout.rdbuf()); // Enable debug output to std::cout
         }
@@ -109,6 +119,9 @@ int main(int argc, char **argv) {
             if(!cfg_filename.empty()) {
                 utils::dbg << "Loading solver configuration from file: " << cfg_filename << "\n";
                 config.fromYaml(cfg_filename);
+                for(const auto& ov : cfg_overrides) {
+                    config.applyOverride(ov);
+                }
             }else{
                 utils::dbg << "Using default solver configuration.\n";
             }

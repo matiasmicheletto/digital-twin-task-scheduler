@@ -21,10 +21,17 @@ OPTIONS:
    -v, --version  (optional) Displays software version.  
    -s, --solver   (optional) Choose solver. Options are "random", "genetic" or "annealing".
    -o, --output   (optional) Output format. Must be "json", "text" or "csv". Default value is "text".  
+   --set          (optional) Override configuration parameter
 
 EXAMPLE:  
    # Solve instance defined in tasks.json and network.json, with simulated annealing method using configuration declared in config.yaml file and printing output using .json format
    solve -t tasks.json -n network.json -c config.yaml -s annealing -o json
+
+   # Overriding parameters
+   solver -t t.json -n n.json -s annealing -o csv \
+         --set simulated_annealing.max_iterations=8000 \
+         --set tunning.alpha=2 \
+         --set genetic_algorithm.population_size=300
 
 INPUT FILES FORMAT
 Schedule file:
@@ -132,7 +139,7 @@ genetic_algorithm: # GA
   crossover_rate: 0.75 # Probability of crossover between pairs of individuals
 
 misc: # Miscellaneous settings
-  log_file: "solver_log.csv" # File to log solver results
+  log_file: solver_log.csv # File to log solver results
 
 
 AUTHORS  
