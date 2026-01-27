@@ -11,7 +11,7 @@ double Solver::computeObjective() const {
     int delay_cost = scheduler.getDelayCost();
 
     double objective = config.alpha * static_cast<double>(finish_time_sum)
-                     + config.beta * delay_cost
+                     + config.beta * static_cast<double>(delay_cost)
                      + config.gamma * static_cast<double>(processors_cost);
     return objective;
 };

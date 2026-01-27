@@ -2,22 +2,26 @@
 
 SolverResult Solver::simulatedAnnealingSolve() {
     // Parameters from config
-    const int maxInitTries        = config.sa_maxInitTries;
-    const int maxIterations       = config.sa_maxIterations;
-    const int maxNeighborTries    = config.sa_maxNeighborTries;
-    const double initialTemperature = config.sa_initialTemperature;
-    const double coolingRate      = config.sa_coolingRate;
-    const double minTemperature   = config.sa_minTemperature;
-    const int timeout            = config.sa_timeout;
-    const int stagnationLimit      = config.sa_stagnationLimit;
+    const int maxInitTries           = config.sa_maxInitTries;
+    const int maxIterations          = config.sa_maxIterations;
+    const int maxNeighborTries       = config.sa_maxNeighborTries;
+    const double initialTemperature  = config.sa_initialTemperature;
+    const double coolingRate         = config.sa_coolingRate;
+    const double minTemperature      = config.sa_minTemperature;
+    const int timeout                = config.sa_timeout;
+    const int stagnationLimit        = config.sa_stagnationLimit;
     const double stagnationThreshold = config.sa_stagnationThreshold;
 
     SolverResult results(
         SolverResult::SolverStatus::NOT_STARTED,
         scheduler.getInstanceName(),
         SolverMethod::SIMULATED_ANNEALING,
+        config.sa_priorityRefinementMethod,
         ScheduleState::NOT_SCHEDULED,
         Candidate(scheduler.getTaskCount()),
+        config.alpha,
+        config.beta,
+        config.gamma,
         0,
         0,
         0,

@@ -3,12 +3,22 @@
 SolverResult Solver::randomSearchSolve() {
     // Performs random search to find a feasible scheduling solution
 
+    const int maxIterations          = config.rs_maxIterations;
+    const bool breakOnFirstFeasible  = config.rs_breakOnFirstFeasible;
+    const int timeout                = config.rs_timeout;
+    const int stagnationLimit        = config.rs_stagnationLimit;
+    const double stagnationThreshold = config.rs_stagnationThreshold;
+
     SolverResult results(
         SolverResult::SolverStatus::NOT_STARTED,
         scheduler.getInstanceName(),
         SolverMethod::RANDOM_SEARCH,
+        PriorityRefinementMethod::NORMAL_PERTURBATION, // (not used in random search)
         ScheduleState::NOT_SCHEDULED,
         Candidate(scheduler.getTaskCount()),
+        config.alpha,
+        config.beta,
+        config.gamma,
         0,
         0,
         0,
@@ -19,10 +29,6 @@ SolverResult Solver::randomSearchSolve() {
     );
 
     auto startTime = std::chrono::high_resolution_clock::now();
-
-    int maxIterations = config.rs_maxIterations;
-    bool breakOnFirstFeasible = config.rs_breakOnFirstFeasible;
-    int timeout = config.rs_timeout;
 
     int bestFitness = INT_MAX;
     Candidate curr(scheduler.getTaskCount());
@@ -82,9 +88,9 @@ SolverResult Solver::randomSearchSolve() {
             }
 
             // Stagnation check
-            if (improvement < config.rs_stagnationThreshold) {
+            if (improvement < stagnationThreshold) {
                 nonImprovingGenerations++;
-                if (nonImprovingGenerations >= config.rs_stagnationLimit) {
+                if (nonImprovingGenerations >= stagnationLimit) {
                     results.status = SolverResult::SolverStatus::STAGNATION;
                     results.observations = "Random Search: Stagnation reached after " + std::to_string(nonImprovingGenerations) + " iterations without improvement.";
                     utils::dbg << results.observations << "\n";

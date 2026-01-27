@@ -18,6 +18,7 @@ enum SolverMethod {
 };
 
 std::string solverMethodToString(SolverMethod method);
+std::string priorityRefinementMethodToString(PriorityRefinementMethod method);
 
 class SolverConfig { // Configuration parameters for the solver
 public:
@@ -95,9 +96,14 @@ public:
 
     std::string instanceName;
 
-    SolverMethod usedMethod;
+    SolverMethod method;
+    PriorityRefinementMethod refinement;
     ScheduleState scheduleState;
     Candidate bestCandidate;
+
+    double alpha;
+    double beta;
+    double gamma;
 
     int runtime_ms;
     int iterations;
@@ -107,14 +113,21 @@ public:
     int delayCost;
     std::string observations;
 
+    double getObjectiveValue() const;
+
+    static std::string getHeaderCSV();
     std::string print(utils::PRINT_FORMAT = utils::PRINT_FORMAT::TXT) const;
 
     SolverResult() : 
         status(SolverStatus::NOT_STARTED),
         instanceName(""),
-        usedMethod(SolverMethod::RANDOM_SEARCH),
+        method(SolverMethod::RANDOM_SEARCH),
+        refinement(PriorityRefinementMethod::NORMAL_PERTURBATION),
         scheduleState(ScheduleState::NOT_SCHEDULED),
         bestCandidate(Candidate(0)),
+        alpha(0.0),
+        beta(0.0),
+        gamma(0.0),
         runtime_ms(0), 
         iterations(0), 
         scheduleSpan(0), 
@@ -127,9 +140,13 @@ public:
     SolverResult(
         SolverStatus status,
         std::string instanceName,
-        SolverMethod usedMethod,
+        SolverMethod method,
+        PriorityRefinementMethod refinement,
         ScheduleState scheduleState,
         const Candidate& bestCandidate,
+        double alpha,
+        double beta,
+        double gamma,
         int runtime_ms,
         int iterations,
         int scheduleSpan,
@@ -140,9 +157,13 @@ public:
     ) : 
         status(status), 
         instanceName(instanceName),
-        usedMethod(usedMethod),
+        method(method),
+        refinement(refinement),
         scheduleState(scheduleState),
         bestCandidate(bestCandidate),
+        alpha(alpha),
+        beta(beta),
+        gamma(gamma),
         runtime_ms(runtime_ms), 
         iterations(iterations), 
         scheduleSpan(scheduleSpan), 

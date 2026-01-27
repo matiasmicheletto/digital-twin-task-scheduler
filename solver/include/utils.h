@@ -54,7 +54,7 @@ void printHelp(const char* file, const char* message = defaultMessage);
 
 std::string currentDateTime();
 
-int getElapsedMs(const std::chrono::high_resolution_clock::time_point& start_time);
+long long getElapsedMs(const std::chrono::high_resolution_clock::time_point& start_time);
 
 // Random number generator
 static std::random_device rd;

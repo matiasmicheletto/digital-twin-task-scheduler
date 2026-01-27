@@ -1,5 +1,16 @@
 #include "solver.h"
 
+std::string priorityRefinementMethodToString(PriorityRefinementMethod method) {
+    switch(method) {
+        case PriorityRefinementMethod::NORMAL_PERTURBATION:
+            return "Normal Perturbation";
+        case PriorityRefinementMethod::PARTICLE_SWARM_OPTIMIZATION:
+            return "Particle Swarm Optimization";
+        default:
+            return "Unknown Method";
+    }
+};
+
 std::string solverMethodToString(SolverMethod method) {
     switch(method) {
         case SolverMethod::RANDOM_SEARCH:
@@ -41,15 +52,8 @@ std::string SolverConfig::print() const {
             oss << "    initial_temperature: " << sa_initialTemperature << "\n";
             oss << "    cooling_rate: " << sa_coolingRate << "\n";
             oss << "    min_temperature: " << sa_minTemperature << "\n";
-            oss << "  Priority Refinement Method: ";
-            switch (sa_priorityRefinementMethod) {
-                case PriorityRefinementMethod::NORMAL_PERTURBATION:
-                    oss << "NORMAL_PERTURBATION\n";
-                    break;
-                case PriorityRefinementMethod::PARTICLE_SWARM_OPTIMIZATION:
-                    oss << "PARTICLE_SWARM_OPTIMIZATION\n";
-                    break;
-            }
+            oss << "  Priority Refinement Method: " << priorityRefinementMethodToString(sa_priorityRefinementMethod) << "\n";
+            oss << "  Refinement Parameters:\n";
             oss << "    sigma_max: " << sa_sigmaMax << "\n";
             oss << "    refinement_iterations: " << sa_refinementIterations << "\n";
             oss << "    pso_swarm_size: " << sa_pso_swarmSize << "\n";
@@ -76,19 +80,51 @@ std::string SolverConfig::print() const {
     return oss.str();
 }  
 
+double SolverResult::getObjectiveValue() const {
+    return alpha * static_cast<double>(finishTimeSum)
+         + beta * static_cast<double>(delayCost)
+         + gamma * static_cast<double>(processorsCost);
+};
+
+std::string SolverResult::getHeaderCSV() {
+    return  "Date/time,"
+            "Instance name,"
+            "Alpha,"
+            "Beta,"
+            "Gamma,"
+            "Solver method,"
+            "Refinement method,"
+            "Runtime (ms),"
+            "Iterations,"
+            "Schedule span,"
+            "Finish time sum,"
+            "Processors cost,"
+            "Delay cost,"
+            "Objetvive value,"
+            "Schedule state\n";
+};
 
 std::string SolverResult::printCSV() const {
     std::ostringstream oss;
 
     oss << utils::currentDateTime() << ",";
     oss << instanceName << ",";
-    oss << solverMethodToString(usedMethod) << ",";
+    oss << alpha << ",";
+    oss << beta << ",";
+    oss << gamma << ",";
+    oss << solverMethodToString(method) << ",";
+    if(method == SolverMethod::SIMULATED_ANNEALING) {
+        oss << priorityRefinementMethodToString(refinement) << ",";
+    } else {
+        oss << "N/A,";
+    }
     oss << runtime_ms << ",";
     oss << iterations << ",";
     oss << scheduleSpan << ",";
     oss << finishTimeSum << ",";
     oss << processorsCost << ",";
     oss << delayCost << ",";
+    oss << getObjectiveValue() << ",";
     oss << scheduleState.toString() << "\n";
 
     return oss.str();
@@ -97,7 +133,12 @@ std::string SolverResult::printCSV() const {
 std::string SolverResult::printTxt() const {
     std::ostringstream oss;
     oss << "Solver Results:\n";
-    oss << "  Solver Method: " << solverMethodToString(usedMethod) << "\n";
+    oss << "  Solver Method: " << solverMethodToString(method) << "\n";
+
+    oss << "Tunning Parameters:\n";
+    oss << "  Alpha: " << alpha << "\n";
+    oss << "  Beta: " << beta << "\n";
+    oss << "  Gamma: " << gamma << "\n\n";
 
     oss << "  Instance Name: " << instanceName << "\n";
     oss << "  Status: ";
@@ -121,6 +162,7 @@ std::string SolverResult::printTxt() const {
             oss << "Unknown Status\n";
             break;
     }
+
     if (scheduleState == ScheduleState::SCHEDULED) {
         oss << "  Runtime (ms): " << runtime_ms << "\n";
         oss << "  Iterations: " << iterations << "\n";
@@ -128,9 +170,12 @@ std::string SolverResult::printTxt() const {
         oss << "  Finish Time Sum: " << finishTimeSum << "\n";
         oss << "  Processors Cost: " << processorsCost << "\n";
         oss << "  Delay Cost: " << delayCost << "\n";
-        oss << "  Schedule State: " << scheduleState.toString() << "\n";
+        oss << "  Schedule State: " << scheduleState.toString() << "\n\n";
+
         oss << "  Best candidate:\n";
         oss << bestCandidate.print();
+
+        oss << " \nBest objective value: " << getObjectiveValue() << "\n";
     }
     
     return oss.str();

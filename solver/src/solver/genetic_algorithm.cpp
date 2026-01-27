@@ -39,22 +39,26 @@ Candidate crossover(Scheduler& scheduler, const Candidate& p1, const Candidate& 
 
 SolverResult Solver::geneticAlgorithmSolve() {
     
-    const int maxInitTries = config.ga_maxInitTries;
-    const size_t populationSize = config.ga_populationSize;
-    const int maxGenerations = config.ga_maxGenerations;
-    const double mutationRate = config.ga_mutationRate;
-    const double crossoverRate = config.ga_crossoverRate;
-    const int timeout = config.ga_timeout;
-    const int stagnationLimit = config.ga_stagnationLimit;
+    const int maxInitTries           = config.ga_maxInitTries;
+    const size_t populationSize      = config.ga_populationSize;
+    const int maxGenerations         = config.ga_maxGenerations;
+    const double mutationRate        = config.ga_mutationRate;
+    const double crossoverRate       = config.ga_crossoverRate;
+    const int timeout                = config.ga_timeout;
+    const int stagnationLimit        = config.ga_stagnationLimit;
     const double stagnationThreshold = config.ga_stagnationThreshold;
-    const size_t eliteCount = config.ga_eliteCount;
+    const size_t eliteCount          = config.ga_eliteCount;
 
     SolverResult results(
         SolverResult::SolverStatus::NOT_STARTED,
         scheduler.getInstanceName(),
         SolverMethod::GENETIC_ALGORITHM,
+        PriorityRefinementMethod::NORMAL_PERTURBATION, // (not used in GA)
         ScheduleState::NOT_SCHEDULED,
         Candidate(scheduler.getTaskCount()),
+        config.alpha,
+        config.beta,
+        config.gamma,
         0,
         0,
         0,

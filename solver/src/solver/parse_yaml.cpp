@@ -94,6 +94,7 @@ void SolverConfig::applyOverride(const std::string& override_str) {
         if (v == "true" || v == "1") return true;
         if (v == "false" || v == "0") return false;
         utils::throw_runtime_error("Invalid bool: " + v);
+        return false;
     };
 
     // ---- TUNNING ----
@@ -176,9 +177,7 @@ void SolverConfig::setLogFile(const std::string& file_path) {
 
     if (!file_exists) { // New file, write header
         if (log_file_stream.tellp() == 0) { // File is empty, write header
-            log_file_stream
-                << "Date,Instance,Solver Method,Runtime (s),Iterations,"
-                "Schedule Span,Finish Time Sum,Schedule State\n";
+            log_file_stream << SolverResult::getHeaderCSV();
         }
     }
 
