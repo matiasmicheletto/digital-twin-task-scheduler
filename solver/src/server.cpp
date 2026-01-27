@@ -1,5 +1,24 @@
 #include "../include/server.h"
 
+Server::Server( 
+        const ServerType type,
+        const std::string& label,
+        const int memory,
+        const int cost,
+        const double utilization
+    ) {
+    this->id = utils::generate_uuid_short();
+    this->type = type;
+    this->label = label;
+    this->memory = memory;
+    this->available_memory = memory; // Initially equals total memory
+    this->cost = cost;
+    this->utilization = utilization;
+    this->available_utilization = utilization; // Initially equals total utilization
+    this->internal_idx = -1; // Default value (can be configured with setter)
+    this->last_slot = 0; // Initial value
+};
+
 Server Server::fromJSON(const nlohmann::json& j) {
     Server server;
     

@@ -1,5 +1,15 @@
 #include "scheduler.h"
 
+Scheduler::Scheduler(std::string dat_file) {
+    // Save instance name
+    instance_name = dat_file;
+    // Sets up the scheduler by loading schedule from a .dat file
+    loadScheduleFromDatFile(dat_file);
+    // Delay matrix is used to define start and finish times of tasks based on communication delays
+    computeDelayMatrix();
+    state = ScheduleState::NOT_SCHEDULED;
+};
+
 Scheduler::Scheduler(std::string tasks_file, std::string network_file) {
     // Save instance name
     instance_name = tasks_file + " + " + network_file;

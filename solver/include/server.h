@@ -16,6 +16,13 @@ enum class ServerType {
 class Server {
 public:
     Server() = default;
+    Server( 
+        const ServerType type,
+        const std::string& label,
+        const int memory,
+        const int cost,
+        const double utilization
+    );
 
     static Server fromJSON(const nlohmann::json& j);
     std::string print() const;
@@ -47,10 +54,10 @@ private:
     ServerType type;
     std::string label;
     int memory; // Total memory
-    int available_memory; // Available memory for allocating tasks
+    int available_memory; // Available memory for allocating tasks. Initially equals total memory
     int cost; // Cost per use
-    double utilization; // 0..1, minimal utilization
-    double available_utilization; // available utilization for allocating tasks
+    double utilization; // 0..1, total utilization.
+    double available_utilization; // available utilization for allocating tasks. Initially equals total utilization
     int last_slot; // Last slot occupied by a task
     std::deque<Task> assigned_tasks;
 };

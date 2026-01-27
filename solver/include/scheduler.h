@@ -68,6 +68,8 @@ public:
 
 class Scheduler {
     public:
+        Scheduler() = default;
+        Scheduler(std::string dat_file);    
         Scheduler(std::string tasks_file, std::string network_file);
         
         ScheduleState schedule(const Candidate& candidate);
@@ -105,6 +107,7 @@ class Scheduler {
 
         ScheduleState state;
 
+        void loadScheduleFromDatFile(const std::string& file_path);
         void loadTasksFromJSONFile(const std::string& file_path);
         void loadNetworkFromJSONFile(const std::string& file_path);
         void computeDelayMatrix();

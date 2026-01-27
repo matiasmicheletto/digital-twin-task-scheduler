@@ -1,5 +1,32 @@
 #include "../include/task.h"
 
+Task::Task(
+        const TaskType type,
+        const std::string label,
+        const bool fixedAllocation,
+        const int C,
+        const int T,
+        const int D,
+        const int M,
+        const int a
+    ) {
+    this->id = utils::generate_uuid_short();
+    this->type = type;
+    this->label = label;
+    this->fixedAllocation = fixedAllocation;
+    this->fixedAllocationId = ""; // Will be set later if fixedAllocation is true
+    this->fixedAllocationInternalIdx = -1; // Will be set later when servers are loaded
+    this->C = C;
+    this->T = T;
+    this->D = D;
+    this->M = M;
+    this->a = a;
+    this->u = static_cast<double>(C) / T; // Calculate utilization
+    this->internal_idx = -1; // Default value (can be configured with setter)
+    this->start_time = 0; // Initial value
+    this->finish_time = 0; // Initial value
+};
+
 Task Task::fromJSON(const nlohmann::json& j) {
 
     Task task;
@@ -32,20 +59,6 @@ Task Task::fromJSON(const nlohmann::json& j) {
     task.successors.clear();    
     if(j.contains("successors"))
         task.successors = utils::require_type<std::vector<std::string>>(j, "successors");
-
-    /*
-    utils::dbg << "Loaded Task ID: " << task.id << ": "
-            << "\n    Label: " << task.label 
-            << "\n    Type: " << (mist ? "MIST" : "REGULAR") 
-            << "\n    C: " << task.C 
-            << "\n    T: " << task.T 
-            << "\n    D: " << task.D 
-            << "\n    M: " << task.M 
-            << "\n    a: " << task.a 
-            << "\n    u: " << task.u
-            << "\n    Preallocated: " << (task.fixedAllocation ? "Yes, to " + task.fixedAllocationId : "No")
-            << "\n    Number of successors: " << task.successors.size() << "\n";
-    */
 
     task.start_time = 0;
     task.finish_time = task.start_time + task.C;

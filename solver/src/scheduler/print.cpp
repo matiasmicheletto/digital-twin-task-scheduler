@@ -28,16 +28,16 @@ std::string Scheduler::printTxt() const {
 
     std::ostringstream oss;
 
-    oss << "Scheduler Information:\n";
+    oss << "Scheduler Information:\n\n";
     
-    oss << "Tasks (" << tasks.size() << "):\n";
+    oss << "Tasks (" << tasks.size() << "):\n\n";
     for (const auto& task : tasks) {
         oss << task.print();
         oss << "---------------------\n";
     }
 
     oss << "\n" << "####################\n";
-    oss << "Servers (" << servers.size() << "):\n";
+    oss << "Servers (" << servers.size() << "):\n\n";
     for (const auto& server : servers) {
         oss << server.print();
         oss << "---------------------\n";

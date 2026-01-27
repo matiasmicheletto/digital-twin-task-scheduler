@@ -83,6 +83,11 @@ std::string generate_uuid() {
     return ss.str();
 }
 
+std::string generate_uuid_short() {
+    std::string full_uuid = generate_uuid();
+    return full_uuid.substr(0, 8); // Return first 8 characters
+}
+
 
 void printHelp(const char* file, const char* message) { // Open readme file with manual and print on terminal   
     std::cerr << std::endl << message << std::endl << std::endl;

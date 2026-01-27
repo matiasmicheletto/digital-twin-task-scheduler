@@ -47,6 +47,7 @@ std::string getBinaryDirStr();
 
 // Generate a simple UUID (not RFC4122 compliant, just for unique IDs)
 std::string generate_uuid();
+std::string generate_uuid_short();
 
 // Print help message from file
 inline constexpr const char defaultMessage[] = "";

@@ -13,8 +13,10 @@
 
 int main(int argc, char **argv) {
 
+    // Parse command line arguments
     std::string tsk_filename; // Tasks file (json)
     std::string nw_filename; // Network file (json)
+    std::string dat_filename; // Schedule file (dat)
     std::string cfg_filename = "default_config.yaml"; // Solver config file (yaml)
     utils::PRINT_FORMAT output_format = utils::PRINT_FORMAT::TXT;
     SolverMethod method = SolverMethod::RANDOM_SEARCH;
@@ -72,6 +74,15 @@ int main(int argc, char **argv) {
             }
         }
 
+        if(strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--dat") == 0) {
+            if(i+1 < argc) {
+                const char* file = argv[i+1];
+                dat_filename = std::string(file);
+            }else{
+                utils::printHelp(MANUAL, "Error in argument -d (--dat). A filename must be provided");
+            }
+        }
+
         if(strcmp(argv[i], "-c") == 0 || strcmp(argv[i], "--config") == 0) {
             if(i+1 < argc) {
                 const char* file = argv[i+1];
@@ -109,10 +120,27 @@ int main(int argc, char **argv) {
         }
     }
 
-    utils::dbg << "Initializing Scheduler with tasks file: " << tsk_filename << " and network file: " << nw_filename << "\n";
-    
+    // Check that dat file is not provided with tasks/network files
+    if(!dat_filename.empty() && (!tsk_filename.empty() || !nw_filename.empty())) {
+        utils::printHelp(MANUAL, "Error: Cannot provide both DAT file and tasks/network files.");
+    }
+
+    if(dat_filename.empty() && (tsk_filename.empty() || nw_filename.empty())) {
+        utils::printHelp(MANUAL, "Error: Must provide either DAT file or both tasks and network files.");
+    }
+
     try {
-        Scheduler sch(tsk_filename, nw_filename);
+        
+        // Initialize Scheduler
+        Scheduler sch;
+        if(!dat_filename.empty()) {
+            utils::dbg << "Loading schedule from DAT file: " << dat_filename << "\n";
+            sch = Scheduler(dat_filename);
+        }else{
+            utils::dbg << "Loading tasks from JSON file: " << tsk_filename << "\n";
+            utils::dbg << "Loading network from JSON file: " << nw_filename << "\n";
+            sch = Scheduler(tsk_filename, nw_filename);
+        }
         
         if(solve){
             SolverConfig config;

@@ -16,36 +16,18 @@ enum class TaskType {
 class Task {
     public:
         Task() = default;
-        Task(const Task&) = default;
+
         Task(
-            const std::string& id_,
-            TaskType type_,
-            const std::string& label_,
-            int internal_idx_,
-            bool fixedAllocation_,
-            const std::string& fixedAllocationId_,
-            int C_,
-            int T_,
-            int D_,
-            int M_,
-            int a_)
-            : 
-            id(id_),
-            type(type_),
-            label(label_),
-            internal_idx(internal_idx_),
-            fixedAllocation(fixedAllocation_),
-            fixedAllocationId(fixedAllocationId_),
-            fixedAllocationInternalIdx(-1),
-            C(C_),
-            T(T_),
-            D(D_),
-            a(a_),
-            start_time(0),
-            finish_time(0),
-            M(M_),
-            u(static_cast<double>(C_) / T_) 
-        {}
+            const TaskType type,
+            const std::string label,
+            const bool fixedAllocation,
+            const int C,
+            const int T,
+            const int D,
+            const int M,
+            const int a
+        );
+
         ~Task() = default;
 
         static Task fromJSON(const nlohmann::json& j);
@@ -85,9 +67,8 @@ class Task {
         inline void setM(int m) { M = m; }
         inline void setU(double utilization) { u = utilization; }
         inline void setInternalIdx(int internal_idx_) { internal_idx = internal_idx_; }
+        inline void setFixedAllocationId(const std::string& fixed_allocation_id_) { fixedAllocationId = fixed_allocation_id_; fixedAllocation=true; }
         inline void setFixedAllocationInternalId(int fixed_allocation_internal_idx_) { fixedAllocationInternalIdx = fixed_allocation_internal_idx_; }
-        inline void setStart_time(int start) { start_time = start; }
-        inline void setFinish_time(int finish) { finish_time = finish; }
         
         inline const std::vector<std::string>& getPredecessors() const { return predecessors; }
         inline const std::vector<int>& getPredecessorInternalIdxs() const { return predecessor_internal_idxs; }
