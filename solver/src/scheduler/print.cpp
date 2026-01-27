@@ -177,7 +177,7 @@ std::string Scheduler::printJSON() const {
 std::string Scheduler::printCSV() const {
 
     if (state != ScheduleState::SCHEDULED) {
-        throw std::runtime_error("Schedule not computed yet. Cannot export.");
+        utils::throw_runtime_error("Schedule not computed yet. Cannot export.");
     }
 
     std::ostringstream oss;
@@ -208,7 +208,9 @@ std::string Scheduler::print(utils::PRINT_FORMAT format) const {
         case utils::PRINT_FORMAT::CSV:
             return printCSV();
             break;
-        default: 
-            throw std::runtime_error("Unknown print format");
+        default: {
+            utils::throw_runtime_error("Unknown print format");
+            return "";
+        }
     }
 };

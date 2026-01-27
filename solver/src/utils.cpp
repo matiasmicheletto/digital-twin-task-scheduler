@@ -8,7 +8,7 @@ std::filesystem::path getBinaryDir(){
     wchar_t buffer[MAX_PATH];
     DWORD len = GetModuleFileNameW(nullptr, buffer, MAX_PATH);
     if (len == 0 || len == MAX_PATH)
-        throw std::runtime_error("GetModuleFileNameW failed");
+        throw_runtime_error("GetModuleFileNameW failed");
 
     return std::filesystem::path(buffer).parent_path();
 
@@ -19,7 +19,7 @@ std::filesystem::path getBinaryDir(){
 
     std::string buffer(size, '\0');
     if (_NSGetExecutablePath(buffer.data(), &size) != 0)
-        throw std::runtime_error("_NSGetExecutablePath failed");
+        throw_runtime_error("_NSGetExecutablePath failed");
 
     return std::filesystem::canonical(buffer).parent_path();
 
@@ -28,7 +28,7 @@ std::filesystem::path getBinaryDir(){
     char buffer[PATH_MAX];
     ssize_t len = ::readlink("/proc/self/exe", buffer, sizeof(buffer) - 1);
     if (len == -1)
-        throw std::runtime_error("readlink(/proc/self/exe) failed");
+        throw_runtime_error("Cannot resolve /proc/self/exe");
 
     buffer[len] = '\0';
     return std::filesystem::path(buffer).parent_path();
@@ -47,7 +47,7 @@ std::string getBinaryDirStr() {
 #else
     char result[PATH_MAX];
     ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
-    if (count == -1) throw std::runtime_error("Cannot resolve /proc/self/exe");
+    if (count == -1) throw_runtime_error("Cannot resolve /proc/self/exe");    
     std::string path(result, count);
     return path.substr(0, path.find_last_of('/'));
 #endif
@@ -108,7 +108,8 @@ void printHelp(const char* file, const char* message) { // Open readme file with
         }
     }
 
-    std::cerr << "Error: Unable to open manual file." << std::endl;
+    throw_runtime_error("Unable to open manual file: " + std::string(file));
+    exit(1);
 }
 
 std::string currentDateTime() {
@@ -130,27 +131,27 @@ T require_type(const nlohmann::json& obj, const std::string& key) {
 
     if constexpr (std::is_same_v<T, bool>) {
         if (!value.is_boolean()) {
-            throw std::runtime_error("Invalid JSON: boolean field '" + key + "' expected");
+            throw_runtime_error("Invalid JSON: boolean field '" + key + "' expected");
         }
         return value.get<bool>();
     }
     else if constexpr (std::is_same_v<T, std::string>) {
         if (!value.is_string()) {
-            throw std::runtime_error("Invalid JSON: string field '" + key + "' expected");
+            throw_runtime_error("Invalid JSON: string field '" + key + "' expected");
         }
         return value.get<std::string>();
     }
     else if constexpr (std::is_floating_point_v<T>) {
         // Accept any numeric JSON (int, unsigned, or float); convert to T
         if (!value.is_number()) {
-            throw std::runtime_error("Invalid JSON: numeric (float) field '" + key + "' expected");
+            throw_runtime_error("Invalid JSON: numeric (float) field '" + key + "' expected");
         }
         return value.get<T>();
     }
     else if constexpr (std::is_integral_v<T> && !std::is_same_v<T, bool>) {
         // Accept both signed and unsigned JSON numbers
         if (!(value.is_number_integer() || value.is_number_unsigned())) {
-            throw std::runtime_error("Invalid JSON: integer field '" + key + "' expected");
+            throw_runtime_error("Invalid JSON: integer field '" + key + "' expected");
         }
 
         // Bounds-safe extraction to avoid UB/narrowing:
@@ -162,7 +163,7 @@ T require_type(const nlohmann::json& obj, const std::string& key) {
 
             if (v < static_cast<long long>(std::numeric_limits<T>::min()) ||
                 v > static_cast<long long>(std::numeric_limits<T>::max())) {
-                throw std::runtime_error("Invalid JSON: integer field '" + key + "' out of range");
+                throw_runtime_error("Invalid JSON: integer field '" + key + "' out of range");
             }
             return static_cast<T>(v);
         } else {
@@ -172,7 +173,7 @@ T require_type(const nlohmann::json& obj, const std::string& key) {
                                  : static_cast<unsigned long long>(value.get<long long>());
 
             if (v > static_cast<unsigned long long>(std::numeric_limits<T>::max())) {
-                throw std::runtime_error("Invalid JSON: unsigned field '" + key + "' out of range");
+                throw_runtime_error("Invalid JSON: unsigned field '" + key + "' out of range");
             }
             return static_cast<T>(v);
         }
@@ -182,7 +183,8 @@ T require_type(const nlohmann::json& obj, const std::string& key) {
         try {
             return value.get<T>();
         } catch (const std::exception& e) {
-            throw std::runtime_error("Invalid JSON: field '" + key + "' has wrong type: " + std::string(e.what()));
+            throw_runtime_error("Invalid JSON: field '" + key + "' has wrong type: " + std::string(e.what()));
+            return T(); // Unreachable
         }
     }
 }

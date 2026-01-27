@@ -75,6 +75,12 @@ constexpr const char* red   = "\033[31m";
 constexpr const char* green = "\033[32m";
 constexpr const char* reset = "\033[0m";
 
+inline void throw_runtime_error(const std::string& message) { 
+    dbg << red << message << reset << "\n"; 
+    std::cerr << red << message << reset << std::endl; 
+    throw std::runtime_error(message); 
+};
+
 template<typename T>
 T require_type(const nlohmann::json&, const std::string&);
 

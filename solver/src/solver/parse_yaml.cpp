@@ -28,7 +28,7 @@ void SolverConfig::fromYaml(const std::string& file_path) {
             else if (method == "PSO")
                 sa_priorityRefinementMethod = PriorityRefinementMethod::PARTICLE_SWARM_OPTIMIZATION;
             else
-                throw std::runtime_error("Invalid refinement_priority_method in YAML config");
+                utils::throw_runtime_error("Invalid refinement_priority_method in YAML config");
         }
         if (sa["max_init_tries"])                   sa_maxInitTries = sa["max_init_tries"].as<int>();
         if (sa["max_iterations"])                   sa_maxIterations = sa["max_iterations"].as<int>();
@@ -85,7 +85,7 @@ void SolverConfig::applyOverride(const std::string& override_str) {
 
     auto pos = override_str.find('=');
     if (pos == std::string::npos)
-        throw std::runtime_error("Invalid override (expected key=value): " + override_str);
+        utils::throw_runtime_error("Invalid override (expected key=value): " + override_str);
 
     std::string key = override_str.substr(0, pos);
     std::string val = override_str.substr(pos + 1);
@@ -93,7 +93,7 @@ void SolverConfig::applyOverride(const std::string& override_str) {
     auto asBool = [&](const std::string& v) {
         if (v == "true" || v == "1") return true;
         if (v == "false" || v == "0") return false;
-        throw std::runtime_error("Invalid bool: " + v);
+        utils::throw_runtime_error("Invalid bool: " + v);
     };
 
     // ---- TUNNING ----
@@ -118,7 +118,7 @@ void SolverConfig::applyOverride(const std::string& override_str) {
         else if (val == "PSO")
             sa_priorityRefinementMethod = PriorityRefinementMethod::PARTICLE_SWARM_OPTIMIZATION;
         else
-            throw std::runtime_error("Invalid refinement_priority_method: " + val);
+            utils::throw_runtime_error("Invalid refinement_priority_method: " + val);
     }
 
     else if (key == "simulated_annealing.refinement_sigma_max") sa_sigmaMax = std::stod(val);
@@ -151,7 +151,7 @@ void SolverConfig::applyOverride(const std::string& override_str) {
     else if (key == "misc.log_file") setLogFile(val);
 
     else {
-        throw std::runtime_error("Unknown config key: " + key);
+        utils::throw_runtime_error("Unknown config key: " + key);
     }
 
     (*log) << "Override applied: " << key << "=" << val << "\n";

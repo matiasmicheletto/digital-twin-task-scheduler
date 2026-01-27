@@ -16,7 +16,7 @@ Task Task::fromJSON(const nlohmann::json& j) {
     
     // Calculate utilization, avoid division by zero
     if (task.T <= 0) {
-        throw std::runtime_error("Task " + task.id + " has invalid period T: " + std::to_string(task.T) + " (must be > 0)");
+        utils::throw_runtime_error("Task " + task.id + " has invalid period T: " + std::to_string(task.T) + " (must be > 0)");
     }
     task.u = static_cast<double>(task.C) / static_cast<double>(task.T);
 

@@ -4,8 +4,7 @@ void Scheduler::loadTasksFromJSONFile(const std::string& file_path) {
 
     std::ifstream file(file_path);
     if (!file.is_open()) {
-        std::cerr << "Could not open file: " + file_path << std::endl;
-        throw std::runtime_error("Could not open file: " + file_path);
+        utils::throw_runtime_error("Could not open file: " + file_path);
     }
 
     nlohmann::json j;
@@ -19,7 +18,7 @@ void Scheduler::loadTasksFromJSONFile(const std::string& file_path) {
     // }
 
     if (!j.contains("tasks") || !j.at("tasks").is_array()) {
-        throw std::runtime_error("JSON file does not contain a valid 'tasks' array");
+        utils::throw_runtime_error("JSON file does not contain a valid 'tasks' array");
     }
 
     size_t num_tasks = j.at("tasks").size();
@@ -31,7 +30,7 @@ void Scheduler::loadTasksFromJSONFile(const std::string& file_path) {
             tasks.back().setInternalIdx(task_index);
             task_index++;
         } catch (const std::exception& e) {
-            throw std::runtime_error("Failed to load task " + std::to_string(task_index + 1) + ": " + std::string(e.what()));
+            utils::throw_runtime_error("Failed to load task " + std::to_string(task_index + 1) + ": " + std::string(e.what()));
         }
     }
 
@@ -46,13 +45,13 @@ void Scheduler::loadTasksFromJSONFile(const std::string& file_path) {
                 return t.getId() == from_id;
             });
             if (from_it == tasks.end())
-                throw std::runtime_error("Invalid from_id in precedence: " + from_id);
+                utils::throw_runtime_error("Invalid from_id in precedence: " + from_id);
             
             auto to_it = std::find_if(tasks.begin(), tasks.end(), [&](const Task& t) {
                 return t.getId() == to_id;
             });
             if (to_it == tasks.end()) 
-                throw std::runtime_error("Invalid to_id in precedence: " + to_id);
+                utils::throw_runtime_error("Invalid to_id in precedence: " + to_id);
 
             int from_internal = from_it->getInternalIdx();
             int to_internal = to_it->getInternalIdx();
@@ -71,8 +70,7 @@ void Scheduler::loadNetworkFromJSONFile(const std::string& file_path) {
 
     std::ifstream file(file_path);
     if (!file.is_open()) {
-        std::cerr << "Could not open file: " + file_path << std::endl;
-        throw std::runtime_error("Could not open file: " + file_path);
+        utils::throw_runtime_error("Could not open file: " + file_path);
     }
 
     nlohmann::json j;
@@ -85,7 +83,7 @@ void Scheduler::loadNetworkFromJSONFile(const std::string& file_path) {
     // }
 
     if (!j.contains("nodes") || !j.at("nodes").is_array()) {
-        throw std::runtime_error("JSON file does not contain a valid 'nodes' array");
+        utils::throw_runtime_error("JSON file does not contain a valid 'nodes' array");
     }
 
     servers.reserve(j.at("nodes").size());
@@ -111,7 +109,7 @@ void Scheduler::loadNetworkFromJSONFile(const std::string& file_path) {
                 return s.getId() == server_id;
             });
             if (server == servers.end()) {
-                throw std::runtime_error("Task " + task.getId() + " has invalid fixed allocation to server: " + server_id);
+                utils::throw_runtime_error("Task " + task.getId() + " has invalid fixed allocation to server: " + server_id);
             }
             task.setFixedAllocationInternalId(server->getInternalIdx());
             fixedAllocationCount++;
@@ -122,7 +120,7 @@ void Scheduler::loadNetworkFromJSONFile(const std::string& file_path) {
 
 
     if (!j.contains("connections") || !j.at("connections").is_array()) {
-        throw std::runtime_error("JSON file does not contain a valid 'connections' array");
+        utils::throw_runtime_error("JSON file does not contain a valid 'connections' array");
     }
 
     connections.reserve(j.at("connections").size());
@@ -140,7 +138,7 @@ void Scheduler::loadNetworkFromJSONFile(const std::string& file_path) {
             return s.getId() == conn.from_server_id;
         });
         if (from_it == servers.end()) {
-            throw std::runtime_error("Invalid from_server_id in connection: " + conn.id);
+            utils::throw_runtime_error("Invalid from_server_id in connection: " + conn.id);
         };
         conn.from_server_index = std::distance(servers.begin(), from_it);
         
@@ -148,7 +146,7 @@ void Scheduler::loadNetworkFromJSONFile(const std::string& file_path) {
             return s.getId() == conn.to_server_id;
         });
         if (to_it == servers.end()) {
-            throw std::runtime_error("Invalid to_server_id in connection: " + conn.id);
+            utils::throw_runtime_error("Invalid to_server_id in connection: " + conn.id);
         };
         conn.to_server_index = std::distance(servers.begin(), to_it);
         
