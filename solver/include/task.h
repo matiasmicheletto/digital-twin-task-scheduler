@@ -33,16 +33,6 @@ class Task {
         static Task fromJSON(const nlohmann::json& j);
         std::string print() const;
 
-        // Setters
-        inline void setStartTime(int start) { start_time = start; finish_time = start_time + C; }
-        inline void addPredecessor(const std::string& pred_id, const int predecessor_internal_id = 0) { 
-            predecessors.push_back(pred_id); 
-            predecessor_internal_idxs.push_back(predecessor_internal_id); 
-        }
-        inline void addSuccessor(const std::string& succ_id, const int successor_internal_idx = 0) { 
-            successors.push_back(succ_id); 
-            successor_internal_idxs.push_back(successor_internal_idx);
-        }
         // Getters
         inline std::string getId() const { return id; }
         inline int getInternalIdx() const { return internal_idx; }
@@ -51,7 +41,6 @@ class Task {
         inline TaskType getType() const { return type; }
         inline bool hasFixedAllocation() const { return fixedAllocation; }
         inline std::string getFixedAllocationTo() const { return fixedAllocationId; }
-
         inline int getC() const { return C; }
         inline int getT() const { return T; }
         inline int getD() const { return D; }
@@ -60,7 +49,21 @@ class Task {
         inline double getU() const { return u; }
         inline int getStartTime() const { return start_time; }
         inline int getFinishTime() const { return finish_time; }
+        inline const std::vector<std::string>& getPredecessors() const { return predecessors; }
+        inline const std::vector<int>& getPredecessorInternalIdxs() const { return predecessor_internal_idxs; }
+        inline const std::vector<std::string>& getSuccessors() const { return successors; }
+        inline const std::vector<int>& getSuccessorInternalIdxs() const { return successor_internal_idxs; }
 
+        // Setters
+        inline void setStartTime(int start) { start_time = start; finish_time = start_time + C - 1; }
+        inline void addPredecessor(const std::string& pred_id, const int predecessor_internal_id = 0) { 
+            predecessors.push_back(pred_id); 
+            predecessor_internal_idxs.push_back(predecessor_internal_id); 
+        }
+        inline void addSuccessor(const std::string& succ_id, const int successor_internal_idx = 0) { 
+            successors.push_back(succ_id); 
+            successor_internal_idxs.push_back(successor_internal_idx);
+        }
         inline void setC(int c) { C = c; }
         inline void setT(int t) { T = t; }
         inline void setD(int d) { D = d; }
@@ -69,12 +72,6 @@ class Task {
         inline void setInternalIdx(int internal_idx_) { internal_idx = internal_idx_; }
         inline void setFixedAllocationId(const std::string& fixed_allocation_id_) { fixedAllocationId = fixed_allocation_id_; fixedAllocation=true; }
         inline void setFixedAllocationInternalId(int fixed_allocation_internal_idx_) { fixedAllocationInternalIdx = fixed_allocation_internal_idx_; }
-        
-        inline const std::vector<std::string>& getPredecessors() const { return predecessors; }
-        inline const std::vector<int>& getPredecessorInternalIdxs() const { return predecessor_internal_idxs; }
-        
-        inline const std::vector<std::string>& getSuccessors() const { return successors; }
-        inline const std::vector<int>& getSuccessorInternalIdxs() const { return successor_internal_idxs; }
 
     private:
         // Properties

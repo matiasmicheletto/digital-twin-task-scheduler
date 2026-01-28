@@ -201,7 +201,7 @@ ScheduleState Scheduler::schedule(const Candidate& candidate) {
             utils::dbg << "Task " << t.getLabel() << " earliest start time overflow: " << earliest << "\n";
             return state = ScheduleState::CANDIDATE_ERROR; // too large
         }
-        t.setStartTime((int)earliest); // setStartTime updates finish_time = start + C (internally)
+        t.setStartTime((int)earliest); // setStartTime updates finish_time = start + C - 1 (internally)
 
         // Check deadline if D > 0. Interpret deadline as relative to activation a: finish <= a + D
         int D = t.getD();
@@ -216,7 +216,7 @@ ScheduleState Scheduler::schedule(const Candidate& candidate) {
         
         // Update server ready time (server executes tasks sequentially)
         if (servers[server_idx].getType() != ServerType::Mist) {
-            server_ready[server_idx] = (long long)t.getFinishTime();
+            server_ready[server_idx] = (long long)t.getFinishTime() + 1LL; // next available time slot
         }else{
             if (!servers[server_idx].getAssignedTasks().empty()) {
                 utils::dbg << "Mist server " << servers[server_idx].getLabel()
@@ -308,6 +308,7 @@ int Scheduler::getDelayCost() const {
     }
     return total_delay;
 };
+
 void Scheduler::clearAllServerTasks() {
     // Clears all assigned tasks from all servers to prevent accessing corrupted data
     for (auto& server : servers) {

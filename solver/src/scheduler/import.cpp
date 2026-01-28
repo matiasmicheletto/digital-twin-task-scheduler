@@ -3,8 +3,7 @@
 void Scheduler::loadScheduleFromDatFile(const std::string& file_path) {
     std::ifstream file(file_path);
     if (!file.is_open()) {
-        utils::dbg << utils::red << "Could not open file: " + file_path << utils::reset << std::endl;
-        throw std::runtime_error("Could not open file: " + file_path);
+        utils::throw_runtime_error("Could not open file: " + file_path);
     }
 
     try {
@@ -99,7 +98,7 @@ void Scheduler::loadScheduleFromDatFile(const std::string& file_path) {
                 task.setFixedAllocationInternalId(serverInternalIdx);
             }
 
-            task.setStartTime(0); // Finish time will be start + C, but not used yet
+            task.setStartTime(0); // Finish time will be start + C - 1, but not used yet
 
             taskIdMap[taskIndex] = task.getId();
             taskIndexMap[taskIndex] = i;
@@ -180,8 +179,7 @@ void Scheduler::loadScheduleFromDatFile(const std::string& file_path) {
         utils::dbg << "Parsed " << actualConnections << " connections.\n";
 
     } catch (const std::exception& e) {
-        utils::dbg << utils::red << "Error parsing DAT file: " << e.what() << utils::reset << std::endl;
-        throw std::runtime_error("Error parsing DAT file: " + std::string(e.what()));
+        utils::throw_runtime_error("Error parsing DAT file: " + std::string(e.what()));        
     }
 
     file.close();

@@ -37,7 +37,7 @@ Server Server::fromJSON(const nlohmann::json& j) {
         } else if (typeStr == "CLOUD") {
             server.type = ServerType::Cloud;
         } else {
-            throw std::invalid_argument("Invalid server type: " + typeStr);
+            utils::throw_runtime_error("Invalid server type: " + typeStr);
         }
     }
 
