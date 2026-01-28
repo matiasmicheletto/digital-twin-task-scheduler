@@ -55,6 +55,7 @@ def main():
     ax.set_ylabel("Servers")
     ax.set_title("Task Schedule Gantt Chart")
 
+    plt.grid(True)
     plt.tight_layout()
     if output_file:
         plt.savefig(output_file)
