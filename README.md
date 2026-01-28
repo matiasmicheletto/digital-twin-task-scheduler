@@ -63,10 +63,16 @@ make
 cd bin
 ./solve -t tasks.json -n network.json -c config.yaml -s annealing -o json
 ```
+
 To save a csv file, use `-o csv` instead of `-o json`:
 ```bash
 ./solve -t tasks.json -n network.json -c config.yaml -s annealing -o csv > ../../data/schedule.csv
 ``` 
+
+To pass the .dat file directly, use:
+```bash
+./solve -d instance.dat -s annealing -o json
+```
 
 To override specific parameters from the command line, use the `--set` flag followed by `key=value` pairs. For example:
 ```bash

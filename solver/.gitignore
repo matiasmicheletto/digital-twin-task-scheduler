@@ -1,3 +1,4 @@
 bin/
 obj/
 solver_log.csv
+custon_config.yaml

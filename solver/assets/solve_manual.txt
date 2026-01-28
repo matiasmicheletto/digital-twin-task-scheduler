@@ -16,6 +16,7 @@ DESCRIPTION:
 OPTIONS:  
    -t, --tasks    File with the tasks the instance. Must be in json format.  
    -n, --network  File with the network of the instance. Must be in json format.  
+   -d, --dat      File with system description using dat format.  
    -c, --config   Optimization parameters.
    -h, --help     (optional) Display this help message.  
    -v, --version  (optional) Displays software version.  
@@ -26,6 +27,9 @@ OPTIONS:
 EXAMPLE:  
    # Solve instance defined in tasks.json and network.json, with simulated annealing method using configuration declared in config.yaml file and printing output using .json format
    solve -t tasks.json -n network.json -c config.yaml -s annealing -o json
+
+   # Solve instance defined in instance.dat with random method and saving result in a csv file:
+   solve -d instance.dat -s random -o csv > output.csv 
 
    # Overriding parameters
    solver -t t.json -n n.json -s annealing -o csv \
@@ -93,6 +97,21 @@ Network file:
       "delay": 8, // Delay of the link in time slots
       "bidirectional": false // If data can be sent back and forth or not
    }
+
+Dat file: 
+N
+nodeId (from 1)    memory    u    cost
+...
+M
+taskId (from 0)   C    T    D    a    M    allocatedNode
+...
+P (M x M)
+fromTaskId    toTaskId    exists (1/0)
+...
+S (N x N)
+fromNodeId    toNodeId    delay
+...
+
 
 Optimization parameters file:
 
