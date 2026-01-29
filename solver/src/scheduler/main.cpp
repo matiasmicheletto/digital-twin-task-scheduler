@@ -188,7 +188,7 @@ ScheduleState Scheduler::schedule(const Candidate& candidate) {
                     utils::dbg << "Task " << t.getLabel() << " predecessor " << pt.getLabel() << " on disconnected servers.\n";
                     return state = ScheduleState::PRECEDENCES_ERROR;
                 }
-                long long candidate_start = pred_finish + (long long)delay;
+                long long candidate_start = pred_finish + (long long)delay + 1LL; // +1 since finish is inclusive
                 earliest = std::max(earliest, candidate_start);
             }
         }
@@ -263,7 +263,7 @@ int Scheduler::getFinishTimeSum() const {
     }
     int finish_time_sum = 0;
     for (const auto& t : tasks) {
-        finish_time_sum += t.getFinishTime();
+        finish_time_sum += t.getFinishTime()+1; // finish time is inclusive, so add 1
     }
     return finish_time_sum;
 };

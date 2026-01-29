@@ -99,6 +99,8 @@ int main(int argc, char **argv) {
                     output_format = utils::PRINT_FORMAT::JSON;
                 } else if (strcmp(format, "csv") == 0) {
                     output_format = utils::PRINT_FORMAT::CSV;
+                } else if (strcmp(format, "tab") == 0) {
+                    output_format = utils::PRINT_FORMAT::TAB;
                 } else {
                     utils::printHelp(MANUAL, "Error in argument -o (--output). Supported formats are: text, json");
                 }

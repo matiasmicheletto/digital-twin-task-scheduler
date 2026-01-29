@@ -104,27 +104,27 @@ std::string SolverResult::getHeaderCSV() {
             "Schedule state\n";
 };
 
-std::string SolverResult::printCSV() const {
+std::string SolverResult::printTable(char separator) const {
     std::ostringstream oss;
 
-    oss << utils::currentDateTime() << ",";
-    oss << instanceName << ",";
-    oss << alpha << ",";
-    oss << beta << ",";
-    oss << gamma << ",";
-    oss << solverMethodToString(method) << ",";
+    oss << utils::currentDateTime() << separator;
+    oss << instanceName << separator;
+    oss << alpha << separator;
+    oss << beta << separator;
+    oss << gamma << separator;
+    oss << solverMethodToString(method) << separator;
     if(method == SolverMethod::SIMULATED_ANNEALING) {
-        oss << priorityRefinementMethodToString(refinement) << ",";
+        oss << priorityRefinementMethodToString(refinement) << separator;
     } else {
         oss << "N/A,";
     }
-    oss << runtime_ms << ",";
-    oss << iterations << ",";
-    oss << scheduleSpan << ",";
-    oss << finishTimeSum << ",";
-    oss << processorsCost << ",";
-    oss << delayCost << ",";
-    oss << getObjectiveValue() << ",";
+    oss << runtime_ms << separator;
+    oss << iterations << separator;
+    oss << scheduleSpan << separator;
+    oss << finishTimeSum << separator;
+    oss << processorsCost << separator;
+    oss << delayCost << separator;
+    oss << getObjectiveValue() << separator;
     oss << scheduleState.toString() << "\n";
 
     return oss.str();
@@ -184,7 +184,9 @@ std::string SolverResult::printTxt() const {
 std::string SolverResult::print(utils::PRINT_FORMAT format) const {
     switch(format) {
         case utils::PRINT_FORMAT::CSV:
-            return printCSV();
+            return printTable(',');
+        case utils::PRINT_FORMAT::TAB:
+            return printTable('\t');
         case utils::PRINT_FORMAT::TXT:
         default:
             return printTxt();

@@ -173,7 +173,7 @@ public:
         observations(observations)
     {}
 private: 
-    std::string printCSV() const;
+    std::string printTable(char separator = ',') const;
     std::string printTxt() const;
 };
 

@@ -21,8 +21,9 @@ OPTIONS:
    -h, --help     (optional) Display this help message.  
    -v, --version  (optional) Displays software version.  
    -s, --solver   (optional) Choose solver. Options are "random", "genetic" or "annealing".
-   -o, --output   (optional) Output format. Must be "json", "text" or "csv". Default value is "text".  
-   --set          (optional) Override configuration parameter
+   -o, --output   (optional) Output format. Must be "json", "text", "csv" or "tab". Default value is "text".  
+   --set          (optional) Override configuration parameter.  
+   --dbg          (optional) Show debugging messages.  
 
 EXAMPLE:  
    # Solve instance defined in tasks.json and network.json, with simulated annealing method using configuration declared in config.yaml file and printing output using .json format
@@ -32,7 +33,7 @@ EXAMPLE:
    solve -d instance.dat -s random -o csv > output.csv 
 
    # Overriding parameters
-   solver -t t.json -n n.json -s annealing -o csv \
+   solver -t t.json -n n.json -s annealing -o tab \
          --set simulated_annealing.max_iterations=8000 \
          --set tunning.alpha=2 \
          --set genetic_algorithm.population_size=300

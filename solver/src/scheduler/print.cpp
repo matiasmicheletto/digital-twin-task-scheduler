@@ -174,7 +174,7 @@ std::string Scheduler::printJSON() const {
     return j.dump(4);
 }
 
-std::string Scheduler::printCSV() const {
+std::string Scheduler::printTable(char separator) const {
 
     if (state != ScheduleState::SCHEDULED) {
         utils::throw_runtime_error("Schedule not computed yet. Cannot export.");
@@ -187,9 +187,9 @@ std::string Scheduler::printCSV() const {
     for (const auto& server : servers) {
         const auto& tasks = server.getAssignedTasks();
         for (const auto& task : tasks) {
-            oss << task.getLabel() << ","
-                << server.getLabel() << ","
-                << task.getStartTime() << ","
+            oss << task.getLabel() << separator
+                << server.getLabel() << separator
+                << task.getStartTime() << separator
                 << task.getFinishTime() << "\n";
         }
     }
@@ -206,7 +206,10 @@ std::string Scheduler::print(utils::PRINT_FORMAT format) const {
             return printJSON();
             break;
         case utils::PRINT_FORMAT::CSV:
-            return printCSV();
+            return printTable(',');
+            break;
+        case utils::PRINT_FORMAT::TAB:
+            return printTable('\t');
             break;
         default: {
             utils::throw_runtime_error("Unknown print format");

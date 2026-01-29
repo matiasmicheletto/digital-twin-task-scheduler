@@ -155,7 +155,7 @@ void SolverConfig::applyOverride(const std::string& override_str) {
         utils::throw_runtime_error("Unknown config key: " + key);
     }
 
-    (*log) << "Override applied: " << key << "=" << val << "\n";
+    utils::dbg << "Override applied: " << key << "=" << val << "\n";
 };
 
 

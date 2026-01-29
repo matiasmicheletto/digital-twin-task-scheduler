@@ -39,7 +39,7 @@
 
 namespace utils { // Utility functions
 
-enum PRINT_FORMAT { TXT, JSON, CSV };
+enum PRINT_FORMAT { TXT, JSON, CSV, TAB };
 
 // Get directory of the executable (to load the manual file if not specified)
 std::filesystem::path getBinaryDir();

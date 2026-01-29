@@ -114,7 +114,7 @@ class Scheduler {
 
         std::string printTxt() const;
         std::string printJSON() const;
-        std::string printCSV() const;
+        std::string printTable(char separator = ',') const;
 };
 
 #endif // SCHEDULER_H

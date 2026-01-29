@@ -16,28 +16,30 @@ A comprehensive tool for generating, solving, and visualizing task scheduling pr
 - **Task automations**: Bash, Node.js, Python
 
 ## Installation
-To build the project, ensure you have a C++ compiler and CMake installed.  
-Also install the following dependencies:  
 
-Arch / Manjaro:
-  sudo pacman -S yaml-cpp
-
-Debian / Ubuntu:
-  sudo apt install libyaml-cpp-dev
-
-Fedora:
-  sudo dnf install yaml-cpp-devel
-
-## Getting Started
-Follow these steps to generate instances, run the solver, and visualize the results:
-
-1. Clone the repository:
+Clone the repository:
 ```bash
 git clone https://github.com/matiasmicheletto/digital-twin-task-scheduler.git
 cd digital-twin-task-scheduler
 ```
 
-2. Generate instances using the graphical interface:
+To build the project, ensure you have a C++ compiler and CMake installed.  
+
+Also install the following dependencies:  
+
+Arch / Manjaro: ```sudo pacman -S yaml-cpp```.
+
+Debian / Ubuntu: ```sudo apt install libyaml-cpp-dev```.
+
+Fedora: ```sudo dnf install yaml-cpp-devel```.
+
+## GUI
+
+The GUI allows to visually generate networks and tasks graphs, and also export generated instances in JSON format to be later processed.
+
+The GUI requires Node.js and npm. Install them from [Node.js official website](https://nodejs.org/).
+
+### Usage
 ```bash
 cd gui
 npm install
@@ -45,58 +47,8 @@ npm run build
 npm start
 cd ..
 ```
+
 Open your browser and navigate to `http://localhost:5173` to access the GUI. Or use the pre-built version in the `dist` folder.
-
-3. To generate large datasets of instances automatically (See scripts help manuals for custom presets):
-```bash
-cd data
-npm install
-node instance-generator.js presets
-node network-generator.js --batch presets
-cd ..
-```
-
-4. Compile and run solver (for instance, using simulated annealing):
-```bash
-cd solver
-make
-cd bin
-./solve -t tasks.json -n network.json -c config.yaml -s annealing -o json
-```
-
-To save a csv file, use `-o csv` instead of `-o json`:
-```bash
-./solve -t tasks.json -n network.json -c config.yaml -s annealing -o csv > ../../data/schedule.csv
-``` 
-
-To pass the .dat file directly, use:
-```bash
-./solve -d instance.dat -s annealing -o json
-```
-
-To override specific parameters from the command line, use the `--set` flag followed by `key=value` pairs. For example:
-```bash
-solver -t tasks.json -n network.json -s annealing -o csv \
-         --set simulated_annealing.max_iterations=8000 \
-         --set tunning.alpha=2 \
-         --set genetic_algorithm.population_size=300
-```
-
-5. Visualize schedule. Run solver with `-o csv`, then:
-```bash
-cd data
-virtualenv venv
-source venv/bin/activate
-pip install -r requirements.txt
-python plot.py schedule.csv
-```
-
-## Usage
-The entire process can be automated using the provided `all.sh` script, which covers instance generation, solving, and visualization. Before running the script, ensure to:
-
-1. Define preset parameters for tasks and network generation in the `shared/presets` folder.
-2. Check directories in the header of the `all.sh` script.
-
 
 ## Data format
 Instances can be generated using the GUI or the automatic generators. They consist of two JSON files: one for tasks and another for the network. There is also a tool to combine both data structures into a single .dat file to solve the instance with ILP optimizers.  
@@ -180,6 +132,61 @@ Network consists of nodes and connections represented in JSON format with the fo
 };
 ```
 
+To generate large datasets of instances in json format automatically (See scripts help manuals for custom presets), run:
+
+```bash
+cd data
+npm install
+node instance-generator.js presets
+node network-generator.js --batch presets
+cd ..
+```
+
+### Plain text
+
+The following format is used to combine tasks and network data into a single .dat file for solving using ILP models as CPLEX or AMPL.
+
+```txt
+N (number of processors)
+nodeId (from 1)    memory    u    cost
+...
+M (number of tasks)
+taskId (from 0)   C    T    D    a    M    allocatedProcessor (if preallocated, otherwise 0)
+...
+P (M x M, precedence matrix)
+fromTaskId    toTaskId    exists (1/0)
+...
+S (N x N, processors connection matrix)
+fromNodeId    toNodeId    delay
+```
+
+
+## Solver
+
+The [Makefile](solver/Makefile) contains instructions to compile the C++ solvers. Entry points must be located in the [solver/src](solver/src) folder with `_main.cpp` suffix. The compiled binaries can be found in the [solver/bin](solver/bin) folder.
+
+```bash
+cd solver
+make
+cd bin
+./solve -t tasks.json -n network.json -s annealing
+```
+
+See manual in [solver/assets/solve_manual.txt](solver/assets/solve_manual.txt) for detailed instructions.
+
+To save results to a csv file, use `-o csv`:
+```bash
+./solve -t tasks.json -n network.json -s annealing -o csv > ../../data/schedule.csv
+``` 
+This will create `schedule.csv` in the `data` folder with the following colums: `task_id, processor_id, start_time, finish_time`.
+
+Other available outputs formats are `text`, `json` and `tab`. The last one prints tab-separated values of `task_id, processor_id, start_time, finish_time`.
+
+ILP models use the combined model in a .dat. To pass the .dat file directly as input, use:
+```bash
+./solve -d instance.dat -s annealing
+```
+
 ### Optimization options
 Optimization options can be specified in a YAML configuration file with the following structure:
 
@@ -229,31 +236,41 @@ genetic_algorithm: # GA
 misc: # Miscellaneous settings
   log_file: solver_log.csv # File to log solver results
 ```
+This file can be passed to the solver using the `-c` flag:
+```bash
+solver -t tasks.json -n network.json -s annealing -o csv -c config.yaml
+```
 
-### CPLEX Integration
+To override specific parameters from the command line, use the `--set` flag followed by `key=value` pairs. For example:
+```bash
+solver -t tasks.json -n network.json -s annealing -o csv \
+         --set simulated_annealing.max_iterations=8000 \
+         --set tunning.alpha=2 \
+         --set genetic_algorithm.population_size=300
+```
 
-The following format is used to combine tasks and network data into a single .dat file for solving with CPLEX.
+## Results Visualization
 
-```txt
-N (number of processors)
-nodeId (from 1)    memory    u
-...
-M (number of tasks)
-taskId (from 0)   C    T    D    a    M    allocatedProcessor (if preallocated, otherwise 0)
-...
-P (M x M, precedence matrix)
-fromTaskId    toTaskId    exists (1/0)
-...
-S (N x N, processors connection matrix)
-fromNodeId    toNodeId    delay
+Run solver with `-o csv` and save output, for instance, to `data/schedule.csv`. Then, use the provided Python script in the [data](data) folder to visualize a Gantt chart of the schedule:
+
+```bash
+cd data
+virtualenv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python plot.py schedule.csv 
+deactivate
+```
+
+To save the figure pass the name of the file as second argument:
+```bash
+python plot.py schedule.csv schedule.png
 ```
 
 
-### Solver
+## Dataset Generation and Automation
 
-The [Makefile](solver/Makefile) contains instructions to compile the C++ solvers. Entry points must be located in the [solver/src](solver/src) folder with `_main.cpp` suffix. The compiled binaries can be found in the [solver/bin](solver/bin) folder.
+The entire process can be automated using the provided `all.sh` script, which covers instance generation, solving, and visualization. Before running the script, ensure to:
 
-Read the [manual](solver/assets/solve_manual.txt) for detailed instructions on how to use the solver.
-
-### Results
-The solver can output results in three formats: text, JSON, and CSV. The CSV format is particularly useful for visualizing schedules using the provided Python script in the [data](data) folder. The script generates Gantt charts to represent task allocations over time.
+1. Define preset parameters for tasks and network generation in the `shared/presets` folder.
+2. Check directories in the header of the `all.sh` script.
