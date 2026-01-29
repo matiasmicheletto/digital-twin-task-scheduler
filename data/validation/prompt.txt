@@ -1,0 +1,171 @@
+Write a python program to solve the following problem:
+
+A real time system is composed by a set of M precedence related tasks and a set of N interconnected servers where tasks can be executed. Servers cannot run more than one task at the same time and tasks must start and finish in the same server without interruption. Connections between servers have a communication delay, so a succesor task must wait the finish of its predecessor at least during this delay until its execution. Not all servers are connected, so delays must be computed by the shortest path between them.
+
+Given this, a schedule can be computed showing the tasks to servers allocations and the instants (time slots) when tasks start and finish their execution. Some tasks are preallocated to some servers, and this allocation cannot be modified.
+
+The problem consists on evaluating the feasibility of a given schedule stored in a csv file and the systems parameters stored in a text file.
+
+The text file describing the system has the following format:
+
+* All values are separated by tab.
+* First line is the number of servers N.
+* Lines 2 to N+1 have 4 values that corresponds to id, m, u and cost where id goest from 1 to N, m is the available memory, u is the initial utilization which is a real number between 0 and 1 and cost is the cost of using that server by a task.
+* Line number N+2 indicates the id of the last task, where ids goes from 0 to M-1. If there are M tasks, then line N+2 will be M-1.
+* Lines from N+3 to N+M+2 contain the attributes of tasks which are id, C, T, D, a, M and pre-allocated server, where where id goes from 0 to M-1, C is the worst case execution time, T is the period, D is the deadline, is the activation time, M is the required memory to execute and pre-allocated server indicates that this task can only be executed in that server.
+* Then it comes the number of precedences P in line N+M+3. P equals to MxM because it is a task-to-task matrix.
+* From line N+M+4 to N+M+P+3 the precedence relation is notated with a set of three values: the id of first task, the id of the potential successor task and a binary number indicating if both tasks are related by precedence or not.
+* Line N+M+4 indicates the number of connections between servers S, which equals to NxN.
+* Following lines contain the delay values of connection between servers. Three values per line indicating the id of one server, the id of another server and the communication delay. If there are no connection between them, then the delay value is 1000.
+* For example, a file describing a system composed by 4 servers and 10 tasks, may look like this:
+
+4
+1	12	0.5
+2	12	0.5
+3	131	1.0
+4	1540	1.0
+9
+0	10	488	488	0	5	1
+1	42	488	488	0	3	2
+2	64	488	488	0	22	0
+3	39	488	488	0	18	0
+4	66	488	488	0	22	0
+5	42	488	488	0	22	0
+6	88	488	488	0	20	0
+7	98	488	488	0	15	0
+8	16	488	488	0	15	0
+9	23	488	488	0	20	0
+100
+0	0	0
+0	1	0
+0	2	0
+0	3	1
+0	4	1
+0	5	1
+0	6	0
+0	7	0
+0	8	0
+0	9	1
+1	0	0
+1	1	0
+1	2	0
+1	3	0
+1	4	0
+1	5	0
+1	6	0
+1	7	0
+1	8	0
+1	9	0
+2	0	0
+2	1	0
+2	2	0
+2	3	0
+2	4	1
+2	5	1
+2	6	0
+2	7	1
+2	8	0
+2	9	0
+3	0	0
+3	1	0
+3	2	0
+3	3	0
+3	4	1
+3	5	1
+3	6	0
+3	7	0
+3	8	1
+3	9	1
+4	0	0
+4	1	0
+4	2	0
+4	3	0
+4	4	0
+4	5	1
+4	6	0
+4	7	0
+4	8	1
+4	9	0
+5	0	0
+5	1	0
+5	2	0
+5	3	0
+5	4	0
+5	5	0
+5	6	0
+5	7	0
+5	8	0
+5	9	1
+6	0	0
+6	1	1
+6	2	0
+6	3	0
+6	4	0
+6	5	0
+6	6	0
+6	7	0
+6	8	0
+6	9	0
+7	0	0
+7	1	0
+7	2	0
+7	3	0
+7	4	0
+7	5	0
+7	6	0
+7	7	0
+7	8	0
+7	9	1
+8	0	0
+8	1	0
+8	2	0
+8	3	0
+8	4	0
+8	5	0
+8	6	0
+8	7	0
+8	8	0
+8	9	1
+9	0	0
+9	1	0
+9	2	0
+9	3	0
+9	4	0
+9	5	0
+9	6	0
+9	7	0
+9	8	0
+9	9	0
+16
+1	1	0
+1	2	1000
+1	3	2
+1	4	5
+2	1	1000
+2	2	0
+2	3	2
+2	4	5
+3	1	2
+3	2	2
+3	3	0
+3	4	4
+4	1	5
+4	2	5
+4	3	4
+4	4	0
+
+Now, the file containing the schedule uses csv format, where columns are task id, server id, start slot and finish slot. For instance, a schedule file may look like this:
+
+task,server,start,finish
+0,1,0,9
+1,2,89,130
+6,3,0,87
+7,3,88,185
+8,3,186,201
+2,4,0,63
+3,4,64,102
+4,4,103,168
+5,4,169,210
+9,4,211,233
+
+Make a python program that reads both files and return if system if feasible or not. If the system is feasible, it must show, tasks by task, why it is ok the allocation and start and finish slots. If system is not feasible, then it must show which conditions are not met.
