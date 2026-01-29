@@ -42,18 +42,17 @@ import { generateUUID8 } from "./utils.js";
     }
 
     Dat format:
-    N
+    N (number of processors)
     nodeId (from 1)    memory    u    cost
     ...
-    M
-    taskId (from 0)   C    T    D    a    M    allocatedNode
+    M-1 (index of last task)
+    taskId (from 0)   C    T    D    a    M    allocatedProcessor (if preallocated, otherwise 0)
     ...
-    P (M x M)
+    P (M x M, precedence matrix)
     fromTaskId    toTaskId    exists (1/0)
     ...
-    S (N x N)
-    fromNodeId    toNodeId    delay
-    ...
+    S (N x N, processors connection matrix)
+    fromNodeId    toNodeId    delay (1000 if no connection)
 */
 
 export const modelToDat = model => {

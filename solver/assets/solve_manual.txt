@@ -4,20 +4,24 @@ PROLOG
    This manual is part of the digital-twin-task-scheduler project. See project documentation at: https://github.com/matiasmicheletto/digital-twin-task-scheduler
 
 NAME  
-   solve - Computes the optimal allocation of tasks to network nodes
+   solve - Computes the optimal allocation of tasks to network servers.
 
 SYNOPSIS  
    solve [OPTIONS] -t [TASK_FILE] -n [NETWORK_FILE] -o [OUTPUT_FORMAT]
+   solve [OPTIONS] -d [DAT_FILE]
 
 DESCRIPTION:  
-   This program loads two json files describing a set of precedence related tasks and a network architecture. Tasks have different attributes as computing time, period, deadline, memory requirements, between others and have to be allocated to nodes to their execution. The network on the other side is composed by a set of nodes. There are three types of nodes corresponding to the three network layers: MIST, EDGE and CLOUD. The nodes are connected by links, these last ones have delays indicated in time slots, and it is the time it takes for a task to send its output to its successor if it is allocated in another node. 
-   The program computes the optimal allocation of tasks to nodes in order to minimize the total period of the system.  
+   This program loads two .json files or a single .dat file describing a set of real-time precedence related tasks and the network architecture. Tasks have different attributes as worse case execution time, period, deadline, memory requirements, between others and have to be allocated to servers in order to compute the optimal schedule. 
+
+   There are three types of servers, also called nodes or processors, corresponding to the three network layers: MIST, EDGE and CLOUD. Some servers can be connected by links, having delays indicated in time slots, representing the time it takes for a task to send its output to its successor, if it is allocated in another server. Servers can redirect data, so the network is fully connected and the delay matrix of nodes have no infinity values.  
+   
+   The program computes the optimal allocation of tasks to servers in order to minimize three objectives: the sum of all finish slots of all tasks, the total communication delay of the schedule and the cost of servers usage.  
 
 OPTIONS:  
    -t, --tasks    File with the tasks the instance. Must be in json format.  
    -n, --network  File with the network of the instance. Must be in json format.  
    -d, --dat      File with system description using dat format.  
-   -c, --config   Optimization parameters.
+   -c, --config   Optimization parameters (see below).
    -h, --help     (optional) Display this help message.  
    -v, --version  (optional) Displays software version.  
    -s, --solver   (optional) Choose solver. Options are "random", "genetic" or "annealing".
@@ -99,18 +103,18 @@ Network file:
       "bidirectional": false // If data can be sent back and forth or not
    }
 
-Dat file: 
+Dat file (values separated by \t): 
 N
 nodeId (from 1)    memory    u    cost
 ...
-M
+M-1
 taskId (from 0)   C    T    D    a    M    allocatedNode
 ...
 P (M x M)
 fromTaskId    toTaskId    exists (1/0)
 ...
 S (N x N)
-fromNodeId    toNodeId    delay
+fromNodeId    toNodeId    delay (1000 if not connected)
 ...
 
 
