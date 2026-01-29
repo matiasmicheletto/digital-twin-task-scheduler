@@ -25,7 +25,8 @@ void Scheduler::loadScheduleFromDatFile(const std::string& file_path) {
 
             Server server(
                 ServerType::Edge, // Initially set as Edge, will update if MIST task allocated
-                "Node " + std::to_string(nodeIndex),
+                //"Node " + std::to_string(nodeIndex),
+                std::to_string(nodeIndex),
                 static_cast<int>(memory),
                 1, // Default cost
                 u
@@ -58,7 +59,8 @@ void Scheduler::loadScheduleFromDatFile(const std::string& file_path) {
 
             Task task(
                 isMist ? TaskType::Mist : TaskType::Regular,
-                isMist ? ("Mst " + std::to_string(taskIndex)) : ("Tsk " + std::to_string(taskIndex)),
+                //isMist ? ("Mst " + std::to_string(taskIndex)) : ("Tsk " + std::to_string(taskIndex)),
+                std::to_string(taskIndex),
                 isMist,
                 static_cast<int>(C),
                 static_cast<int>(T),
@@ -82,7 +84,8 @@ void Scheduler::loadScheduleFromDatFile(const std::string& file_path) {
                 if (servers[serverInternalIdx].getType() != ServerType::Mist) {
                     servers[serverInternalIdx] = Server(
                         ServerType::Mist,
-                        "MIST " + std::to_string(allocatedNode),
+                        //"MIST " + std::to_string(allocatedNode),
+                        std::to_string(allocatedNode),
                         servers[serverInternalIdx].getMemory(),
                         servers[serverInternalIdx].getCost(),
                         servers[serverInternalIdx].getUtilization()

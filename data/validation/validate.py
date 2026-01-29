@@ -1,205 +1,8 @@
 #!/usr/bin/env python3
+
 """
-Real-Time System Schedule Validator
-
-A Python program that validates the feasibility of schedules for real-time systems with precedence-related tasks running on interconnected servers.
-
-It checks:
-1. Pre-allocation constraints
-2. Precedence constraints with communication delays
-3. Server capacity (one task at a time)
-4. Memory constraints
-5. Timing constraints (deadlines)
-
-
-## Overview
-
-This program validates whether a given schedule meets all the constraints of a real-time system, including:
-- Pre-allocation constraints
-- Precedence constraints with communication delays
-- Server capacity (one task at a time)
-- Memory constraints
-- Timing constraints (activation times and deadlines)
-- Execution time matching WCET (Worst Case Execution Time)
-
-## Requirements
-
-- Python 3.6 or higher
-- No external dependencies required (uses only standard library)
-
-## Usage
-
-```bash
-python schedule_validator.py <system_file> <schedule_file>
-```
-
-### Example:
-```bash
-python schedule_validator.py system.txt schedule.csv
-```
-
-## Input File Formats
-
-### System File Format (tab-separated text file)
-
-The system file describes the real-time system parameters:
-
-1. **Line 1**: Number of servers (N)
-2. **Lines 2 to N+1**: Server information
-   - Format: `id<TAB>memory<TAB>utilization<TAB>cost`
-   - id: Server ID (1 to N)
-   - memory: Available memory
-   - utilization: Initial utilization (0.0 to 1.0)
-   - cost: Cost of using the server
-
-3. **Line N+2**: Last task ID (M-1, where M is the number of tasks)
-
-4. **Lines N+3 to N+M+2**: Task attributes
-   - Format: `C<TAB>T<TAB>D<TAB>a<TAB>M<TAB>server`
-   - C: Worst Case Execution Time (WCET)
-   - T: Period
-   - D: Deadline
-   - a: Activation time
-   - M: Required memory
-   - server: Pre-allocated server (0 means no pre-allocation)
-
-5. **Line N+M+3**: Number of precedence relations (P = M×M)
-
-6. **Lines N+M+4 to N+M+P+3**: Precedence matrix
-   - Format: `task1<TAB>task2<TAB>is_precedence`
-   - is_precedence: 1 if task1 precedes task2, 0 otherwise
-
-7. **Line N+M+P+4**: Number of server connections (S = N×N)
-
-8. **Lines N+M+P+5 to end**: Communication delays
-   - Format: `server1<TAB>server2<TAB>delay`
-   - delay: Communication delay (1000 means no connection)
-
-### Schedule File Format (CSV)
-
-The schedule file specifies when and where each task executes:
-
-```csv
-task,server,start,finish
-0,1,0,10
-1,2,0,42
-...
-```
-
-- **task**: Task ID
-- **server**: Server ID where task executes
-- **start**: Start time slot
-- **finish**: Finish time slot
-
-## Validation Checks
-
-The program performs the following validations for each task:
-
-### 1. Pre-allocation Constraint
-- If a task is pre-allocated to a specific server, it must be scheduled on that server
-
-### 2. Execution Time
-- The actual execution time (finish - start) must match the task's WCET
-
-### 3. Activation Time
-- Tasks cannot start before their activation time
-
-### 4. Deadline Constraint
-- Tasks must finish before their deadline (activation + deadline)
-
-### 5. Memory Constraint
-- The task's memory requirement must not exceed the server's available memory
-
-### 6. Precedence Constraints
-- If task A precedes task B, then B must start after A finishes plus the communication delay
-- Communication delays are calculated using shortest paths between servers (Floyd-Warshall algorithm)
-
-### 7. Server Capacity
-- No two tasks can execute simultaneously on the same server (no overlapping time slots)
-
-## Output
-
-The program provides detailed output for each task, showing:
-- Task allocation and timing
-- Which constraints are satisfied (✓) or violated (✗)
-- Specific reasons for any failures
-
-### Example Output:
-
-```
-=== Task 0 ===
-  Scheduled on Server 1: [0, 10]
-  WCET: 10, Deadline: 488, Activation: 0
-  ✓ Pre-allocation constraint satisfied (server 1)
-  ✓ Execution time matches WCET (10)
-  ✓ Starts after activation time (0)
-  ✓ Meets deadline (finish: 10 <= 488)
-  ✓ Memory constraint satisfied (5 <= 12)
-  ✓ Precedence constraint with task 3 satisfied (delay: 5, successor starts: 69 >= 15)
-
-=== Server Capacity Check ===
-Server 1:
-  ✓ Task 0 [0, 10] - first task
-
-RESULT: Schedule is FEASIBLE ✓
-All constraints are satisfied.
-```
-
-If any constraint is violated, the program will show:
-```
-✗ FAIL: [Detailed error message]
-RESULT: Schedule is NOT FEASIBLE ✗
-```
-
-## Exit Codes
-
-- **0**: Schedule is feasible
-- **1**: Schedule is not feasible or an error occurred
-
-## Algorithm Details
-
-### Shortest Path Calculation
-The program uses the **Floyd-Warshall algorithm** to compute shortest paths between all pairs of servers. This is necessary because:
-- Not all servers are directly connected
-- Communication delays must account for the shortest path through intermediate servers
-- A delay of 1000 indicates no direct connection
-
-### Validation Flow
-1. Parse system file (servers, tasks, precedences, delays)
-2. Compute shortest paths between all server pairs
-3. Parse schedule file
-4. For each scheduled task:
-   - Verify pre-allocation
-   - Check execution time
-   - Validate timing constraints
-   - Check memory availability
-   - Verify precedence relations
-5. Check server capacity (no overlaps)
-6. Report overall feasibility
-
-## Example Files
-
-The repository includes example files:
-- `system.txt`: Example system description with 4 servers and 10 tasks
-- `schedule.csv`: Example schedule file
-
-## Error Handling
-
-The program includes comprehensive error handling:
-- File not found errors
-- Malformed input files
-- Missing tasks in schedule
-- Invalid server or task IDs
-- Unreachable servers (infinite delay)
-
-## Notes
-
-- Task IDs start from 0
-- Server IDs typically start from 1
-- A pre-allocated server value of 0 means no pre-allocation
-- Communication delay of 1000 conventionally means "no connection"
-- All timing values are in abstract time slots
-
+Usage:
+    python validate.py <instance_file> <schedule_file>
 """
 
 import csv
@@ -240,8 +43,8 @@ class ScheduleEntry:
 
 
 class RealTimeSystemValidator:
-    def __init__(self, system_file: str, schedule_file: str):
-        self.system_file = system_file
+    def __init__(self, instance_file: str, schedule_file: str):
+        self.instance_file = instance_file
         self.schedule_file = schedule_file
         self.servers: Dict[int, Server] = {}
         self.tasks: Dict[int, Task] = {}
@@ -252,7 +55,7 @@ class RealTimeSystemValidator:
         
     def read_system_file(self):
         """Parse the system description file"""
-        with open(self.system_file, 'r') as f:
+        with open(self.instance_file, 'r') as f:
             lines = [line.strip() for line in f.readlines()]
         
         line_idx = 0
@@ -280,13 +83,13 @@ class RealTimeSystemValidator:
         # Format: C (WCET), T (period), D (deadline), a (activation), M (memory), pre-allocated server
         for i in range(n_tasks):
             parts = lines[line_idx].split('\t')
-            task_id = i
-            wcet = int(parts[0])  # C - Worst Case Execution Time
-            period = int(parts[1])  # T - Period
-            deadline = int(parts[2])  # D - Deadline
-            activation = int(parts[3])  # a - Activation time
-            memory = int(parts[4])  # M - Required memory
-            preallocated = int(parts[5]) if len(parts) > 5 else 0  # Pre-allocated server (0 = none)
+            task_id = int(parts[0])
+            wcet = int(parts[1])  # C - Worst Case Execution Time
+            period = int(parts[2])  # T - Period
+            deadline = int(parts[3])  # D - Deadline
+            activation = int(parts[4])  # a - Activation time
+            memory = int(parts[5])  # M - Required memory
+            preallocated = int(parts[6]) if len(parts) > 5 else 0  # Pre-allocated server (0 = none)
             self.tasks[task_id] = Task(task_id, wcet, period, deadline, activation, memory, preallocated)
             line_idx += 1
         
@@ -400,7 +203,7 @@ class RealTimeSystemValidator:
                 task_messages.append(f"  ✓ No pre-allocation constraint")
             
             # Check 2: Execution time matches WCET
-            actual_execution = entry.finish - entry.start
+            actual_execution = entry.finish - entry.start + 1 # inclusive
             if actual_execution != task.wcet:
                 task_messages.append(f"  ✗ FAIL: Execution time {actual_execution} doesn't match WCET {task.wcet}")
                 task_ok = False
@@ -487,7 +290,7 @@ class RealTimeSystemValidator:
         
         try:
             # Read input files
-            print(f"\nReading system file: {self.system_file}")
+            print(f"\nReading system file: {self.instance_file}")
             self.read_system_file()
             print(f"  - Loaded {len(self.servers)} servers")
             print(f"  - Loaded {len(self.tasks)} tasks")
@@ -529,15 +332,15 @@ class RealTimeSystemValidator:
 
 def main():
     if len(sys.argv) != 3:
-        print("Usage: python schedule_validator.py <system_file> <schedule_file>")
+        print("Usage: python validate.py <instance_file> <schedule_file>")
         print("\nExample:")
-        print("  python schedule_validator.py system.txt schedule.csv")
+        print("  python validate.py instance.dat schedule.csv")
         sys.exit(1)
     
-    system_file = sys.argv[1]
+    instance_file = sys.argv[1]
     schedule_file = sys.argv[2]
     
-    validator = RealTimeSystemValidator(system_file, schedule_file)
+    validator = RealTimeSystemValidator(instance_file, schedule_file)
     is_feasible = validator.run()
     
     sys.exit(0 if is_feasible else 1)

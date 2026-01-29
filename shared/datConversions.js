@@ -173,7 +173,8 @@ export const datToModel = (datString) => {
         nodes.push({
             id: nodeId,
             type: "EDGE",
-            label: `Node ${nodeIndex}`,
+            //label: `Node ${nodeIndex}`,
+            label: `${nodeIndex}`,
             allocatedTasks: [],
             memory: parseFloat(memory),
             u: parseFloat(u),
@@ -204,7 +205,8 @@ export const datToModel = (datString) => {
         tasks.push({
             id: taskId,
             type: "TASK",
-            label: isMist ? `Mst ${taskIndex}` : `Tsk ${taskIndex}`,
+            //label: isMist ? `Mst ${taskIndex}` : `Tsk ${taskIndex}`,
+            label: `${taskIndex}`,
             mist: isMist,
             C: parseFloat(C),
             T: parseFloat(T),
@@ -305,7 +307,8 @@ export const datToModel = (datString) => {
         const isMistNode = tasks.some(task => task.processorId === node.id);
         if(isMistNode) {
             node.type = "MIST";
-            node.label = `MIST ${index + 1}`;
+            //node.label = `MIST ${index + 1}`;
+            node.label = `${index + 1}`;
         }
     });
 

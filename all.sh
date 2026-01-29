@@ -6,6 +6,7 @@
 ##
 
 set -euo pipefail # Strict mode
+shopt -s nullglob
 
 # Instances directories
 # Task and network JSON files will be generated from DAT files
@@ -23,13 +24,12 @@ RUN_CPLEX=false
 RUN_AMPL=false
 
 VENV_PATH="data/venv"
-RUNTIME_FILE="data/results/runtimes.txt"
 
 
 
-echo "=========================================="
-echo "Setting up directories"
-echo "=========================================="
+
+echo "Setting up directories..."
+
 mkdir -p \
   "$RESULTS_CSV_DIR" \
   "$RESULTS_CPLEX_DIR" \
@@ -37,83 +37,106 @@ mkdir -p \
   "$CHARTS_DIR" \
   "$TASKS_DIR" \
   "$NETS_DIR"
+rm -rf "$TASKS_DIR"/* "$NETS_DIR"/* "$RESULTS_CSV_DIR"/* "$RESULTS_CPLEX_DIR"/* "$RESULTS_AMPL_DIR"/* "$CHARTS_DIR"/*
 
-: > "$RUNTIME_FILE"
 # Clear solver log if exists
 if [ -f "./solver/bin/solver_log.csv" ]; then
   rm ./solver/bin/solver_log.csv
 fi
 
-rm -f "$RESULTS_CSV_DIR"/*.csv
-rm -f "$CHARTS_DIR"/*
-
-shopt -s nullglob # Make globs return empty if no matches
+echo "Done."
+echo ""
 
 
 
-echo "=========================================="
-echo "Building heuristic solver"
-echo "=========================================="
-make solver
-
-
-echo "=========================================="
-echo "Converting DAT to JSON and solving instances"
-echo "=========================================="
+echo "Converting DAT to JSON..."
 for dat_file in "$DAT_DIR"/*.dat; do # For each instance DAT file
     
-    # Extract the filename without the path and extension (e.g., "40")
-    filename=$(basename "$dat_file" .dat)
+    # Extract the instance_name without the path and extension (e.g., "40")
+    instance_name=$(basename "$dat_file" .dat)
     
-    echo "Processing $filename..."
+    echo "Processing $instance_name..."
 
-    # Define the output paths based on the filename
+    # Define the output paths based on the instance_name
     dat_abs=$(realpath "$dat_file")
-    net_output=$(realpath "$NETS_DIR")/net${filename}.json
-    task_output=$(realpath "$TASKS_DIR")/sched${filename}.json
+    net_output=$(realpath "$NETS_DIR")/net${instance_name}.json
+    task_output=$(realpath "$TASKS_DIR")/sched${instance_name}.json
 
     # Execute the node command to convert DAT to JSON
     node data/dat-to-json.js -d "$dat_abs" -n "$net_output" -t "$task_output"
 
-    # Prepare absolute paths for solver input
-    base_t="sched${filename}"
-    base_n="net${filename}"
-    t_abs=$(realpath "$TASKS_DIR/$base_t.json")
-    n_abs=$(realpath "$NETS_DIR/$base_n.json")
-
-    # Now run the solver with different strategies
-    for strategy in random annealing genetic; do
-      out="$RESULTS_CSV_DIR/${base_t}__${base_n}_${strategy}.csv"
-
-      echo "Heuristic [$strategy]: $base_t / $base_n"
-
-      if (
-        cd "$(dirname "$0")" && \
-        ./solver/bin/solve \
-          -t "$t_abs" \
-          -n "$n_abs" \
-          -s "$strategy" \
-          -o csv
-      ) > "$out"; then
-        # Check if the output file is non-empty
-        if [ ! -s "$out" ]; then
-          echo "FAIL -> $base_t / $base_n ($strategy): Empty output file" >&2
-          rm -f "$out"
-          continue
-        fi
-        echo "OK  -> $out"
-      else
-        echo "FAIL -> $base_t / $base_n ($strategy)" >&2
-        rm -f "$out"
-      fi
-    done
+    # Check if json files were created
+    if [ ! -f "$net_output" ] || [ ! -f "$task_output" ]; then
+      echo "Error: JSON files not created for $instance_name!"
+      exit 1
+    fi
 done
+echo "All DAT files converted to JSON."
+echo ""
+
+
+
+echo "Compiling solver..."
+make solver
+
+
+echo "Running solvers on all instances..."
+for dat_file in "$DAT_DIR"/*.dat; do
+
+  # Get base names and paths
+  instance_name=$(basename "$dat_file" .dat)
+  task_json="$TASKS_DIR/sched${instance_name}.json"
+  net_json="$NETS_DIR/net${instance_name}.json"
+  t_abs=$(realpath "$task_json")
+  n_abs=$(realpath "$net_json")
+
+  for strategy in random annealing genetic; do
+
+    echo "Using strategy: $strategy, for instance: $instance_name"
+
+    # Prepare output file path
+    base_t=$(basename "$task_json" .json)
+    base_n=$(basename "$net_json" .json)
+    out="$RESULTS_CSV_DIR/${base_t}__${base_n}_${strategy}.csv"
+
+    
+    if (
+      cd solver && \
+      # Run the solver
+      ./bin/solve \
+        -t "$t_abs" \
+        -n "$n_abs" \
+        -s "$strategy" \
+        -o csv
+    ) > "$out"; then
+      
+      # Check if the output file is non-empty
+      if [ ! -s "$out" ]; then
+        echo "FAIL -> $base_t / $base_n ($strategy): Empty output file" >&2
+        rm -f "$out"
+        continue
+      fi
+      echo "OK  -> $out"
+    else
+      echo "FAIL -> $base_t / $base_n ($strategy)" >&2
+      rm -f "$out"
+    fi
+
+    echo "Solver finished for $instance_name"
+    echo ""
+
+  done
+done
+
+echo "All solvers finished."
+echo ""
+
+
 
 # Run AMPL solver for each instance if enabled
 if [[ "${RUN_AMPL:-false}" == true ]]; then
-  echo "=========================================="
+  
   echo "Running AMPL solver"
-  echo "=========================================="
 
   # Check if AMPL is installed
   if command -v ampl >/dev/null 2>&1; then
@@ -136,7 +159,6 @@ solve;
 display s, f, L;
 EOF
         end=$(date +%s)
-        echo "ampl $base $((end - start))s" >> "$RUNTIME_FILE"
         echo "OK  -> $out"
       else
         echo "FAIL -> AMPL $base" >&2
@@ -146,14 +168,16 @@ EOF
   else
     echo "AMPL not found — skipping"
   fi
+
+  echo "AMPL solving done."
+  echo ""
 fi
 
 # Run CPLEX solver for each instance if enabled
 if [[ "${RUN_CPLEX:-false}" == true ]]; then
-  echo "=========================================="
+  
   echo "Running CPLEX solver"
-  echo "=========================================="
-
+  
   if command -v cplex >/dev/null 2>&1; then
     for dat in "$DAT_DIR"/*.dat; do
       base=$(basename "$dat" .dat)
@@ -169,7 +193,6 @@ if [[ "${RUN_CPLEX:-false}" == true ]]; then
           "write $sol sol" \
           "quit"; then
         end=$(date +%s)
-        echo "cplex $base $((end - start))s" >> "$RUNTIME_FILE"
         echo "OK  -> $sol"
       else
         echo "FAIL -> CPLEX $base" >&2
@@ -179,12 +202,15 @@ if [[ "${RUN_CPLEX:-false}" == true ]]; then
   else
     echo "CPLEX not found — skipping"
   fi
+
+  echo "CPLEX solving done."
+  echo ""
 fi
 
+
 # Parse CPLEX and AMPL outputs to CSV with node scripts
-echo "=========================================="
-echo "Converting CPLEX solutions to CSV"
-echo "=========================================="
+
+echo "Converting CPLEX solutions to CSV.."
 
 find "$RESULTS_CPLEX_DIR" "$RESULTS_AMPL_DIR" -type f \( -name "*.sol" -o -name "*.out" \) |
 while read -r file; do
@@ -206,13 +232,15 @@ while read -r file; do
       ;;
   esac
 done
+echo "Conversion done."
+echo ""
 
 
 # Generate Gantt charts from all CSV results
-echo "=========================================="
-echo "Generating charts"
-echo "=========================================="
 
+echo "Generating charts..."
+
+# Set up and activate virtualenv
 if [ -f "$VENV_PATH/bin/activate" ]; then
   source "$VENV_PATH/bin/activate"
 else
@@ -223,10 +251,9 @@ else
   pip3 install -r data/requirements.txt
 fi
 
+# Loop through all CSV results and generate charts
 for r in \
-  "$RESULTS_CSV_DIR"/*.csv \
-  "$RESULTS_CPLEX_DIR"/*.csv \
-  "$RESULTS_AMPL_DIR"/*.out; do
+  "$RESULTS_CSV_DIR"/*.csv; do
 
   [ -s "$r" ] || continue
 
@@ -236,6 +263,11 @@ for r in \
   python3 data/plot.py "$r" "$out"
 done
 
+# Deactivate virtualenv
 deactivate
+echo "All charts generated."
 
-echo "DONE"
+
+echo "=========================================="
+echo "JOB COMPLETED."
+echo "=========================================="
