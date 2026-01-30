@@ -34,6 +34,8 @@ void Scheduler::computeDelayMatrix() {
             delay_matrix[conn.to_server_index][conn.from_server_index] = conn.delay;
         }
     }
+    
+    /*  If allow data to be routed via multiple hops, uncomment this section
     // Floyd-Warshall algorithm for all-pairs shortest paths
     for (int k = 0; k < n; ++k) {
         for (int i = 0; i < n; ++i) {
@@ -44,6 +46,7 @@ void Scheduler::computeDelayMatrix() {
             }
         }
     }
+    */
 
     utils::dbg << "Computed delay matrix:\n";
 };
@@ -145,6 +148,11 @@ ScheduleState Scheduler::schedule(const Candidate& candidate) {
         // Find assigned server
         const int server_idx = t.hasFixedAllocation() ? t.getFixedAllocationInternalIdx() : candidate.server_indices[idx]; 
 
+        if(server_idx < 0 || server_idx >= S){
+            utils::dbg << "Task " << t.getLabel() << " assigned to invalid server index " << server_idx << "\n";
+            return state = ScheduleState::CANDIDATE_ERROR;
+        }
+        
         if (servers[server_idx].getType() == ServerType::Mist && !t.hasFixedAllocation()) {
             utils::dbg << "Task " << t.getLabel()
                     << " cannot be assigned to MIST server "

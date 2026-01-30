@@ -24,6 +24,29 @@ std::string solverMethodToString(SolverMethod method) {
     }
 };
 
+std::string SolverResult::solverStatusToString(SolverStatus status) {
+    switch(status) {
+        case SolverStatus::NOT_STARTED:
+            return "Not Started";
+        case SolverStatus::COMPLETED:
+            return "Completed";
+        case SolverStatus::TIMEOUT:
+            return "Timeout";
+        case SolverStatus::STAGNATION:
+            return "Stagnation";
+        case SolverStatus::SOLUTION_NOT_FOUND:
+            return "Solution Not Found";
+        case SolverStatus::INITIALIZATION_ERROR:
+            return "Initialization Error";
+        case SolverStatus::INITIALIZATION_NOT_FEASIBLE:
+            return "Initialization Not Feasible";
+        case SolverStatus::ERROR:
+            return "Error";
+        default:
+            return "Unknown Status";
+    }
+};
+
 std::string SolverConfig::print() const {
     std::ostringstream oss;
 
@@ -34,7 +57,7 @@ std::string SolverConfig::print() const {
             oss << "RANDOM_SEARCH\n";
             oss << "  Parameters:\n";
             oss << "    max_iterations: " << rs_maxIterations << "\n";
-            oss << "    timeout: " << rs_timeout << "\n";
+            oss << "    timeout: " << rs_timeout_sec << "\n";
             oss << "    stagnation_threshold: " << rs_stagnationThreshold << "\n";
             oss << "    stagnation_limit: " << rs_stagnationLimit << "\n";
             oss << "    break_on_first_feasible: " << (rs_breakOnFirstFeasible ? "true" : "false") << "\n";
@@ -45,7 +68,7 @@ std::string SolverConfig::print() const {
             oss << "  Parameters:\n";
             oss << "    max_init_tries: " << sa_maxInitTries << "\n";
             oss << "    max_iterations: " << sa_maxIterations << "\n";
-            oss << "    timeout: " << sa_timeout << "\n";
+            oss << "    timeout: " << sa_timeout_sec << "\n";
             oss << "    stagnation_threshold: " << sa_stagnationThreshold << "\n";
             oss << "    stagnation_limit: " << sa_stagnationLimit << "\n";
             oss << "    max_neighbor_tries: " << sa_maxNeighborTries << "\n";
@@ -68,7 +91,7 @@ std::string SolverConfig::print() const {
             oss << "  Parameters:\n";
             oss << "    population_size: " << ga_populationSize << "\n";
             oss << "    max_generations: " << ga_maxGenerations << "\n";
-            oss << "    timeout: " << ga_timeout << "\n";
+            oss << "    timeout: " << ga_timeout_sec << "\n";
             oss << "    stagnation_threshold: " << ga_stagnationThreshold << "\n";
             oss << "    elite_count: " << ga_eliteCount << "\n";
             oss << "    stagnation_limit: " << ga_stagnationLimit << "\n";
@@ -101,6 +124,8 @@ std::string SolverResult::getHeaderCSV() {
             "Processors cost,"
             "Delay cost,"
             "Objetvive value,"
+            "Solver status,"
+            "Observations,"
             "Schedule state\n";
 };
 
@@ -125,6 +150,8 @@ std::string SolverResult::printTable(char separator) const {
     oss << processorsCost << separator;
     oss << delayCost << separator;
     oss << getObjectiveValue() << separator;
+    oss << solverStatusToString(status) << separator;
+    oss << "\"" << observations << "\"" << separator;
     oss << scheduleState.toString() << "\n";
 
     return oss.str();
@@ -142,27 +169,7 @@ std::string SolverResult::printTxt() const {
 
     oss << "  Instance Name: " << instanceName << "\n";
     oss << "  Status: ";
-    switch (status) {
-        case SolverStatus::NOT_STARTED:
-            oss << "Not Started\n";
-            break;
-        case SolverStatus::COMPLETED:
-            oss << "Completed\n";
-            break;
-        case SolverStatus::TIMEOUT:
-            oss << "Timeout\n";
-            break;
-        case SolverStatus::STAGNATION:
-            oss << "Stagnation\n";
-            break;
-        case SolverStatus::ERROR:
-            oss << "Error\n";
-            break;
-        default:
-            oss << "Unknown Status\n";
-            break;
-    }
-
+    oss << solverStatusToString(status) << "\n";
     if (scheduleState == ScheduleState::SCHEDULED) {
         oss << "  Runtime (ms): " << runtime_ms << "\n";
         oss << "  Iterations: " << iterations << "\n";

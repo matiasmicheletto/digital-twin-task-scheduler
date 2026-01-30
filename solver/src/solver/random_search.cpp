@@ -5,7 +5,7 @@ SolverResult Solver::randomSearchSolve() {
 
     const int maxIterations          = config.rs_maxIterations;
     const bool breakOnFirstFeasible  = config.rs_breakOnFirstFeasible;
-    const int timeout                = config.rs_timeout;
+    const int timeoutMs              = config.rs_timeout_sec * 1000;
     const int stagnationLimit        = config.rs_stagnationLimit;
     const double stagnationThreshold = config.rs_stagnationThreshold;
 
@@ -45,13 +45,13 @@ SolverResult Solver::randomSearchSolve() {
     double improvement = 0.0;
     int nonImprovingGenerations = 0;
     int iteration;
-    results.status = SolverResult::SolverStatus::COMPLETED; // Default to completed unless timeout or stagnation occurs
+    results.status = SolverResult::SolverStatus::COMPLETED; // Default to completed unless timeoutMs or stagnation occurs
     for (iteration = 0; iteration < maxIterations; ++iteration) {
 
-        // timeout check
-        if(utils::getElapsedMs(startTime) >= timeout) {
+        // timeoutMs check
+        if(utils::getElapsedMs(startTime) >= timeoutMs) {
             results.status = SolverResult::SolverStatus::TIMEOUT;
-            results.observations = "GA: Timeout reached after " + std::to_string(timeout) + " seconds.";
+            results.observations = "GA: Timeout reached after " + std::to_string(timeoutMs) + " seconds.";
             utils::dbg << results.observations << "\n";
             break;
         }
@@ -62,8 +62,11 @@ SolverResult Solver::randomSearchSolve() {
             if (!task.hasFixedAllocation()){
                 //curr.server_indices[i] = rand() % scheduler.getServerCount(); // Random server assignment
                 curr.server_indices[i] = scheduler.getNonMISTServerIdx(rand() % allocable_servers_count);
+                continue; // Priority doesnt matter for fixed allocation tasks
             }
-            curr.priorities[i] = static_cast<double>(rand()) / RAND_MAX; // Random priority between 0 and 1
+            // Random priority between 0 and 1
+            // Optimization algorithms do not need to clamp priorities values (outside [0,1]) as allocation work with relative values
+            curr.priorities[i] = static_cast<double>(rand()) / RAND_MAX; 
         }
 
         // Schedule using the generated candidate
@@ -102,7 +105,7 @@ SolverResult Solver::randomSearchSolve() {
 
     // Final scheduling with the best candidate found
     if (scheduler.schedule(best) != ScheduleState::SCHEDULED) {
-        results.status = SolverResult::SolverStatus::ERROR;
+        results.status = SolverResult::SolverStatus::SOLUTION_NOT_FOUND;
         results.observations = "No feasible solution found after " + std::to_string(maxIterations) + " iterations.";
         utils::dbg << results.observations << "\n";
     }else{

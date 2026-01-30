@@ -8,7 +8,7 @@ SolverResult Solver::simulatedAnnealingSolve() {
     const double initialTemperature  = config.sa_initialTemperature;
     const double coolingRate         = config.sa_coolingRate;
     const double minTemperature      = config.sa_minTemperature;
-    const int timeout                = config.sa_timeout;
+    const int timeoutMs              = config.sa_timeout_sec*1000;
     const int stagnationLimit        = config.sa_stagnationLimit;
     const double stagnationThreshold = config.sa_stagnationThreshold;
 
@@ -38,7 +38,7 @@ SolverResult Solver::simulatedAnnealingSolve() {
     config.rs_maxIterations = maxInitTries;
     SolverResult rsResult = randomSearchSolve();
     if (scheduler.getScheduleState() != ScheduleState::SCHEDULED) {
-        results.status = SolverResult::SolverStatus::ERROR;
+        results.status = SolverResult::SolverStatus::INITIALIZATION_NOT_FEASIBLE;
         results.observations = "SA: Could not find initial feasible solution";
         utils::dbg << results.observations << "\n";
         return results;
@@ -56,14 +56,14 @@ SolverResult Solver::simulatedAnnealingSolve() {
     double improvement = 0.0;
     int nonImprovingIterations = 0;
     int iteration;
-    results.status = SolverResult::SolverStatus::COMPLETED; // Default to completed unless timeout or stagnation occurs
+    results.status = SolverResult::SolverStatus::COMPLETED; // Default to completed unless timeoutMs or stagnation occurs
 
     for (iteration = 0; iteration < maxIterations && T > minTemperature; ++iteration) {
 
-        // timeout check
-        if(utils::getElapsedMs(startTime) >= timeout) {
+        // timeoutMs check
+        if(utils::getElapsedMs(startTime) >= timeoutMs) {
             results.status = SolverResult::SolverStatus::TIMEOUT;
-            results.observations = "GA: Timeout reached after " + std::to_string(timeout) + " seconds.";
+            results.observations = "GA: Timeout reached after " + std::to_string(timeoutMs) + " seconds.";
             utils::dbg << results.observations << "\n";
             break;
         }

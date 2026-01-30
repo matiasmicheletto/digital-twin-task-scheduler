@@ -44,7 +44,7 @@ SolverResult Solver::geneticAlgorithmSolve() {
     const int maxGenerations         = config.ga_maxGenerations;
     const double mutationRate        = config.ga_mutationRate;
     const double crossoverRate       = config.ga_crossoverRate;
-    const int timeout                = config.ga_timeout;
+    const int timeoutMs              = config.ga_timeout_sec*1000;
     const int stagnationLimit        = config.ga_stagnationLimit;
     const double stagnationThreshold = config.ga_stagnationThreshold;
     const size_t eliteCount          = config.ga_eliteCount;
@@ -75,12 +75,12 @@ SolverResult Solver::geneticAlgorithmSolve() {
     config.rs_breakOnFirstFeasible = true;
     config.rs_maxIterations = maxInitTries;
     for (size_t i = 0; i < populationSize; ++i) {
-        SolverResult results = randomSearchSolve();
+        SolverResult rsResults = randomSearchSolve();
         if (scheduler.getScheduleState() == ScheduleState::SCHEDULED) {
-            population.emplace_back(results.bestCandidate, computeObjective());
+            population.emplace_back(rsResults.bestCandidate, computeObjective());
         }else{
             results.status = SolverResult::SolverStatus::ERROR;
-            results.observations = "GA: Individual " + std::to_string(i + 1) + "/" + std::to_string(populationSize) + " infeasible during initialization.";
+            results.observations = "GA: Individual " + std::to_string(i + 1) + "/" + std::to_string(populationSize) + " infeasible during initialization after " + std::to_string(maxInitTries) + " tries.";
             utils::dbg << results.observations << "\n";
             return results;
         }
@@ -88,7 +88,7 @@ SolverResult Solver::geneticAlgorithmSolve() {
 
     // Check if all individuals are feasible
     if (population.size() < populationSize / 2) {
-        results.status = SolverResult::SolverStatus::ERROR;
+        results.status = SolverResult::SolverStatus::INITIALIZATION_NOT_FEASIBLE;
         results.observations = "Could not initialize a sufficient feasible population";
         utils::dbg << results.observations << "\n";
         return results;
@@ -113,13 +113,13 @@ SolverResult Solver::geneticAlgorithmSolve() {
     int iterations = 0;
     double improvement = 0.0;
     int nonImprovingGenerations = 0;
-    results.status = SolverResult::SolverStatus::COMPLETED; // Default to completed unless timeout or stagnation occurs
+    results.status = SolverResult::SolverStatus::COMPLETED; // Default to completed unless timeoutMs or stagnation occurs
     for (int generation = 0; generation < maxGenerations; ++generation) {
         
-        // timeout check
-        if(utils::getElapsedMs(startTime) >= timeout) {
+        // timeoutMs check
+        if(utils::getElapsedMs(startTime) >= timeoutMs) {
             results.status = SolverResult::SolverStatus::TIMEOUT;
-            results.observations = "GA: Timeout reached after " + std::to_string(timeout) + " seconds.";
+            results.observations = "GA: Timeout reached after " + std::to_string(timeoutMs) + " seconds.";
             utils::dbg << results.observations << "\n";
             break;
         }

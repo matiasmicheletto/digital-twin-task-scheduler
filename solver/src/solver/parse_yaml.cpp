@@ -32,7 +32,7 @@ void SolverConfig::fromYaml(const std::string& file_path) {
         }
         if (sa["max_init_tries"])                   sa_maxInitTries = sa["max_init_tries"].as<int>();
         if (sa["max_iterations"])                   sa_maxIterations = sa["max_iterations"].as<int>();
-        if (sa["timeout"])                          sa_timeout = sa["timeout"].as<int>();
+        if (sa["timeout"])                          sa_timeout_sec = sa["timeout"].as<int>();
         if (sa["stagnation_threshold"])             sa_stagnationThreshold = sa["stagnation_threshold"].as<double>();
         if (sa["stagnation_limit"])                 sa_stagnationLimit = sa["stagnation_limit"].as<int>();
         if (sa["max_neighbor_tries"])               sa_maxNeighborTries = sa["max_neighbor_tries"].as<int>();
@@ -52,7 +52,7 @@ void SolverConfig::fromYaml(const std::string& file_path) {
     // --- Random Search ---
     if (auto rs = root["random_search"]) {
         if (rs["max_iterations"])            rs_maxIterations = rs["max_iterations"].as<int>();
-        if (rs["timeout"])                   rs_timeout = rs["timeout"].as<int>();
+        if (rs["timeout"])                   rs_timeout_sec = rs["timeout"].as<int>();
         if (rs["stagnation_threshold"])      rs_stagnationThreshold = rs["stagnation_threshold"].as<double>();
         if (rs["stagnation_limit"])          rs_stagnationLimit = rs["stagnation_limit"].as<int>();
         if (rs["break_on_first_feasible"])   rs_breakOnFirstFeasible = rs["break_on_first_feasible"].as<bool>();
@@ -60,9 +60,10 @@ void SolverConfig::fromYaml(const std::string& file_path) {
 
     // --- Genetic Algorithm ---
     if (auto ga = root["genetic_algorithm"]) {
+        if (ga["max_init_tries"])            ga_maxInitTries = ga["max_init_tries"].as<int>();
         if (ga["population_size"])          ga_populationSize = ga["population_size"].as<size_t>();
         if (ga["max_generations"])          ga_maxGenerations = ga["max_generations"].as<int>();
-        if (ga["timeout"])                  ga_timeout = ga["timeout"].as<int>();
+        if (ga["timeout"])                  ga_timeout_sec = ga["timeout"].as<int>();
         if (ga["elite_count"])              ga_eliteCount = ga["elite_count"].as<size_t>();
         if (ga["stagnation_threshold"])  ga_stagnationThreshold = ga["stagnation_threshold"].as<double>();
         if (ga["stagnation_limit"])         ga_stagnationLimit = ga["stagnation_limit"].as<int>();
@@ -105,7 +106,7 @@ void SolverConfig::applyOverride(const std::string& override_str) {
     // ---- SIMULATED ANNEALING ----
     else if (key == "simulated_annealing.max_init_tries") sa_maxInitTries = std::stoi(val);
     else if (key == "simulated_annealing.max_iterations") sa_maxIterations = std::stoi(val);
-    else if (key == "simulated_annealing.timeout") sa_timeout = std::stoi(val);
+    else if (key == "simulated_annealing.timeout") sa_timeout_sec = std::stoi(val);
     else if (key == "simulated_annealing.stagnation_threshold") sa_stagnationThreshold = std::stod(val);
     else if (key == "simulated_annealing.stagnation_limit") sa_stagnationLimit = std::stoi(val);
     else if (key == "simulated_annealing.max_neighbor_tries") sa_maxNeighborTries = std::stoi(val);
@@ -133,15 +134,16 @@ void SolverConfig::applyOverride(const std::string& override_str) {
 
     // ---- RANDOM SEARCH ----
     else if (key == "random_search.max_iterations") rs_maxIterations = std::stoi(val);
-    else if (key == "random_search.timeout") rs_timeout = std::stoi(val);
+    else if (key == "random_search.timeout") rs_timeout_sec = std::stoi(val);
     else if (key == "random_search.stagnation_threshold") rs_stagnationThreshold = std::stod(val);
     else if (key == "random_search.stagnation_limit") rs_stagnationLimit = std::stoi(val);
     else if (key == "random_search.break_on_first_feasible") rs_breakOnFirstFeasible = asBool(val);
 
     // ---- GENETIC ALGORITHM ----
+    else if (key == "genetic_algorithm.max_init_tries") ga_maxInitTries = std::stoi(val);
     else if (key == "genetic_algorithm.population_size") ga_populationSize = std::stoul(val);
     else if (key == "genetic_algorithm.max_generations") ga_maxGenerations = std::stoi(val);
-    else if (key == "genetic_algorithm.timeout") ga_timeout = std::stoi(val);
+    else if (key == "genetic_algorithm.timeout") ga_timeout_sec = std::stoi(val);
     else if (key == "genetic_algorithm.elite_count") ga_eliteCount = std::stoul(val);
     else if (key == "genetic_algorithm.stagnation_threshold") ga_stagnationThreshold = std::stod(val);
     else if (key == "genetic_algorithm.stagnation_limit") ga_stagnationLimit = std::stoi(val);

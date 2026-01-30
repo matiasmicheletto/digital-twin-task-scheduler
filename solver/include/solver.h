@@ -34,7 +34,7 @@ public:
     // Parameters for Simulated Annealing
     int sa_maxInitTries = 3000;
     int sa_maxIterations = 3000;
-    int sa_timeout = 3600;
+    int sa_timeout_sec = 3600;
     double sa_stagnationThreshold = 1e-6;
     int sa_stagnationLimit = 200; // Number of iterations without improvement before stopping
     int sa_maxNeighborTries = 20; // Number of neighbor solutions to try at each temperature
@@ -54,7 +54,7 @@ public:
 
     // Parameters for Random Search
     int rs_maxIterations = 1000;
-    int rs_timeout = 3600;
+    int rs_timeout_sec = 3600;
     double rs_stagnationThreshold = 1e-6;
     int rs_stagnationLimit = 200;
     bool rs_breakOnFirstFeasible = false;
@@ -64,7 +64,7 @@ public:
     int ga_maxInitTries = 3000;
     size_t ga_populationSize = 100;
     int ga_maxGenerations = 500;
-    int ga_timeout = 3600;
+    int ga_timeout_sec = 3600;
     size_t ga_eliteCount = 5;
     double ga_stagnationThreshold = 1e-6;
     int ga_stagnationLimit = 50;
@@ -91,6 +91,9 @@ public:
         COMPLETED,
         TIMEOUT,
         STAGNATION,
+        SOLUTION_NOT_FOUND,
+        INITIALIZATION_ERROR,
+        INITIALIZATION_NOT_FEASIBLE,
         ERROR
     } status;
 
@@ -116,6 +119,7 @@ public:
     double getObjectiveValue() const;
 
     static std::string getHeaderCSV();
+    static std::string solverStatusToString(SolverStatus status);
     std::string print(utils::PRINT_FORMAT = utils::PRINT_FORMAT::TXT) const;
 
     SolverResult() : 

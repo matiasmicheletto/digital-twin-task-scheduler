@@ -153,6 +153,7 @@ random_search: # RS
   break_on_first_feasible: false # Stop search when first feasible solution is found (used for SA initialization)
 
 genetic_algorithm: # GA
+  max_init_tries: 5000 # Number of attempts to find a valid initial solution
   population_size: 100 # Number of individuals in the population
   max_generations: 800 # Total number of generations
   timeout: 3600 # Timeout in seconds
