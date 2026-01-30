@@ -20,8 +20,9 @@ DESCRIPTION:
 OPTIONS:  
    -t, --tasks    File with the tasks the instance. Must be in json format.  
    -n, --network  File with the network of the instance. Must be in json format.  
-   -d, --dat      File with system description using dat format.  
-   -c, --config   Optimization parameters (see below).
+   -d, --dat      (Alternative to t and n) File with system description using dat format.  
+   -i, --init     (Optional) Load precomputed solution (schedule).
+   -c, --config   (Optional) Load optimization parameters from file (see below).
    -h, --help     (optional) Display this help message.  
    -v, --version  (optional) Displays software version.  
    -s, --solver   (optional) Choose solver. Options are "random", "genetic" or "annealing".
@@ -41,6 +42,10 @@ EXAMPLE:
          --set simulated_annealing.max_iterations=8000 \
          --set tunning.alpha=2 \
          --set genetic_algorithm.population_size=300
+
+   # Load precomputed solution
+   cat solution.csv | solve -d instance.dat -i -s random -o csv
+
 
 INPUT FILES FORMAT
 Schedule file:

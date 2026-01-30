@@ -22,12 +22,12 @@ struct Connection { // Used to compute delay matrix
 };
 
 struct Candidate { // Structure to compute tasks allocation to servers
-    std::vector<int> server_indices; // Server assigned to each task
-    std::vector<double> priorities;   // Priority of each task to define order of execution
+    
     Candidate(size_t task_count) {
         server_indices.resize(task_count, -1); // -1 means unassigned
         priorities.resize(task_count, 0.0);
     }
+
     std::string print() const;
 
     bool operator==(const Candidate& other) const {
@@ -37,6 +37,9 @@ struct Candidate { // Structure to compute tasks allocation to servers
     bool operator!=(const Candidate& other) const {
         return !(*this == other);
     }
+
+    std::vector<int> server_indices; // Server assigned to each task
+    std::vector<double> priorities;   // Priority of each task to define order of execution
 };
 
 struct ScheduleState {
@@ -73,24 +76,22 @@ class Scheduler {
         Scheduler(std::string tasks_file, std::string network_file);
         
         ScheduleState schedule(const Candidate& candidate);
-        inline ScheduleState getScheduleState() const { return state; }
 
-        std::string getInstanceName() const { return instance_name; }
-
-        inline size_t getTaskCount() const { return tasks.size(); }
-        inline size_t getServerCount() const { return servers.size(); }
-        inline size_t getNonMISTServerCount() const { return non_mist_servers_idxs.size(); }
-
+        void setSchedule(const std::string& csv_data);
+        Candidate getCandidateFromCurrentSchedule() const;
+        
+        inline const ScheduleState getScheduleState() const { return state; }
+        inline const std::string getInstanceName() const { return instance_name; }
+        inline const size_t getTaskCount() const { return tasks.size(); }
+        inline const size_t getServerCount() const { return servers.size(); }
+        inline const size_t getNonMISTServerCount() const { return non_mist_servers_idxs.size(); }
         inline const Task& getTask(size_t index) const { return tasks.at(index); }
         inline const Server& getServer(size_t index) const { return servers.at(index); }
         inline const int getNonMISTServerIdx(size_t index) const { return non_mist_servers_idxs.at(index); }
 
         int getScheduleSpan() const;
-
         int getFinishTimeSum() const;
-
         int getProcessorsCost() const;
-
         int getDelayCost() const;
         
         void clearAllServerTasks();

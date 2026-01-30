@@ -89,7 +89,7 @@ std::string Scheduler::printTxt() const {
 
     if(state == ScheduleState::SCHEDULED) {
         oss << "\n" << "####################\n";
-        oss << "Tasks allocation:\n";
+        oss << "Tasks allocation by server:\n";
         for (const auto& server : servers) {
             oss << "Server: " << server.getLabel() << " (" << server.getId() << ")\n";
             oss << "Assigned Tasks: ";
@@ -98,6 +98,28 @@ std::string Scheduler::printTxt() const {
                 oss << task.getLabel() << " ";
             }
             oss << "\n---------------------\n";
+        }
+
+        oss << "\n" << "####################\n";
+        oss << "Tasks allocation by task:\n";
+        for (const auto& task : tasks) {
+            oss << "Task: " << task.getLabel() << " (" << task.getId() << ")\n";
+            // Find server hosting this task
+            std::string server_info = "Not allocated";
+            for (const auto& server : servers) {
+                const auto& assigned_tasks = server.getAssignedTasks();
+                auto it = std::find_if(assigned_tasks.begin(), assigned_tasks.end(), [&task](const Task& at){
+                    return at.getInternalIdx() == task.getInternalIdx();
+                });
+                if (it != assigned_tasks.end()) {
+                    server_info = server.getLabel() + " (" + server.getId() + ")";
+                    break;
+                }
+            }
+            oss << "Assigned Server: " << server_info << "\n";
+            oss << "Start Time: " << task.getStartTime() << "\n";
+            oss << "Finish Time: " << task.getFinishTime() << "\n";
+            oss << "---------------------\n";
         }
     }
 
@@ -187,8 +209,8 @@ std::string Scheduler::printTable(char separator) const {
     for (const auto& server : servers) {
         const auto& tasks = server.getAssignedTasks();
         for (const auto& task : tasks) {
-            oss << task.getLabel() << separator
-                << server.getLabel() << separator
+            oss << task.getId() << separator
+                << server.getId() << separator
                 << task.getStartTime() << separator
                 << task.getFinishTime() << "\n";
         }

@@ -71,6 +71,10 @@ public:
     double ga_mutationRate = 0.1;
     double ga_crossoverRate = 0.7;
 
+    // Randomization parameters
+    int allocationNoiseLevel = 10; // Noise level for task allocation randomization (higher values increase randomness)
+    int priorityNoiseLevel = 10;   // Noise level for priority randomization (higher values increase randomness)
+
     void fromYaml(const std::string& file_path);
     void applyOverride(const std::string& override_str); // Override parameter from "key=value" string
     
@@ -119,7 +123,7 @@ public:
     double getObjectiveValue() const;
 
     static std::string getHeaderCSV();
-    static std::string solverStatusToString(SolverStatus status);
+    std::string solverStatusToString() const;
     std::string print(utils::PRINT_FORMAT = utils::PRINT_FORMAT::TXT) const;
 
     SolverResult() : 
@@ -192,7 +196,7 @@ public:
 
     SolverConfig& getConfig() { return config; }
 
-    std::string getSolverMethodName() const;
+    inline std::string getSolverMethodName() const { return solverMethodToString(config.solverMethod); }
 
 private: 
     Scheduler& scheduler;    

@@ -53,7 +53,7 @@ Open your browser and navigate to `http://localhost:5173` to access the GUI. Or 
 ## Data format
 Instances can be generated using the GUI or the automatic generators. They consist of two JSON files: one for tasks and another for the network. There is also a tool to combine both data structures into a single .dat file to solve the instance with ILP optimizers.  
 
-Automatic generators and format converters are located in the [shared](shared) folder. The [data](data) folder contains node scripts to access these generators and create datasets. To automate the generation of large datasets, use the [generate.sh](data/generate.sh) script.
+Automatic generators and format converters are located in the [shared](shared) folder. The [data](data) folder contains node scripts to access these generators and create datasets.
 
 ### Tasks
 Tasks are represented in JSON format with the following structure:
@@ -178,14 +178,20 @@ To save results to a csv file, use `-o csv`:
 ```bash
 ./solve -t tasks.json -n network.json -s annealing -o csv > ../../data/schedule.csv
 ``` 
-This will create `schedule.csv` in the `data` folder with the following colums: `task_id, processor_id, start_time, finish_time`.
+This will create `schedule.csv` in the `data` folder with the following colums: `task_id,processor_id,start_time,finish_time`.
 
-Other available outputs formats are `text`, `json` and `tab`. The last one prints tab-separated values of `task_id, processor_id, start_time, finish_time`.
+Other available outputs formats are `text`, `json` and `tab`. The last one prints tab-separated values of `task_id,processor_id,start_time,finish_time`.
 
 ILP models use the combined model in a .dat. To pass the .dat file directly as input, use:
 ```bash
 ./solve -d instance.dat -s annealing
 ```
+
+In case of needing to load a previously saved solution as initial solution for the solver, use the `-i` flag:
+```bash
+cat solution.csv | ./solve -t tasks.json -n network.json -s annealing -i
+```
+Input must be in csv format with three or four colums: `task_id (optional),processor_id,start_time,finish_time`. If three columns are provided, each line corresponds to the task allocation. The header of the file is ignored.
 
 ### Optimization options
 Optimization options can be specified in a YAML configuration file with the following structure:
@@ -236,6 +242,8 @@ genetic_algorithm: # GA
 
 misc: # Miscellaneous settings
   log_file: solver_log.csv # File to log solver results
+  allocation_noise_level: 10 # Noise level for task allocation randomization (higher values increase randomness)
+  priority_noise_level: 10   # Noise level for priority randomization (higher values increase randomness)
 ```
 This file can be passed to the solver using the `-c` flag:
 ```bash

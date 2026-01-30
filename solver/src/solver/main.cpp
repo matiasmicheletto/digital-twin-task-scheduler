@@ -45,7 +45,3 @@ SolverResult Solver::solve() {
     
     return result;
 };
-
-std::string Solver::getSolverMethodName() const {
-    return ::solverMethodToString(config.solverMethod);
-};

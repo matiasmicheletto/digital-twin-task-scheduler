@@ -43,3 +43,5 @@ genetic_algorithm: # GA
 
 misc: # Miscellaneous settings
   log_file: solver_log.csv # File to log solver results
+  allocation_noise_level: 10 # Noise level for task allocation randomization (higher values increase randomness)
+  priority_noise_level: 10   # Noise level for priority randomization (higher values increase randomness)

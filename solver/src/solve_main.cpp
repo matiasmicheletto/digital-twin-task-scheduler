@@ -17,6 +17,7 @@ int main(int argc, char **argv) {
     std::string tsk_filename; // Tasks file (json)
     std::string nw_filename; // Network file (json)
     std::string dat_filename; // Schedule file (dat)
+    bool use_initial_solution = false; // Whether to use an initial solution from stdin
     std::string cfg_filename = "default_config.yaml"; // Solver config file (yaml)
     utils::PRINT_FORMAT output_format = utils::PRINT_FORMAT::TXT;
     SolverMethod method = SolverMethod::RANDOM_SEARCH;
@@ -83,6 +84,10 @@ int main(int argc, char **argv) {
             }
         }
 
+        if(strcmp(argv[i], "-i") == 0 || strcmp(argv[i], "--initial") == 0) {
+            use_initial_solution = true;
+        }
+
         if(strcmp(argv[i], "-c") == 0 || strcmp(argv[i], "--config") == 0) {
             if(i+1 < argc) {
                 const char* file = argv[i+1];
@@ -135,13 +140,25 @@ int main(int argc, char **argv) {
         
         // Initialize Scheduler
         Scheduler sch;
+
         if(!dat_filename.empty()) {
             utils::dbg << "Loading schedule from DAT file: " << dat_filename << "\n";
             sch = Scheduler(dat_filename);
-        }else{
+        }
+
+        if(!tsk_filename.empty() && !nw_filename.empty()) {
             utils::dbg << "Loading tasks from JSON file: " << tsk_filename << "\n";
             utils::dbg << "Loading network from JSON file: " << nw_filename << "\n";
             sch = Scheduler(tsk_filename, nw_filename);
+        }
+
+        if(use_initial_solution) {
+            utils::dbg << "Reading initial solution from stdin...\n";
+            std::string initial_solution_csv(
+                (std::istreambuf_iterator<char>(std::cin)),std::istreambuf_iterator<char>()
+            );
+            sch.setSchedule(initial_solution_csv);
+            utils::dbg << "Initial solution set in scheduler.\n";
         }
         
         if(solve){

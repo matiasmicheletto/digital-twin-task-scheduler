@@ -250,6 +250,110 @@ ScheduleState Scheduler::schedule(const Candidate& candidate) {
     return state = ScheduleState::SCHEDULED;
 };
 
+void Scheduler::setSchedule(const std::string& csv_data) {
+    // Loads a schedule from CSV data stored in a string
+    // CSV format: task_id,server_id,start_time
+
+    std::istringstream infile(csv_data);
+
+    std::string line;
+
+    std::unordered_map<std::string, int> taskIdToIdx;
+    std::unordered_map<std::string, int> taskLabelToIdx;
+    for (size_t i = 0; i < tasks.size(); ++i) {
+        taskIdToIdx[tasks[i].getId()] = static_cast<int>(i);
+        taskLabelToIdx[tasks[i].getLabel()] = static_cast<int>(i);
+    }
+
+    std::unordered_map<std::string, int> serverIdToIdx;
+    std::unordered_map<std::string, int> serverLabelToIdx;
+    for (size_t j = 0; j < servers.size(); ++j) {
+        serverIdToIdx[servers[j].getId()] = static_cast<int>(j);
+        serverLabelToIdx[servers[j].getLabel()] = static_cast<int>(j);
+    }
+
+    // Clear all server tasks first
+    clearAllServerTasks();
+
+    bool header_skipped = false;
+    while (std::getline(infile, line)) {
+        if (line.empty()) continue;
+        if (!header_skipped) { header_skipped = true; continue; } // skip header
+
+        std::istringstream ss(line);
+        std::string task_id, server_id, start_time_str;
+
+        if (!std::getline(ss, task_id, ',')) continue;
+        if (!std::getline(ss, server_id, ',')) continue;
+        if (!std::getline(ss, start_time_str, ',')) continue;
+
+        auto task_it = taskIdToIdx.find(task_id);
+        if (task_it == taskIdToIdx.end()) {
+            task_it = taskLabelToIdx.find(task_id);
+        }
+        auto server_it = serverIdToIdx.find(server_id);
+        if (server_it == serverIdToIdx.end()) {
+            server_it = serverLabelToIdx.find(server_id);
+        }
+        if (task_it == taskIdToIdx.end() || server_it == serverIdToIdx.end()) {
+            utils::dbg << "Unknown task or server ID in schedule CSV: " << line << "\n";
+            continue;
+        }
+
+        int task_idx   = task_it->second;
+        int server_idx = server_it->second;
+        int start_time = std::stoi(start_time_str);
+
+        Task& t = tasks[task_idx];
+        t.setStartTime(start_time);
+        servers[server_idx].pushBackTask(t);
+    }
+
+    state = ScheduleState::SCHEDULED;
+}
+
+
+Candidate Scheduler::getCandidateFromCurrentSchedule() const {
+    // Constructs a Candidate from the current schedule state
+    Candidate candidate(tasks.size());
+    for (size_t i = 0; i < tasks.size(); ++i) {
+        const Task& t = tasks[i];
+        int server_idx = -1;
+        // Find server hosting this task
+        for (size_t j = 0; j < servers.size(); ++j) {
+            const Server& srv = servers[j];
+            const auto& assigned_tasks = srv.getAssignedTasks();
+            auto it = std::find_if(assigned_tasks.begin(), assigned_tasks.end(), [&t](const Task& at){
+                return at.getInternalIdx() == t.getInternalIdx();
+            });
+            if (it != assigned_tasks.end()) {
+                server_idx = (int)j;
+                break;
+            }
+        }
+        candidate.server_indices[i] = server_idx;
+    }
+
+    // Set priorities based on start times (earlier start -> higher priority)
+    std::vector<std::pair<int, int>> start_times; // (start_time, task_index)
+    start_times.reserve(tasks.size());
+    for (size_t i = 0; i < tasks.size(); ++i) {
+        start_times.emplace_back(tasks[i].getStartTime(), (int)i);
+    }
+    // Sort by start time ascending
+    std::sort(start_times.begin(), start_times.end());
+    // Assign priorities: earlier start time -> higher priority value
+    for (size_t rank = 0; rank < start_times.size(); ++rank) {
+        int task_idx = start_times[rank].second;
+        // Higher priority for earlier start (e.g., inverse of rank)
+        candidate.priorities[task_idx] = (double)(tasks.size() - rank);
+    }
+
+    return candidate;
+};
+
+
+
 int Scheduler::getScheduleSpan() const {
     // Returns the schedule span (makespan), i.e., the finish time of the last finishing task
     if (state != ScheduleState::SCHEDULED) {

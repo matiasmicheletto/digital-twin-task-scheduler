@@ -24,7 +24,7 @@ std::string solverMethodToString(SolverMethod method) {
     }
 };
 
-std::string SolverResult::solverStatusToString(SolverStatus status) {
+std::string SolverResult::solverStatusToString() const {
     switch(status) {
         case SolverStatus::NOT_STARTED:
             return "Not Started";
@@ -123,7 +123,7 @@ std::string SolverResult::getHeaderCSV() {
             "Finish time sum,"
             "Processors cost,"
             "Delay cost,"
-            "Objetvive value,"
+            "Objective value,"
             "Solver status,"
             "Observations,"
             "Schedule state\n";
@@ -150,7 +150,7 @@ std::string SolverResult::printTable(char separator) const {
     oss << processorsCost << separator;
     oss << delayCost << separator;
     oss << getObjectiveValue() << separator;
-    oss << solverStatusToString(status) << separator;
+    oss << solverStatusToString() << separator;
     oss << "\"" << observations << "\"" << separator;
     oss << scheduleState.toString() << "\n";
 
@@ -169,7 +169,7 @@ std::string SolverResult::printTxt() const {
 
     oss << "  Instance Name: " << instanceName << "\n";
     oss << "  Status: ";
-    oss << solverStatusToString(status) << "\n";
+    oss << solverStatusToString() << "\n";
     if (scheduleState == ScheduleState::SCHEDULED) {
         oss << "  Runtime (ms): " << runtime_ms << "\n";
         oss << "  Iterations: " << iterations << "\n";
