@@ -31,7 +31,7 @@ SolverResult Solver::randomSearchSolve() {
     auto startTime = std::chrono::high_resolution_clock::now();
 
     int bestFitness = INT_MAX;
-    Candidate curr(scheduler.getTaskCount());
+    Candidate curr = scheduler.getCandidateFromCurrentSchedule();
     Candidate best(scheduler.getTaskCount());
     
     const size_t allocable_servers_count = scheduler.getNonMISTServerCount();
@@ -46,6 +46,7 @@ SolverResult Solver::randomSearchSolve() {
     int nonImprovingGenerations = 0;
     int iteration;
     results.status = SolverResult::SolverStatus::COMPLETED; // Default to completed unless timeoutMs or stagnation occurs
+
     for (iteration = 0; iteration < maxIterations; ++iteration) {
 
         // timeoutMs check
@@ -56,28 +57,17 @@ SolverResult Solver::randomSearchSolve() {
             break;
         }
 
-        for (size_t i = 0; i <  scheduler.getTaskCount(); ++i) {
-            // Check if task has fixed allocation
-            const Task& task = scheduler.getTask(i);
-            if (!task.hasFixedAllocation()){
-                //curr.server_indices[i] = rand() % scheduler.getServerCount(); // Random server assignment
-                curr.server_indices[i] = scheduler.getNonMISTServerIdx(rand() % allocable_servers_count);
-                continue; // Priority doesnt matter for fixed allocation tasks
-            }
-            // Random priority between 0 and 1
-            // Optimization algorithms do not need to clamp priorities values (outside [0,1]) as allocation work with relative values
-            curr.priorities[i] = static_cast<double>(rand()) / RAND_MAX; 
-        }
-
-        // Schedule using the generated candidate
-        if (scheduler.schedule(curr) == ScheduleState::SCHEDULED) { // feasible
-            if (breakOnFirstFeasible) { // Only matters the best
+        // Schedule may be already initialized before entering the loop (e.g., from an initial solution)
+        // So, best fitness check must be done here as well
+        if (scheduler.getScheduleState() == ScheduleState::SCHEDULED) { // feasible
+            if (breakOnFirstFeasible) { // Used to initialize other solvers with a quick feasible solution
                 results.status = SolverResult::SolverStatus::COMPLETED;
                 results.observations = "Feasible solution found after " + std::to_string(iteration + 1) + " iterations.";
                 results.bestCandidate = curr;
                 utils::dbg << results.observations << "\n";
                 return results;
             }
+
             // Check if this is the best solution found so far
             //int fitness = scheduler.getScheduleSpan();
             int fitness = computeObjective();
@@ -101,6 +91,21 @@ SolverResult Solver::randomSearchSolve() {
                 }
             }
         }
+
+        for (size_t i = 0; i <  scheduler.getTaskCount(); ++i) {
+            // Check if task has fixed allocation
+            const Task& task = scheduler.getTask(i);
+            if (!task.hasFixedAllocation()){
+                //curr.server_indices[i] = rand() % scheduler.getServerCount(); // Random server assignment
+                curr.server_indices[i] = scheduler.getNonMISTServerIdx(rand() % allocable_servers_count);
+                continue; // Priority doesnt matter for fixed allocation tasks
+            }
+            // Random priority between 0 and 1
+            // Optimization algorithms do not need to clamp priorities values (outside [0,1]) as allocation work with relative values
+            curr.priorities[i] = static_cast<double>(rand()) / RAND_MAX; 
+        }
+
+        scheduler.schedule(curr); // try to schedule current candidate
     }
 
     // Final scheduling with the best candidate found

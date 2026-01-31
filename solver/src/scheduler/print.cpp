@@ -2,7 +2,7 @@
 
 
 std::string Candidate::print() const {
-    std::ostringstream oss;
+    std::ostringstream oss; // Server indices count from 0 (this is not server ID)
     for (size_t i = 0; i < server_indices.size(); ++i) {
         oss << "  Task " << i << ": Server " << server_indices[i] << ", Priority " << std::fixed << std::setprecision(4) << priorities[i] << "\n";
     }

@@ -193,7 +193,7 @@ ScheduleState Scheduler::schedule(const Candidate& candidate) {
                 int delay = delay_matrix[pred_server][server_idx];
                 if (delay == INT_MAX) {
                     // disconnected servers -> infeasible
-                    utils::dbg << "Task " << t.getLabel() << " predecessor " << pt.getLabel() << " on disconnected servers.\n";
+                    // utils::dbg << "Task " << t.getLabel() << " predecessor " << pt.getLabel() << " on disconnected servers.\n";
                     return state = ScheduleState::PRECEDENCES_ERROR;
                 }
                 long long candidate_start = pred_finish + (long long)delay + 1LL; // +1 since finish is inclusive
@@ -412,7 +412,6 @@ Candidate Scheduler::getCandidateFromCurrentSchedule() const {
 
     return candidate;
 };
-
 
 
 int Scheduler::getScheduleSpan() const {
