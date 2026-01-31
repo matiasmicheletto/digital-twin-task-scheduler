@@ -252,8 +252,8 @@ ScheduleState Scheduler::schedule(const Candidate& candidate) {
 
 void Scheduler::setSchedule(const std::string& csv_data) {
     // Loads a schedule from CSV data stored in a string
-    // CSV format: task_id,server_id,start_time (4 columns)
-    //         OR: server_id,start_time (3 columns, using line number as task_id)
+    // CSV format: task_id,server_id,start_time[,finish]
+    //         OR: server_id,start_time[,finish] (uses line number as task_id)
 
     std::istringstream infile(csv_data);
 
@@ -276,32 +276,73 @@ void Scheduler::setSchedule(const std::string& csv_data) {
     // Clear all server tasks first
     clearAllServerTasks();
 
-    bool header_skipped = false;
-    int line_number = 0;
+    auto trim = [](std::string& s) {
+        const char* ws = " \t\r\n";
+        s.erase(0, s.find_first_not_of(ws));
+        s.erase(s.find_last_not_of(ws) + 1);
+    };
+
+    bool header_checked = false;
+    int line_number = 0; // counts data lines (non-header, non-empty)
     
     while (std::getline(infile, line)) {
         if (line.empty()) continue;
-        if (!header_skipped) { header_skipped = true; continue; } // skip header
 
-        std::istringstream ss(line);
-        std::string field1, field2, field3;
-        
-        if (!std::getline(ss, field1, ',')) continue;
-        if (!std::getline(ss, field2, ',')) continue;
-        
+        // Split line by ','
+        std::vector<std::string> fields;
+        {
+            std::istringstream ss(line);
+            std::string field;
+            while (std::getline(ss, field, ',')) {
+                trim(field);
+                fields.push_back(field);
+            }
+        }
+        if (fields.size() < 2) continue;
+
+        // Detect and skip header on the first non-empty line only
+        if (!header_checked) {
+            header_checked = true;
+            auto lower = [](std::string s) {
+                std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c){ return std::tolower(c); });
+                return s;
+            };
+            std::string f0 = lower(fields[0]);
+            std::string f1 = lower(fields.size() > 1 ? fields[1] : "");
+            std::string f2 = lower(fields.size() > 2 ? fields[2] : "");
+            if (f0.find("task") != std::string::npos || f0.find("server") != std::string::npos ||
+                f1.find("task") != std::string::npos || f1.find("server") != std::string::npos ||
+                f2.find("start") != std::string::npos || f2.find("finish") != std::string::npos) {
+                continue;
+            }
+        }
+
         std::string task_id, server_id, start_time_str;
-        
-        // Check if there's a third field
-        if (std::getline(ss, field3, ',')) {
-            // 4-column format: task_id,server_id,start_time
-            task_id = field1;
-            server_id = field2;
-            start_time_str = field3;
+
+        // Decide format based on field count and whether task id is known
+        if (fields.size() >= 4) {
+            // task_id,server_id,start_time,finish (finish ignored)
+            task_id = fields[0];
+            server_id = fields[1];
+            start_time_str = fields[2];
+        } else if (fields.size() == 3) {
+            // Either task_id,server_id,start_time OR server_id,start_time,finish
+            const bool task_known = (taskIdToIdx.find(fields[0]) != taskIdToIdx.end()) ||
+                                    (taskLabelToIdx.find(fields[0]) != taskLabelToIdx.end());
+            if (task_known) {
+                task_id = fields[0];
+                server_id = fields[1];
+                start_time_str = fields[2];
+            } else {
+                task_id = std::to_string(line_number);
+                server_id = fields[0];
+                start_time_str = fields[1];
+            }
         } else {
-            // 3-column format: server_id,start_time (use line number as task_id)
+            // 2-column format: server_id,start_time (use line number as task_id)
             task_id = std::to_string(line_number);
-            server_id = field1;
-            start_time_str = field2;
+            server_id = fields[0];
+            start_time_str = fields[1];
         }
 
         auto task_it = taskIdToIdx.find(task_id);
