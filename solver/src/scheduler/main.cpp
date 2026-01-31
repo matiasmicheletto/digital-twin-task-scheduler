@@ -252,7 +252,8 @@ ScheduleState Scheduler::schedule(const Candidate& candidate) {
 
 void Scheduler::setSchedule(const std::string& csv_data) {
     // Loads a schedule from CSV data stored in a string
-    // CSV format: task_id,server_id,start_time
+    // CSV format: task_id,server_id,start_time (4 columns)
+    //         OR: server_id,start_time (3 columns, using line number as task_id)
 
     std::istringstream infile(csv_data);
 
@@ -276,16 +277,32 @@ void Scheduler::setSchedule(const std::string& csv_data) {
     clearAllServerTasks();
 
     bool header_skipped = false;
+    int line_number = 0;
+    
     while (std::getline(infile, line)) {
         if (line.empty()) continue;
         if (!header_skipped) { header_skipped = true; continue; } // skip header
 
         std::istringstream ss(line);
+        std::string field1, field2, field3;
+        
+        if (!std::getline(ss, field1, ',')) continue;
+        if (!std::getline(ss, field2, ',')) continue;
+        
         std::string task_id, server_id, start_time_str;
-
-        if (!std::getline(ss, task_id, ',')) continue;
-        if (!std::getline(ss, server_id, ',')) continue;
-        if (!std::getline(ss, start_time_str, ',')) continue;
+        
+        // Check if there's a third field
+        if (std::getline(ss, field3, ',')) {
+            // 4-column format: task_id,server_id,start_time
+            task_id = field1;
+            server_id = field2;
+            start_time_str = field3;
+        } else {
+            // 3-column format: server_id,start_time (use line number as task_id)
+            task_id = std::to_string(line_number);
+            server_id = field1;
+            start_time_str = field2;
+        }
 
         auto task_it = taskIdToIdx.find(task_id);
         if (task_it == taskIdToIdx.end()) {
@@ -297,6 +314,7 @@ void Scheduler::setSchedule(const std::string& csv_data) {
         }
         if (task_it == taskIdToIdx.end() || server_it == serverIdToIdx.end()) {
             utils::dbg << "Unknown task or server ID in schedule CSV: " << line << "\n";
+            line_number++;
             continue;
         }
 
@@ -307,10 +325,12 @@ void Scheduler::setSchedule(const std::string& csv_data) {
         Task& t = tasks[task_idx];
         t.setStartTime(start_time);
         servers[server_idx].pushBackTask(t);
+        
+        line_number++;
     }
 
     state = ScheduleState::SCHEDULED;
-}
+};
 
 
 Candidate Scheduler::getCandidateFromCurrentSchedule() const {
