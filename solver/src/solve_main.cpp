@@ -4,12 +4,28 @@
 #include <cstring>
 #include <fstream>
 #include <vector>
+#include <getopt.h>
 
 #include "../include/json.hpp"
 #include "../include/utils.h"
 #include "../include/scheduler.h"
 #include "../include/solver.h"
 
+
+static struct option long_options[] = {
+    {"help",        no_argument,        0,  'h' },
+    {"version",     no_argument,        0,  'v' },
+    {"solver",      required_argument,  0,  's' },
+    {"tasks",       required_argument,  0,  't' },
+    {"network",     required_argument,  0,  'n' },
+    {"dat",         required_argument,  0,  'd' },
+    {"init",        no_argument,        0,  'i' },
+    {"config",      required_argument,  0,  'c' },
+    {"output",      required_argument,  0,  'o' },
+    {"set",         required_argument,  0,  'S' },
+    {"dbg",         no_argument,        0,  'D' },
+    {0,             0,                  0,  0   }
+};
 
 int main(int argc, char **argv) {
 
@@ -24,106 +40,60 @@ int main(int argc, char **argv) {
     bool solve = false;
     std::vector<std::string> cfg_overrides; // Configuration overrides from command line
 
-    for(int i = 0; i < argc; i++) {  
-        if(argc == 1) {
-            utils::printHelp(MANUAL, "No arguments provided.");
-        }
-        
-        if(strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0) {
-            std::cout << "Solver version 1.0.0" << std::endl;
-            return 0;
-        }
-        
-        if(strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0)
-            utils::printHelp(MANUAL);
+    int opt;
+    int option_index = 0;
 
-        if(strcmp(argv[i], "-s") == 0 || strcmp(argv[i], "--solver") == 0) {
-            // Enable solving
-            solve = true;
-            // Check for method
-            if(i+1 < argc) {
-                const char* mth = argv[i+1];
-                if(strcmp(mth, "random") == 0) {
-                    method = SolverMethod::RANDOM_SEARCH;
-                } else if (strcmp(mth, "genetic") == 0) {
-                    method = SolverMethod::GENETIC_ALGORITHM;
-                } else if (strcmp(mth, "annealing") == 0) {
-                    method = SolverMethod::SIMULATED_ANNEALING;
-                } else {
-                    utils::printHelp(MANUAL, "Error in argument -s (--solve). Supported methods are: random, genetic, annealing");
+    while((opt = getopt_long(argc, argv, "vhs:t:n:d:ic:o:S:D", long_options, &option_index)) != -1) {
+        switch(opt) {
+            case 'v':
+                std::cout << "Solver version 1.0.0" << std::endl;
+                return 0;
+            case 'h':
+                utils::printHelp(MANUAL);
+                return 0;
+            case 's':
+                solve = true;
+                if(strcmp(optarg, "random") == 0) method = SolverMethod::RANDOM_SEARCH;
+                else if(strcmp(optarg, "genetic") == 0) method = SolverMethod::GENETIC_ALGORITHM;
+                else if(strcmp(optarg, "annealing") == 0) method = SolverMethod::SIMULATED_ANNEALING;
+                else {
+                    utils::printHelp(MANUAL, "Supported methods: random, genetic, annealing");
+                    return 1;
                 }
-            }else{
-                utils::printHelp(MANUAL, "Error in argument -s (--solve). A method must be provided");
-            }
-        }   
-
-        if(strcmp(argv[i], "-t") == 0 || strcmp(argv[i], "--tasks") == 0) {
-            if(i+1 < argc) {
-                const char* file = argv[i+1];
-                tsk_filename = std::string(file);
-            }else{
-                utils::printHelp(MANUAL, "Error in argument -t (--tasks). A filename must be provided");
-            }
-        }
-
-        if(strcmp(argv[i], "-n") == 0 || strcmp(argv[i], "--network") == 0) {
-            if(i+1 < argc) {
-                const char* file = argv[i+1];
-                nw_filename = std::string(file);
-            }else{
-                utils::printHelp(MANUAL, "Error in argument -n (--network). A filename must be provided");
-            }
-        }
-
-        if(strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--dat") == 0) {
-            if(i+1 < argc) {
-                const char* file = argv[i+1];
-                dat_filename = std::string(file);
-            }else{
-                utils::printHelp(MANUAL, "Error in argument -d (--dat). A filename must be provided");
-            }
-        }
-
-        if(strcmp(argv[i], "-i") == 0 || strcmp(argv[i], "--initial") == 0) {
-            use_initial_solution = true;
-        }
-
-        if(strcmp(argv[i], "-c") == 0 || strcmp(argv[i], "--config") == 0) {
-            if(i+1 < argc) {
-                const char* file = argv[i+1];
-                cfg_filename = std::string(file);
-            }
-        }
-
-        if(strcmp(argv[i], "-o") == 0 || strcmp(argv[i], "--output") == 0) {
-            if(i+1 < argc) {
-                const char* format = argv[i+1];
-                if(strcmp(format, "text") == 0) {
-                    output_format = utils::PRINT_FORMAT::TXT;
-                } else if (strcmp(format, "json") == 0) {
-                    output_format = utils::PRINT_FORMAT::JSON;
-                } else if (strcmp(format, "csv") == 0) {
-                    output_format = utils::PRINT_FORMAT::CSV;
-                } else if (strcmp(format, "tab") == 0) {
-                    output_format = utils::PRINT_FORMAT::TAB;
-                } else {
-                    utils::printHelp(MANUAL, "Error in argument -o (--output). Supported formats are: text, json");
+                break;
+            case 't':
+                tsk_filename = optarg;
+                break;
+            case 'n':
+                nw_filename = optarg;
+                break;
+            case 'd':
+                dat_filename = optarg;
+                break;
+            case 'i':
+                use_initial_solution = true;
+                break;
+            case 'c':
+                cfg_filename = optarg;
+                break;
+            case 'o':
+                if(strcmp(optarg, "text") == 0) output_format = utils::PRINT_FORMAT::TXT;
+                else if(strcmp(optarg, "json") == 0) output_format = utils::PRINT_FORMAT::JSON;
+                else if(strcmp(optarg, "csv") == 0) output_format = utils::PRINT_FORMAT::CSV;
+                else if(strcmp(optarg, "tab") == 0) output_format = utils::PRINT_FORMAT::TAB;
+                else {
+                    utils::printHelp(MANUAL, "Supported formats: text, json, csv, tab");
+                    return 1;
                 }
-            }else{
-                utils::printHelp(MANUAL, "Error in argument -o (--output). An output format must be provided");
-            }   
-        }
-
-        if(strcmp(argv[i], "--set") == 0) {
-            if(i + 1 < argc) {
-                cfg_overrides.emplace_back(argv[i+1]);
-            } else {
-                utils::printHelp(MANUAL, "Error in --set. Use --set key=value");
-            }
-        }
-
-        if(strcmp(argv[i], "--dbg") == 0) {
-            utils::dbg.rdbuf(std::cout.rdbuf()); // Enable debug output to std::cout
+                break;
+            case 'S':
+                cfg_overrides.emplace_back(optarg);
+                break;
+            case 'D':
+                utils::dbg.rdbuf(std::cout.rdbuf());
+                break;
+            case '?':
+                return 1;
         }
     }
 
