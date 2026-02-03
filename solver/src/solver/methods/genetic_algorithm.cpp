@@ -14,7 +14,6 @@ void mutate(Scheduler& scheduler, double mutationRate, Candidate& c) {
     for (size_t i = 0; i < scheduler.getTaskCount(); ++i) {
         if (rand() / (double)RAND_MAX < mutationRate) {
             if (!scheduler.getTask(i).hasFixedAllocation()){
-                //c.server_indices[i] = rand() % scheduler.getServerCount();
                 c.server_indices[i] = scheduler.getNonMISTServerIdx(rand() % scheduler.getNonMISTServerCount());
             }
         }

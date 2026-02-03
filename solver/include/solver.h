@@ -211,6 +211,8 @@ private:
     void refinePrioritiesNormal(Candidate& curr, int currFitness, double T);
     void refinePrioritiesPSO(Candidate& curr, int currFitness, double T);
     void refinePriorities(PriorityRefinementMethod refinementMethod, Candidate& curr, int currFitness, double T);
+
+    void randomizeCandidate(Candidate& candidate);
 };
 
 

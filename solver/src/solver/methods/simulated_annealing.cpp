@@ -77,14 +77,14 @@ SolverResult Solver::simulatedAnnealingSolve() {
             next = curr;
 
             // multi-perturbation: modify k tasks
-            int k = 1 + rand() % 5;   // 1–5 tasks
-            for (int m = 0; m < k; ++m) {
+            int k = static_cast<int>(static_cast<double>(scheduler.getTaskCount()) * 0.2); // 20% of tasks
+            int ki = 1 + rand() % k; // 1–k tasks
+            for (int m = 0; m < ki; ++m) {
                 size_t idx = rand() % scheduler.getTaskCount();
                 const Task& task = scheduler.getTask(idx);
-
                 if (!task.hasFixedAllocation()){
-                    //next.server_indices[idx] = rand() % scheduler.getServerCount();
                     curr.server_indices[idx] = scheduler.getNonMISTServerIdx(rand() % allocable_servers_count);
+                    continue;
                 }
                 next.priorities[idx] = static_cast<double>(rand()) / RAND_MAX;
             }

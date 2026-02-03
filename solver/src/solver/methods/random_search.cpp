@@ -34,8 +34,7 @@ SolverResult Solver::randomSearchSolve() {
     Candidate curr = scheduler.getCandidateFromCurrentSchedule();
     Candidate best(scheduler.getTaskCount());
     
-    const size_t allocable_servers_count = scheduler.getNonMISTServerCount();
-    if(allocable_servers_count == 0) {
+    if(scheduler.getNonMISTServerCount() == 0) {
         results.status = SolverResult::SolverStatus::ERROR;
         results.observations = "No allocable servers available.";
         utils::dbg << results.observations << "\n";
@@ -64,6 +63,13 @@ SolverResult Solver::randomSearchSolve() {
                 results.status = SolverResult::SolverStatus::COMPLETED;
                 results.observations = "Feasible solution found after " + std::to_string(iteration + 1) + " iterations.";
                 results.bestCandidate = curr;
+                results.runtime_ms = utils::getElapsedMs(startTime);
+                results.iterations = iteration + 1;
+                results.scheduleSpan = scheduler.getScheduleSpan();
+                results.finishTimeSum = scheduler.getFinishTimeSum();
+                results.processorsCost = scheduler.getProcessorsCost();
+                results.delayCost = scheduler.getDelayCost();
+                results.scheduleState = scheduler.getScheduleState();
                 utils::dbg << results.observations << "\n";
                 return results;
             }
@@ -92,18 +98,7 @@ SolverResult Solver::randomSearchSolve() {
             }
         }
 
-        for (size_t i = 0; i <  scheduler.getTaskCount(); ++i) {
-            // Check if task has fixed allocation
-            const Task& task = scheduler.getTask(i);
-            if (!task.hasFixedAllocation()){
-                //curr.server_indices[i] = rand() % scheduler.getServerCount(); // Random server assignment
-                curr.server_indices[i] = scheduler.getNonMISTServerIdx(rand() % allocable_servers_count);
-                continue; // Priority doesnt matter for fixed allocation tasks
-            }
-            // Random priority between 0 and 1
-            // Optimization algorithms do not need to clamp priorities values (outside [0,1]) as allocation work with relative values
-            curr.priorities[i] = static_cast<double>(rand()) / RAND_MAX; 
-        }
+        randomizeCandidate(curr);
 
         scheduler.schedule(curr); // try to schedule current candidate
     }
