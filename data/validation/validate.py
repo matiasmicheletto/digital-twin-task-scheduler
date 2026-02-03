@@ -203,7 +203,7 @@ class RealTimeSystemValidator:
                 task_messages.append(f"  ✓ No pre-allocation constraint")
             
             # Check 2: Execution time matches WCET
-            actual_execution = entry.finish - entry.start + 1 # inclusive
+            actual_execution = entry.finish - entry.start # inclusive
             if actual_execution != task.wcet:
                 task_messages.append(f"  ✗ FAIL: Execution time {actual_execution} doesn't match WCET {task.wcet}")
                 task_ok = False
