@@ -4,6 +4,7 @@
 #include <cstring>
 #include <fstream>
 #include <vector>
+#include <filesystem>
 #include <getopt.h>
 
 #include "../include/json.hpp"
@@ -136,6 +137,15 @@ int main(int argc, char **argv) {
         if(solve){
             SolverConfig config;
             if(!cfg_filename.empty()) {
+                // Resolve relative config path against the binary directory (and its parent)
+                if (!std::filesystem::path(cfg_filename).is_absolute()) {
+                    auto bin_dir = utils::getBinaryDir();
+                    std::filesystem::path candidate = bin_dir / cfg_filename;
+                    if (!std::filesystem::exists(candidate)) {
+                        candidate = bin_dir.parent_path() / cfg_filename;
+                    }
+                    cfg_filename = candidate.string();
+                }
                 utils::dbg << "Loading solver configuration from file: " << cfg_filename << "\n";
                 config.fromYaml(cfg_filename);
                 for(const auto& ov : cfg_overrides) {

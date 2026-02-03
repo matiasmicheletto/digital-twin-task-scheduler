@@ -33,7 +33,8 @@ void Scheduler::importScheduleFromCSV(const std::string& csv_data) {
     };
 
     bool header_checked = false;
-    int line_number = 0; // counts data lines (non-header, non-empty)
+    bool force_server_start_format = false; // If header indicates server,start,finish
+    int line_number = 0; // counts data lines (non-header, non-empty), 0-based to match DAT task IDs
     
     while (std::getline(infile, line)) {
         if (line.empty()) continue;
@@ -61,8 +62,14 @@ void Scheduler::importScheduleFromCSV(const std::string& csv_data) {
             std::string f1 = lower(fields.size() > 1 ? fields[1] : "");
             std::string f2 = lower(fields.size() > 2 ? fields[2] : "");
             if (f0.find("task") != std::string::npos || f0.find("server") != std::string::npos ||
+                f0.find("servidor") != std::string::npos ||
                 f1.find("task") != std::string::npos || f1.find("server") != std::string::npos ||
-                f2.find("start") != std::string::npos || f2.find("finish") != std::string::npos) {
+                f1.find("inicio") != std::string::npos ||
+                f2.find("start") != std::string::npos || f2.find("finish") != std::string::npos ||
+                f2.find("fin") != std::string::npos) {
+                if (f0.find("servidor") != std::string::npos || f1.find("inicio") != std::string::npos || f2.find("fin") != std::string::npos) {
+                    force_server_start_format = true;
+                }
                 continue;
             }
         }
@@ -77,16 +84,25 @@ void Scheduler::importScheduleFromCSV(const std::string& csv_data) {
             start_time_str = fields[2];
         } else if (fields.size() == 3) {
             // Either task_id,server_id,start_time OR server_id,start_time,finish
-            const bool task_known = (taskIdToIdx.find(fields[0]) != taskIdToIdx.end()) ||
-                                    (taskLabelToIdx.find(fields[0]) != taskLabelToIdx.end());
-            if (task_known) {
-                task_id = fields[0];
-                server_id = fields[1];
-                start_time_str = fields[2];
-            } else {
+            if (force_server_start_format) {
                 task_id = std::to_string(line_number);
                 server_id = fields[0];
                 start_time_str = fields[1];
+            } else {
+                const bool task_known = (taskIdToIdx.find(fields[0]) != taskIdToIdx.end()) ||
+                                        (taskLabelToIdx.find(fields[0]) != taskLabelToIdx.end());
+                const bool server_known = (serverIdToIdx.find(fields[1]) != serverIdToIdx.end()) ||
+                                          (serverLabelToIdx.find(fields[1]) != serverLabelToIdx.end());
+                if (task_known && server_known) {
+                    task_id = fields[0];
+                    server_id = fields[1];
+                    start_time_str = fields[2];
+                } else {
+                    // Treat as server_id,start_time,finish (task id inferred by line number)
+                    task_id = std::to_string(line_number);
+                    server_id = fields[0];
+                    start_time_str = fields[1];
+                }
             }
         } else {
             // 2-column format: server_id,start_time (use line number as task_id)
@@ -115,6 +131,11 @@ void Scheduler::importScheduleFromCSV(const std::string& csv_data) {
 
         Task& t = tasks[task_idx];
         t.setStartTime(start_time);
+        // If this task is assigned to a MIST server, mark it as fixed allocation
+        if (servers[server_idx].getType() == ServerType::Mist) {
+            t.setFixedAllocationId(servers[server_idx].getId());
+            t.setFixedAllocationInternalId(server_idx);
+        }
         servers[server_idx].pushBackTask(t);
         
         line_number++;

@@ -335,17 +335,28 @@ int Scheduler::getDelayCost() const {
         utils::dbg << "Schedule not computed yet.\n";
         return -1;
     }
+    // Build mapping from task internal index to assigned server index
+    std::unordered_map<int, int> taskToServer;
+    taskToServer.reserve(tasks.size());
+    for (size_t s = 0; s < servers.size(); ++s) {
+        const auto& assigned = servers[s].getAssignedTasks();
+        for (const auto& at : assigned) {
+            taskToServer[at.getInternalIdx()] = (int)s;
+        }
+    }
     int total_delay = 0;
     for (const auto& t : tasks) {
         const auto& pred_internal_idxs = t.getPredecessorInternalIdxs();
-        int task_server = t.hasFixedAllocation() ? t.getFixedAllocationInternalIdx() : -1;
+        auto ts_it = taskToServer.find(t.getInternalIdx());
+        int task_server = (ts_it != taskToServer.end()) ? ts_it->second : -1;
         for (int pred_internal : pred_internal_idxs) { // for each predecessor of t, find its server and add delay
             auto it = std::find_if(tasks.begin(), tasks.end(), [pred_internal](const Task& task) {
                 return task.getInternalIdx() == pred_internal;
             });
             if (it != tasks.end()) { // found predecessor task
                 const Task &pt = *it;
-                int pred_server = pt.hasFixedAllocation() ? pt.getFixedAllocationInternalIdx() : -1;
+                auto ps_it = taskToServer.find(pt.getInternalIdx());
+                int pred_server = (ps_it != taskToServer.end()) ? ps_it->second : -1;
                 if (task_server != -1 && pred_server != -1 && task_server != pred_server) { // both servers known and different
                     int delay = delay_matrix[pred_server][task_server];
                     if (delay != INT_MAX) {
