@@ -195,6 +195,7 @@ T require_type(const nlohmann::json& obj, const std::string& key) {
 }
 
 double randNormal(double mean, double stddev) {
+    // Thread-local random number generator
     std::normal_distribution<double> distribution(mean, stddev);
     return distribution(gen);
 }

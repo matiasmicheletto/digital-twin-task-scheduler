@@ -10,20 +10,6 @@ auto sortByFitness = [](const Individual& a, const Individual& b) {
     return a.fitness < b.fitness;
 };
 
-void mutate(Scheduler& scheduler, double mutationRate, Candidate& c) {
-    for (size_t i = 0; i < scheduler.getTaskCount(); ++i) {
-        if (rand() / (double)RAND_MAX < mutationRate) {
-            if (!scheduler.getTask(i).hasFixedAllocation()){
-                c.server_indices[i] = scheduler.getNonMISTServerIdx(rand() % scheduler.getNonMISTServerCount());
-            }
-        }
-        if (rand() / (double)RAND_MAX < mutationRate) {
-            c.priorities[i] += utils::randNormal(0, 0.05);
-            c.priorities[i] = utils::clamp(c.priorities[i], 0.0, 1.0);
-        }
-    }
-};
-
 Candidate crossover(Scheduler& scheduler, const Candidate& p1, const Candidate& p2) {
     Candidate child = p1;
     for (size_t i = 0; i < scheduler.getTaskCount(); ++i) {
@@ -141,7 +127,7 @@ SolverResult Solver::geneticAlgorithmSolve() {
                 child = crossover(scheduler, p1.candidate, p2.candidate);
             }
 
-            mutate(scheduler, mutationRate, child);
+            randomizeCandidate(child, mutationRate); // Mutation
 
             if (scheduler.schedule(child) == ScheduleState::SCHEDULED) {
                 int fitness = computeObjective();

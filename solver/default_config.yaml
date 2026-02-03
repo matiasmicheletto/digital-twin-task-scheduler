@@ -1,4 +1,4 @@
-tunning: # Weights for different components of the objective function
+tuning: # Weights for different components of the objective function
   alpha: 1 # Weight for finish time sum in objective function
   beta: 1 # Weight for delay cost in objective function
   gamma: 1 # Weight for server usage cost in objective function
@@ -9,6 +9,7 @@ simulated_annealing: # SA
   timeout: 3600 # Timeout in seconds
   stagnation_threshold: 1.0e-6 # Minimum improvement to reset stagnation counter
   stagnation_limit: 200 # Iterations without improvement
+  perturbation_rate: 0.1 # Probability of perturbation for each task
   max_neighbor_tries: 30 # Number of neighbor solutions to try at each temperature
   initial_temperature: 150.0 # Starting temperature for annealing (higher = more exploration)
   cooling_rate: 0.995 # Rate at which temperature decreases (closer to 1 = slower cooling)
@@ -28,6 +29,7 @@ random_search: # RS
   timeout: 3600 # Timeout in seconds
   stagnation_threshold: 1.0e-6 # Minimum improvement to reset stagnation counter
   stagnation_limit: 200 # Iterations without improvement
+  perturbation_rate: 0.1 # Probability of perturbation for each candidate
   break_on_first_feasible: false # Stop search when first feasible solution is found (used for SA initialization)
 
 genetic_algorithm: # GA
@@ -43,5 +45,3 @@ genetic_algorithm: # GA
 
 misc: # Miscellaneous settings
   log_file: solver_log.csv # File to log solver results
-  allocation_noise_level: 10 # Noise level for task allocation randomization (higher values increase randomness)
-  priority_noise_level: 10   # Noise level for priority randomization (higher values increase randomness)

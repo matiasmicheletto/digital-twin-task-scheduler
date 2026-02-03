@@ -162,7 +162,7 @@ std::string SolverResult::printTxt() const {
     oss << "Solver Results:\n";
     oss << "  Solver Method: " << solverMethodToString(method) << "\n";
 
-    oss << "Tunning Parameters:\n";
+    oss << "Tuning Parameters:\n";
     oss << "  Alpha: " << alpha << "\n";
     oss << "  Beta: " << beta << "\n";
     oss << "  Gamma: " << gamma << "\n\n";

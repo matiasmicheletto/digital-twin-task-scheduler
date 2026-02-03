@@ -224,7 +224,7 @@ ScheduleState Scheduler::schedule(const Candidate& candidate) {
         
         // Update server ready time (server executes tasks sequentially)
         if (servers[server_idx].getType() != ServerType::Mist) {
-            server_ready[server_idx] = (long long)t.getFinishTime() + 1LL; // next available time slot
+            server_ready[server_idx] = (long long)t.getFinishTime(); // next available time slot
         }else{
             if (!servers[server_idx].getAssignedTasks().empty()) {
                 utils::dbg << "Mist server " << servers[server_idx].getLabel()

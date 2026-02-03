@@ -197,17 +197,18 @@ Input must be in csv format with three or four colums: `task_id (optional),proce
 Optimization options can be specified in a YAML configuration file with the following structure:
 
 ```yaml
-tunning: # Weights for different components of the objective function
+tuning: # Weights for different components of the objective function
   alpha: 1 # Weight for finish time sum in objective function
   beta: 1 # Weight for delay cost in objective function
   gamma: 1 # Weight for server usage cost in objective function
 
 simulated_annealing: # SA
-  max_init_tries: 5000 # Number of attempts to find a valid initial solution
-  max_iterations: 3000 # Total number of iterations
+  max_init_tries: 10000 # Number of attempts to find a valid initial solution
+  max_iterations: 10000 # Max number of iterations
   timeout: 3600 # Timeout in seconds
-  sa_stagnation_threshold: 1.0e-6 # Minimum improvement to reset stagnation counter
-  sa_stagnation_limit: 200 # Iterations without improvement
+  stagnation_threshold: 1.0e-6 # Minimum improvement to reset stagnation counter
+  stagnation_limit: 200 # Iterations without improvement
+    perturbation_rate: 0.1 # Probability of perturbation for each task
   max_neighbor_tries: 30 # Number of neighbor solutions to try at each temperature
   initial_temperature: 150.0 # Starting temperature for annealing (higher = more exploration)
   cooling_rate: 0.995 # Rate at which temperature decreases (closer to 1 = slower cooling)
@@ -223,27 +224,26 @@ simulated_annealing: # SA
   refinement_pso_social_coef: 1.5 # Social coefficient for PSO refinement
 
 random_search: # RS
-  max_iterations: 1000 # Total number of iterations
+  max_iterations: 10000 # Max number of iterations
   timeout: 3600 # Timeout in seconds
-  rs_stagnation_threshold: 1.0e-6 # Minimum improvement to reset stagnation counter
-  rs_stagnation_limit: 200 # Iterations without improvement
+  stagnation_threshold: 1.0e-6 # Minimum improvement to reset stagnation counter
+  stagnation_limit: 200 # Iterations without improvement
+    perturbation_rate: 0.1 # Probability of perturbation for each candidate
   break_on_first_feasible: false # Stop search when first feasible solution is found (used for SA initialization)
 
 genetic_algorithm: # GA
-  max_init_tries: 5000 # Number of attempts to find a valid initial solution
+  max_init_tries: 10000 # Number of attempts to find a valid initial solution
   population_size: 100 # Number of individuals in the population
-  max_generations: 800 # Total number of generations
+  max_generations: 10000 # Max number of generations
   timeout: 3600 # Timeout in seconds
   elite_count: 5 # Number of top individuals to carry over to the next generation
-  ga_stagnation_threshold: 1.0e-6 # Minimum improvement to reset stagnation counter
-  ga_stagnation_limit: 200 # Generations without improvement
+  stagnation_threshold: 1.0e-6 # Minimum improvement to reset stagnation counter
+  stagnation_limit: 200 # Generations without improvement
   mutation_rate: 0.15 # Probability of mutation for each individual
   crossover_rate: 0.75 # Probability of crossover between pairs of individuals
 
 misc: # Miscellaneous settings
   log_file: solver_log.csv # File to log solver results
-  allocation_noise_level: 10 # Noise level for task allocation randomization (higher values increase randomness)
-  priority_noise_level: 10   # Noise level for priority randomization (higher values increase randomness)
 ```
 This file can be passed to the solver using the `-c` flag:
 ```bash
@@ -254,7 +254,7 @@ To override specific parameters from the command line, use the `--set` flag foll
 ```bash
 solver -t tasks.json -n network.json -s annealing -o csv \
          --set simulated_annealing.max_iterations=8000 \
-         --set tunning.alpha=2 \
+         --set tuning.alpha=2 \
          --set genetic_algorithm.population_size=300
 ```
 

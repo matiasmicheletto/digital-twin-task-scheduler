@@ -7,6 +7,7 @@ SolverResult Solver::randomSearchSolve() {
     const bool breakOnFirstFeasible  = config.rs_breakOnFirstFeasible;
     const int timeoutMs              = config.rs_timeout_sec * 1000;
     const int stagnationLimit        = config.rs_stagnationLimit;
+    const double perturbationRate    = config.rs_perturbationRate;
     const double stagnationThreshold = config.rs_stagnationThreshold;
 
     SolverResult results(
@@ -98,7 +99,7 @@ SolverResult Solver::randomSearchSolve() {
             }
         }
 
-        randomizeCandidate(curr);
+        randomizeCandidate(curr, perturbationRate);
 
         scheduler.schedule(curr); // try to schedule current candidate
     }
@@ -106,7 +107,7 @@ SolverResult Solver::randomSearchSolve() {
     // Final scheduling with the best candidate found
     if (scheduler.schedule(best) != ScheduleState::SCHEDULED) {
         results.status = SolverResult::SolverStatus::SOLUTION_NOT_FOUND;
-        results.observations = "No feasible solution found after " + std::to_string(maxIterations) + " iterations.";
+        results.observations = "No feasible solution found after " + std::to_string(iteration) + " iterations.";
         utils::dbg << results.observations << "\n";
     }else{
         results.runtime_ms = utils::getElapsedMs(startTime);

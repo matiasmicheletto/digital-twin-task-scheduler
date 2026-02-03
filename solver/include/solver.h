@@ -37,6 +37,7 @@ public:
     int sa_timeout_sec = 3600;
     double sa_stagnationThreshold = 1e-6;
     int sa_stagnationLimit = 200; // Number of iterations without improvement before stopping
+    double sa_perturbationRate = 0.1; // Probability of perturbation for each task
     int sa_maxNeighborTries = 20; // Number of neighbor solutions to try at each temperature
     double sa_initialTemperature = 100.0;
     double sa_coolingRate = 0.995;
@@ -57,6 +58,7 @@ public:
     int rs_timeout_sec = 3600;
     double rs_stagnationThreshold = 1e-6;
     int rs_stagnationLimit = 200;
+    double rs_perturbationRate = 0.1;
     bool rs_breakOnFirstFeasible = false;
 
     // Parameters for Genetic Algorithm
@@ -68,8 +70,8 @@ public:
     size_t ga_eliteCount = 5;
     double ga_stagnationThreshold = 1e-6;
     int ga_stagnationLimit = 50;
-    double ga_mutationRate = 0.1;
-    double ga_crossoverRate = 0.7;
+    double ga_mutationRate = 0.15;
+    double ga_crossoverRate = 0.75;
 
     // Randomization parameters
     int allocationNoiseLevel = 10; // Noise level for task allocation randomization (higher values increase randomness)
@@ -212,7 +214,7 @@ private:
     void refinePrioritiesPSO(Candidate& curr, int currFitness, double T);
     void refinePriorities(PriorityRefinementMethod refinementMethod, Candidate& curr, int currFitness, double T);
 
-    void randomizeCandidate(Candidate& candidate);
+    void randomizeCandidate(Candidate& candidate, double perturbationRate);
 };
 
 

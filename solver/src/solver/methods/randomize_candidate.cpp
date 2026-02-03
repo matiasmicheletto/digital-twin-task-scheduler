@@ -1,15 +1,16 @@
 #include "solver.h"
 
-void Solver::randomizeCandidate(Candidate& candidate) {
-    for (size_t i = 0; i <  scheduler.getTaskCount(); ++i) {
-        // Check if task has fixed allocation
-        const Task& task = scheduler.getTask(i);
-        if (!task.hasFixedAllocation()){
-            candidate.server_indices[i] = scheduler.getNonMISTServerIdx(rand() % scheduler.getNonMISTServerCount());
-            continue; // Priority doesnt matter for fixed allocation tasks
+void Solver::randomizeCandidate(Candidate& candidate, double perturbationRate) {
+    for (size_t i = 0; i < scheduler.getTaskCount(); ++i) {
+        if (rand() / (double)RAND_MAX < perturbationRate) {
+            if (!scheduler.getTask(i).hasFixedAllocation()){
+                candidate.server_indices[i] = scheduler.getNonMISTServerIdx(rand() % scheduler.getNonMISTServerCount());
+                continue; // Priority doesnt matter for fixed allocation tasks
+            }
         }
-        // Random priority between 0 and 1
-        // Optimization algorithms do not need to clamp priorities values (outside [0,1]) as allocation work with relative values
-        candidate.priorities[i] = static_cast<double>(rand()) / RAND_MAX; 
+        if (rand() / (double)RAND_MAX < perturbationRate) {
+            candidate.priorities[i] += utils::randNormal(0, 0.05);
+            candidate.priorities[i] = utils::clamp(candidate.priorities[i], 0.0, 1.0);
+        }
     }
 }

@@ -12,11 +12,11 @@ void SolverConfig::fromYaml(const std::string& file_path) {
         utils::dbg << "Using default solver configuration parameters.\n";
     }
 
-    // --- Tunning Parameters --- 
-    if( auto tunning = root["tunning"] ) {
-        if (tunning["alpha"])  alpha = tunning["alpha"].as<double>();
-        if (tunning["beta"])   beta = tunning["beta"].as<double>();
-        if (tunning["gamma"])  gamma = tunning["gamma"].as<double>();
+    // --- Tuning Parameters --- 
+    if( auto tuning = root["tuning"] ) {
+        if (tuning["alpha"])  alpha = tuning["alpha"].as<double>();
+        if (tuning["beta"])   beta = tuning["beta"].as<double>();
+        if (tuning["gamma"])  gamma = tuning["gamma"].as<double>();
     }
 
     // --- Simulated Annealing ---
@@ -35,6 +35,7 @@ void SolverConfig::fromYaml(const std::string& file_path) {
         if (sa["timeout"])                          sa_timeout_sec = sa["timeout"].as<int>();
         if (sa["stagnation_threshold"])             sa_stagnationThreshold = sa["stagnation_threshold"].as<double>();
         if (sa["stagnation_limit"])                 sa_stagnationLimit = sa["stagnation_limit"].as<int>();
+        if (sa["perturbation_rate"])               sa_perturbationRate = sa["perturbation_rate"].as<double>();
         if (sa["max_neighbor_tries"])               sa_maxNeighborTries = sa["max_neighbor_tries"].as<int>();
         if (sa["initial_temperature"])              sa_initialTemperature = sa["initial_temperature"].as<double>();
         if (sa["cooling_rate"])                     sa_coolingRate = sa["cooling_rate"].as<double>();
@@ -55,6 +56,7 @@ void SolverConfig::fromYaml(const std::string& file_path) {
         if (rs["timeout"])                   rs_timeout_sec = rs["timeout"].as<int>();
         if (rs["stagnation_threshold"])      rs_stagnationThreshold = rs["stagnation_threshold"].as<double>();
         if (rs["stagnation_limit"])          rs_stagnationLimit = rs["stagnation_limit"].as<int>();
+        if (rs["perturbation_rate"])         rs_perturbationRate = rs["perturbation_rate"].as<double>();
         if (rs["break_on_first_feasible"])   rs_breakOnFirstFeasible = rs["break_on_first_feasible"].as<bool>();
     }
 
@@ -100,10 +102,10 @@ void SolverConfig::applyOverride(const std::string& override_str) {
         return false;
     };
 
-    // ---- TUNNING ----
-    if (key == "tunning.alpha") alpha = std::stod(val);
-    else if (key == "tunning.beta") beta = std::stod(val);
-    else if (key == "tunning.gamma") gamma = std::stod(val);
+    // ---- Tuning ----
+    if (key == "tuning.alpha") alpha = std::stod(val);
+    else if (key == "tuning.beta") beta = std::stod(val);
+    else if (key == "tuning.gamma") gamma = std::stod(val);
 
     // ---- SIMULATED ANNEALING ----
     else if (key == "simulated_annealing.max_init_tries") sa_maxInitTries = std::stoi(val);
@@ -111,6 +113,7 @@ void SolverConfig::applyOverride(const std::string& override_str) {
     else if (key == "simulated_annealing.timeout") sa_timeout_sec = std::stoi(val);
     else if (key == "simulated_annealing.stagnation_threshold") sa_stagnationThreshold = std::stod(val);
     else if (key == "simulated_annealing.stagnation_limit") sa_stagnationLimit = std::stoi(val);
+    else if (key == "simulated_annealing.perturbation_rate") sa_perturbationRate = std::stod(val);
     else if (key == "simulated_annealing.max_neighbor_tries") sa_maxNeighborTries = std::stoi(val);
     else if (key == "simulated_annealing.initial_temperature") sa_initialTemperature = std::stod(val);
     else if (key == "simulated_annealing.cooling_rate") sa_coolingRate = std::stod(val);
@@ -139,6 +142,7 @@ void SolverConfig::applyOverride(const std::string& override_str) {
     else if (key == "random_search.timeout") rs_timeout_sec = std::stoi(val);
     else if (key == "random_search.stagnation_threshold") rs_stagnationThreshold = std::stod(val);
     else if (key == "random_search.stagnation_limit") rs_stagnationLimit = std::stoi(val);
+    else if (key == "random_search.perturbation_rate") rs_perturbationRate = std::stod(val);
     else if (key == "random_search.break_on_first_feasible") rs_breakOnFirstFeasible = asBool(val);
 
     // ---- GENETIC ALGORITHM ----

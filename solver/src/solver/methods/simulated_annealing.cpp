@@ -10,6 +10,7 @@ SolverResult Solver::simulatedAnnealingSolve() {
     const double minTemperature      = config.sa_minTemperature;
     const int timeoutMs              = config.sa_timeout_sec*1000;
     const int stagnationLimit        = config.sa_stagnationLimit;
+    const double perturbationRate    = config.sa_perturbationRate;
     const double stagnationThreshold = config.sa_stagnationThreshold;
 
     SolverResult results(
@@ -44,13 +45,11 @@ SolverResult Solver::simulatedAnnealingSolve() {
         return results;
     }
 
-    //int currFitness = scheduler.getScheduleSpan();
     int currFitness = computeObjective();
     Candidate best = rsResult.bestCandidate;
     Candidate curr = rsResult.bestCandidate;
     Candidate next(scheduler.getTaskCount());
     int bestFitness = currFitness;
-    const size_t allocable_servers_count = scheduler.getNonMISTServerCount();
     double T = initialTemperature;
 
     double improvement = 0.0;
@@ -77,17 +76,20 @@ SolverResult Solver::simulatedAnnealingSolve() {
             next = curr;
 
             // multi-perturbation: modify k tasks
+            /*
             int k = static_cast<int>(static_cast<double>(scheduler.getTaskCount()) * 0.2); // 20% of tasks
             int ki = 1 + rand() % k; // 1–k tasks
             for (int m = 0; m < ki; ++m) {
                 size_t idx = rand() % scheduler.getTaskCount();
                 const Task& task = scheduler.getTask(idx);
                 if (!task.hasFixedAllocation()){
-                    curr.server_indices[idx] = scheduler.getNonMISTServerIdx(rand() % allocable_servers_count);
+                    curr.server_indices[idx] = scheduler.getNonMISTServerIdx(rand() % scheduler.getNonMISTServerCount());
                     continue;
                 }
                 next.priorities[idx] = static_cast<double>(rand()) / RAND_MAX;
             }
+            */
+            randomizeCandidate(next, perturbationRate); // 20% perturbation rate
 
             if (scheduler.schedule(next) == ScheduleState::SCHEDULED) { // schedule() is expensive, so only call it once per neighbor
                 nextFitness = computeObjective();

@@ -166,10 +166,10 @@ int main(int argc, char **argv) {
                 return 1;
             }else{
                 if(output_format == utils::PRINT_FORMAT::TXT){
-                    std::cout << "Feasible schedule found:\n";
-                    std::cout << result.print(output_format);
                     std::cout << "Schedule details:\n";
                     std::cout << sch.print(output_format);
+                    std::cout << "Feasible schedule found:\n";
+                    std::cout << result.print(output_format);
                     return 0;
                 }else{
                     std::cout << sch.print(output_format);
