@@ -39,6 +39,7 @@ public:
     inline const std::deque<Task>& getAssignedTasks() const { return assigned_tasks; }
     inline std::deque<Task>& getAssignedTasks() { return assigned_tasks; }
 
+    inline void setId(const std::string& id_) { id = id_; }
     inline void setInternalIdx(int internal_idx_) { internal_idx = internal_idx_; }
 
     void pushBackTask(const Task& task);

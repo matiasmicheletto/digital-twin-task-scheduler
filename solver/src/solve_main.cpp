@@ -157,7 +157,7 @@ int main(int argc, char **argv) {
             std::string initial_solution_csv(
                 (std::istreambuf_iterator<char>(std::cin)),std::istreambuf_iterator<char>()
             );
-            sch.setSchedule(initial_solution_csv);
+            sch.importScheduleFromCSV(initial_solution_csv);
             utils::dbg << "Initial solution set.\n";
             utils::dbg << "\nCandidate from current schedule:\n";
             utils::dbg << sch.getCandidateFromCurrentSchedule().print() << "\n";

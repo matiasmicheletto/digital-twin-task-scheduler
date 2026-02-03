@@ -46,14 +46,18 @@ $(BINDIR)/%: $(COMMON_OBJECTS) $(OBJDIR)/%_main.o
 	cp assets/*_manual.txt $(BINDIR)/assets/
 	@echo "$@ built successfully"
 
-# Compile rule for all .cpp files and move manual files to bin
+# Compile rule for all .cpp files with automatic dependency generation
 OBJFILES = $(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$(COMMON_SOURCES) $(MAIN_SOURCES))
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	@mkdir -p $(dir $@)
 	@echo "Compiling $<..."
-	$(CPP) $(CFLAGS) $(INCLUDES) -c $< -o $@
+	$(CPP) $(CFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
 	@echo "$< compiled successfully"
+
+# Include automatically generated dependencies
+DEPFILES = $(OBJFILES:.o=.d)
+-include $(DEPFILES)
 
 clean:
 	rm -rf $(OBJDIR) $(BINDIR)

@@ -55,7 +55,7 @@ class Task {
         inline const std::vector<int>& getSuccessorInternalIdxs() const { return successor_internal_idxs; }
 
         // Setters
-        inline void setStartTime(int start) { start_time = start; finish_time = start_time + C - 1; }
+        inline void setStartTime(int start) { start_time = start; finish_time = start_time + C; }
         inline void addPredecessor(const std::string& pred_id, const int predecessor_internal_id = 0) { 
             predecessors.push_back(pred_id); 
             predecessor_internal_idxs.push_back(predecessor_internal_id); 
@@ -69,6 +69,7 @@ class Task {
         inline void setD(int d) { D = d; }
         inline void setM(int m) { M = m; }
         inline void setU(double utilization) { u = utilization; }
+        inline void setId(const std::string& id_) { id = id_; }
         inline void setInternalIdx(int internal_idx_) { internal_idx = internal_idx_; }
         inline void setFixedAllocationId(const std::string& fixed_allocation_id_) { fixedAllocationId = fixed_allocation_id_; fixedAllocation=true; }
         inline void setFixedAllocationInternalId(int fixed_allocation_internal_idx_) { fixedAllocationInternalIdx = fixed_allocation_internal_idx_; }

@@ -77,7 +77,7 @@ class Scheduler {
         
         ScheduleState schedule(const Candidate& candidate);
 
-        void setSchedule(const std::string& csv_data);
+        void importScheduleFromCSV(const std::string& csv_data);
         Candidate getCandidateFromCurrentSchedule() const;
         
         inline const ScheduleState getScheduleState() const { return state; }

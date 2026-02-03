@@ -83,6 +83,8 @@ void SolverConfig::fromYaml(const std::string& file_path) {
 };
 
 void SolverConfig::applyOverride(const std::string& override_str) {
+    // Parse key=value
+    // Overrides are applied after loading from YAML
 
     auto pos = override_str.find('=');
     if (pos == std::string::npos)
@@ -162,6 +164,8 @@ void SolverConfig::applyOverride(const std::string& override_str) {
 
 
 void SolverConfig::setLogFile(const std::string& file_path) {
+    // Log file is used to append solver results in CSV format
+
     if (file_path.empty())
         return;
 
