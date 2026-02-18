@@ -123,6 +123,7 @@ std::string SolverResult::getHeaderCSV() {
             "Finish time sum,"
             "Processors cost,"
             "Delay cost,"
+            "Memory footprint (KB),"
             "Objective value,"
             "Solver status,"
             "Observations,"
@@ -149,6 +150,7 @@ std::string SolverResult::printTable(char separator) const {
     oss << finishTimeSum << separator;
     oss << processorsCost << separator;
     oss << delayCost << separator;
+    oss << memoryUsageKB << separator;
     oss << getObjectiveValue() << separator;
     oss << solverStatusToString() << separator;
     oss << "\"" << observations << "\"" << separator;
@@ -177,6 +179,7 @@ std::string SolverResult::printTxt() const {
         oss << "  Finish Time Sum: " << finishTimeSum << "\n";
         oss << "  Processors Cost: " << processorsCost << "\n";
         oss << "  Delay Cost: " << delayCost << "\n";
+        oss << "  Memory Usage (KB): " << memoryUsageKB << "\n";
         oss << "  Schedule State: " << scheduleState.toString() << "\n\n";
 
         oss << "  Best candidate:\n";

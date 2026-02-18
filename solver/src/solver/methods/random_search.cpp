@@ -26,6 +26,7 @@ SolverResult Solver::randomSearchSolve() {
         0,
         0,
         0,
+        0,
         ""
     );
 
@@ -70,6 +71,7 @@ SolverResult Solver::randomSearchSolve() {
                 results.finishTimeSum = scheduler.getFinishTimeSum();
                 results.processorsCost = scheduler.getProcessorsCost();
                 results.delayCost = scheduler.getDelayCost();
+                results.memoryUsageKB = utils::getPeakMemoryUsageKB();
                 results.scheduleState = scheduler.getScheduleState();
                 utils::dbg << results.observations << "\n";
                 return results;
@@ -116,6 +118,7 @@ SolverResult Solver::randomSearchSolve() {
         results.finishTimeSum = scheduler.getFinishTimeSum();
         results.processorsCost = scheduler.getProcessorsCost();
         results.delayCost = scheduler.getDelayCost();
+        results.memoryUsageKB = utils::getPeakMemoryUsageKB();
         results.scheduleState = scheduler.getScheduleState();
         results.bestCandidate = best;
     }

@@ -29,6 +29,7 @@ SolverResult Solver::simulatedAnnealingSolve() {
         0,
         0,
         0,
+        0,
         ""
     );
 
@@ -160,6 +161,7 @@ SolverResult Solver::simulatedAnnealingSolve() {
         results.finishTimeSum = scheduler.getFinishTimeSum();
         results.processorsCost = scheduler.getProcessorsCost();
         results.delayCost = scheduler.getDelayCost();
+        results.memoryUsageKB = utils::getPeakMemoryUsageKB();        
     }else{
         results.status = SolverResult::SolverStatus::ERROR;
         results.observations = "SA: No feasible solution found.";

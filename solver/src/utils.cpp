@@ -124,6 +124,25 @@ std::string currentDateTime() {
     return std::string(buf);
 }
 
+long getPeakMemoryUsageKB() {
+#if defined(__linux__)
+    struct rusage usage;
+    if (getrusage(RUSAGE_SELF, &usage) != 0) {
+        throw_runtime_error("getrusage failed");
+    }
+    return usage.ru_maxrss; // Already in KB on Linux
+#elif defined(__APPLE__)
+    struct rusage usage;
+    if (getrusage(RUSAGE_SELF, &usage) != 0) {
+        throw_runtime_error("getrusage failed");
+    }
+    return usage.ru_maxrss / 1024; // Convert from bytes to KB on macOS
+#else
+    throw_runtime_error("Peak memory usage not supported on this platform");
+    return -1;
+#endif
+}
+
 long long getElapsedMs(const std::chrono::high_resolution_clock::time_point& start_time) {
     auto end_time = std::chrono::high_resolution_clock::now();
     return std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();

@@ -14,6 +14,7 @@
 #include <type_traits>
 #include <filesystem>
 #include <stdexcept>
+#include <sys/resource.h>
 
 #include "json.hpp"
 
@@ -54,6 +55,8 @@ inline constexpr const char defaultMessage[] = "";
 void printHelp(const char* file, const char* message = defaultMessage); 
 
 std::string currentDateTime();
+
+long getPeakMemoryUsageKB();
 
 long long getElapsedMs(const std::chrono::high_resolution_clock::time_point& start_time);
 

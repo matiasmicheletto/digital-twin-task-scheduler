@@ -50,6 +50,7 @@ SolverResult Solver::geneticAlgorithmSolve() {
         0,
         0,
         0,
+        0,
         ""
     );
 
@@ -170,6 +171,7 @@ SolverResult Solver::geneticAlgorithmSolve() {
         results.finishTimeSum = scheduler.getFinishTimeSum();
         results.processorsCost = scheduler.getProcessorsCost();
         results.delayCost = scheduler.getDelayCost();
+        results.memoryUsageKB = utils::getPeakMemoryUsageKB();
         utils::dbg << results.observations << "\n";
         return results;
     }else{

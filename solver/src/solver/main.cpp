@@ -19,6 +19,7 @@ double Solver::computeObjective() const {
 SolverResult Solver::solve() {
     srand(static_cast<unsigned int>(time(nullptr)));
     SolverResult result;
+
     switch(config.solverMethod) {
         case SolverMethod::RANDOM_SEARCH:
             result = randomSearchSolve();

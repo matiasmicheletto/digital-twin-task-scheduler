@@ -120,6 +120,7 @@ public:
     int finishTimeSum;
     int processorsCost;
     int delayCost;
+    long memoryUsageKB;
     std::string observations;
 
     double getObjectiveValue() const;
@@ -144,6 +145,7 @@ public:
         finishTimeSum(0), 
         processorsCost(0), 
         delayCost(0),
+        memoryUsageKB(0),
         observations("")
     {}
 
@@ -163,6 +165,7 @@ public:
         int finishTimeSum,
         int processorsCost,
         int delayCost,
+        long memoryUsageKB,
         std::string observations
     ) : 
         status(status), 
@@ -180,6 +183,7 @@ public:
         finishTimeSum(finishTimeSum), 
         processorsCost(processorsCost), 
         delayCost(delayCost),
+        memoryUsageKB(memoryUsageKB),
         observations(observations)
     {}
 private: 
