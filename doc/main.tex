@@ -1,0 +1,44 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{geometry}
+\usepackage{booktabs}
+
+\usepackage{float}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+
+\begin{document}
+
+\section{Candidate representation}
+A candidate $c$ is represented as a tuple of two arrays:
+\begin{itemize}
+	\item \texttt{server\_indices[i]}: server assigned to task $i$.
+	\item \texttt{priorities[i]} $\in [0,1]$: priority of task $i$ in the server assigned to it.
+\end{itemize}
+
+\section{Tunning parameters}
+
+\input{parameters.tex}
+
+\clearpage
+
+\section{Pseudocodes}
+
+\input{randomization.tex}
+
+\input{rs_pseudocode.tex}
+
+\input{refinement_algos.tex}
+
+\input{sa_pseudocode.tex}
+
+\input{ga_pseudocode.tex}
+
+\end{document}

@@ -1,0 +1,30 @@
+\begin{algorithm}[H]
+\caption{Random Search}
+\begin{algorithmic}[1]
+\State initialize limits, timeout, and stagnation counters
+\State obtain initial candidate \texttt{curr} from the scheduler
+\State \texttt{bestFitness} $\gets +\infty$
+\For{$iter \gets 1$ \textbf{to} \texttt{rs\_maxIterations}}
+	\If{timeout reached} \State \textbf{break} \EndIf
+	\If{\texttt{schedule(curr)} is feasible}
+		\If{\texttt{rs\_breakOnFirstFeasible}}
+			\State return \texttt{curr}
+		\EndIf
+		\State $fitness \gets f(curr)$
+		\If{$fitness < bestFitness$}
+			\State update \texttt{best} and \texttt{bestFitness}
+			\State reset stagnation counter
+		\Else
+			\State increment stagnation counter
+			\If{counter $\ge$ \texttt{rs\_stagnationLimit}} \State \textbf{break} \EndIf
+		\EndIf
+	\EndIf
+	\State \texttt{randomizeCandidate(curr, rs\_perturbationRate)}
+\EndFor
+\If{\texttt{schedule(best)} is feasible}
+	\State return \texttt{best}
+\Else
+	\State return ``no feasible solution''
+\EndIf
+\end{algorithmic}
+\end{algorithm}

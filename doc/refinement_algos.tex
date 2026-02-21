@@ -1,0 +1,46 @@
+\begin{algorithm}[H]
+\caption{Normal Priority Refinement (SA)}
+\begin{algorithmic}[1]
+\State $\sigma \gets \max(\texttt{sa\_sigmaMax} \cdot T/\texttt{sa\_initialTemperature}, \texttt{sa\_sigmaMin})$
+\State noImprovementCounter $\gets 0$
+\For{$iter \gets 1$ \textbf{to} \texttt{sa\_refinementIterations}}
+	\State \texttt{trial} $\gets$ copy of \texttt{curr}
+	\For{each task $i$}
+		\State \texttt{trial.priorities[i]} $\gets$ clamp$(\texttt{trial.priorities[i]} + \mathcal{N}(0,\sigma), 0,1)$
+	\EndFor
+	\If{\texttt{schedule(trial)} is feasible and $f(trial) < currFitness$}
+		\State \texttt{curr} $\gets$ \texttt{trial}; \texttt{currFitness} $\gets f(trial)$
+		\State noImprovementCounter $\gets 0$
+	\Else
+		\State noImprovementCounter $\gets$ noImprovementCounter $+ 1$
+	\EndIf
+	\If{noImprovementCounter $\ge 10$} \State \textbf{break} \EndIf
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{PSO Priority Refinement (SA)}
+\begin{algorithmic}[1]
+\State initialize swarm of size \texttt{sa\_pso\_swarmSize} with random priorities and velocities
+\State evaluate feasible particles to initialize personal bests
+\State \texttt{globalBest} $\gets$ \texttt{curr}; \texttt{globalBestFitness} $\gets currFitness$
+\State $v_{max} \gets \max(\texttt{sa\_pso\_velocityClamp} \cdot T/\texttt{sa\_initialTemperature}, 0.1)$
+\For{$iter \gets 1$ \textbf{to} \texttt{sa\_refinementIterations}}
+	\For{each particle $p$}
+		\For{each task $j$}
+			\State update velocity:
+			\State $v_j \gets w v_j + c_1 r_1(pbest_j - x_j) + c_2 r_2(gbest_j - x_j)$
+			\State clamp $v_j$ to $[-v_{max}, v_{max}]$
+			\State $x_j \gets$ clamp$(x_j + v_j, 0,1)$
+		\EndFor
+		\If{\texttt{schedule(position)} is feasible}
+			\State evaluate fitness and update \texttt{pbest} / \texttt{gbest}
+		\EndIf
+	\EndFor
+\EndFor
+\If{\texttt{globalBestFitness} $<$ \texttt{currFitness}}
+	\State \texttt{curr} $\gets$ \texttt{globalBest}
+\EndIf
+\end{algorithmic}
+\end{algorithm}

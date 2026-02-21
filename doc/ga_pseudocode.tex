@@ -1,0 +1,32 @@
+\begin{algorithm}[H]
+\caption{Genetic Algorithm}
+\begin{algorithmic}[1]
+\State initialize population of size \texttt{ga\_populationSize} using feasible Random Search
+\If{initialization insufficient/failed}
+	\State return initialization error
+\EndIf
+\State sort population by fitness and select global best
+\For{$gen \gets 1$ \textbf{to} \texttt{ga\_maxGenerations}}
+	\If{timeout reached} \State \textbf{break} \EndIf
+	\State new population $\gets$ best \texttt{ga\_eliteCount} (elitism)
+	\While{size(new population) $<$ \texttt{ga\_populationSize}}
+		\State select parents by tournament (k=3)
+		\State create child as copy of parent 1
+		\If{\texttt{rand()} $<$ \texttt{ga\_crossoverRate}}
+			\State for each task: mix server (50\%) and average priority
+		\EndIf
+		\State mutate child with \texttt{randomizeCandidate(child, ga\_mutationRate)}
+		\If{\texttt{schedule(child)} is feasible}
+			\State add child and its fitness to new population
+		\EndIf
+	\EndWhile
+	\State replace population and sort by fitness
+	\If{current best improves global best}
+		\State update global best and reset stagnation
+	\Else
+		\State increment stagnation; if it exceeds limit, terminate
+	\EndIf
+\EndFor
+\State return global best individual
+\end{algorithmic}
+\end{algorithm}

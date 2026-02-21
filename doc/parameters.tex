@@ -1,0 +1,76 @@
+\begin{table}[h]
+\centering
+\caption{Random Search Parameters}
+\begin{tabular}{lll}
+\toprule
+Parameter & Type & Description \\
+\midrule
+\texttt{maxIterations} & integer & Iteration limit. \\
+\texttt{timeout\_sec} & integer & Maximum execution time. \\
+\texttt{stagnationThreshold} & real & Minimum improvement to reset stagnation. \\
+\texttt{stagnationLimit} & integer & Allowed iterations without improvement. \\
+\texttt{perturbationRate} & real & Probability of perturbing each gene. \\
+\texttt{breakOnFirstFeasible} & bool & Stops when the first feasible solution is found. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{Simulated Annealing Parameters}
+\begin{tabular}{lll}
+\toprule
+Parameter & Type & Description \\
+\midrule
+\texttt{maxInitTries} & integer & Feasible initialization attempts (via RS). \\
+\texttt{maxIterations} & integer & SA iteration limit. \\
+\texttt{maxNeighborTries} & integer & Neighbors evaluated per temperature. \\
+\texttt{initialTemperature} & real & Initial temperature $T_0$. \\
+\texttt{coolingRate} & real & Multiplicative cooling rate. \\
+\texttt{minTemperature} & real & Minimum cutoff temperature. \\
+\texttt{timeout\_sec} & integer & Maximum execution time. \\
+\texttt{stagnationThreshold} & real & Minimum improvement to avoid stagnation. \\
+\texttt{stagnationLimit} & integer & Allowed iterations without improvement. \\
+\texttt{perturbationRate} & real & Neighbor perturbation intensity. \\
+\texttt{priorityRefinementMethod} & enum & \texttt{NORMAL\_PERTURBATION} or \texttt{PSO}. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{Simulated Annealing Priority Refinement Parameters}
+\begin{tabular}{lll}
+\toprule
+Parameter & Type & Description \\
+\midrule
+\texttt{refinementIterations} & integer & Local refinement iterations. \\
+\texttt{sigmaMax}, \texttt{sigmaMin} & real & Deviation range in Normal mode. \\
+\texttt{swarmSize} & integer & PSO swarm size. \\
+\texttt{velocityClamp} & real & PSO velocity bound. \\
+\texttt{inertiaWeight} & real & PSO inertia weight. \\
+\texttt{cognitiveCoefficient} & real & PSO cognitive term. \\
+\texttt{socialCoefficient} & real & PSO social term. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{Genetic Algorithm Parameters}
+\begin{tabular}{lll}
+\toprule
+Parameter & Type & Description \\
+\midrule
+\texttt{maxInitTries} & integer & RS attempts for each initial individual. \\
+\texttt{populationSize} & integer & Population size. \\
+\texttt{maxGenerations} & integer & Maximum generations. \\
+\texttt{timeout\_sec} & integer & Maximum execution time. \\
+\texttt{eliteCount} & integer & Number of elites preserved. \\
+\texttt{stagnationThreshold} & real & Minimum improvement to avoid stagnation. \\
+\texttt{stagnationLimit} & integer & Allowed generations without improvement. \\
+\texttt{mutationRate} & real & Mutation probability per gene. \\
+\texttt{crossoverRate} & real & Probability of applying crossover. \\
+\bottomrule
+\end{tabular}
+\end{table}

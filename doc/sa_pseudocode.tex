@@ -1,0 +1,35 @@
+\begin{algorithm}[H]
+\caption{Simulated Annealing}
+\begin{algorithmic}[1]
+\State initialize with Random Search configured with \texttt{breakOnFirstFeasible = true}
+\If{no feasible initial solution is found}
+	\State return initialization error
+\EndIf
+\State \texttt{curr} $\gets$ initial solution; \texttt{best} $\gets$ \texttt{curr}
+\State \texttt{currFitness} $\gets f(curr)$; \texttt{bestFitness} $\gets$ \texttt{currFitness}
+\State $T \gets \texttt{sa\_initialTemperature}$
+\For{$iter \gets 1$ \textbf{to} \texttt{sa\_maxIterations} \textbf{while} $T > \texttt{sa\_minTemperature}$}
+	\If{timeout reached} \State \textbf{break} \EndIf
+	\State attempt up to \texttt{sa\_maxNeighborTries} neighbors by perturbing \texttt{curr}
+	\If{no feasible neighbor exists}
+		\State $T \gets T \cdot \texttt{sa\_coolingRate}$; \textbf{continue}
+	\EndIf
+	\If{$f(next) < f(curr)$}
+		\State accept \texttt{next}
+	\Else
+		\State accept with probability $\exp(-(f(next)-f(curr))/T)$
+	\EndIf
+	\If{accepted}
+		\State \texttt{curr} $\gets$ \texttt{next}; \texttt{currFitness} $\gets f(next)$
+		\State apply refinement (Normal or PSO) on \texttt{curr}
+		\If{\texttt{currFitness} improves \texttt{bestFitness}}
+			\State update \texttt{best} and reset stagnation
+		\Else
+			\State increment stagnation; if it exceeds limit, terminate
+		\EndIf
+	\EndIf
+	\State $T \gets T \cdot \texttt{sa\_coolingRate}$
+\EndFor
+\State return \texttt{best}
+\end{algorithmic}
+\end{algorithm}
