@@ -16,29 +16,110 @@
 
 \begin{document}
 
-\section{Candidate representation}
-A candidate $c$ is represented as a tuple of two arrays:
+\section{Metaheuristic Framework and Solution Encoding}
+
+Since the allocation and scheduling problem formulated in Section \ref{sec:model} is NP-hard, a set of metaheuristic approaches were applied to explore the solution space for large-scale instances. In this context, a solution is represented through an explicit encoding that separates \emph{allocation} decisions from \emph{scheduling priority} decisions. This representation allows different search strategies to operate over a common candidate structure while delegating feasibility verification to the greedy heuristic defined previously.
+
+\subsection{Candidate Representation}
+
+As defined in section \ref{sec:model}, $S$ denote the number of tasks and $P$ the number of servers. A candidate solution $c$ is defined as the tuple:
+
+\begin{equation}
+c = (\mathbf{p}, \mathbf{q}),
+\label{eq:encoding}
+\end{equation}
+
+
+where:
+
 \begin{itemize}
-	\item \texttt{server\_indices[i]}: server assigned to task $i$.
-	\item \texttt{priorities[i]} $\in [0,1]$: priority of task $i$ in the server assigned to it.
+    \item $\mathbf{p} = (p_1, \dots, p_{S})$ is the \emph{server assignment vector} with $p_i \in \{1,\dots,P\}$ indicating the server to which task $\tau_i$ is allocated.
+    
+    \item $\mathbf{q} = (q_1, \dots, q_{S})$ is the \emph{priority vector}, with $q_i \in [0,1]$ encoding the relative execution priority of task $\tau_i$ within its assigned server.
 \end{itemize}
 
-\section{Tunning parameters}
+The priority vector does not directly encode start times. Instead, it induces an ordering among tasks assigned to the same processor. The actual schedule (starting times, finishing times, and feasibility verification) is obtained by invoking the scheduling procedure, which processes tasks in decreasing order of priority while enforcing all constraints, including precedence, deadlines and resource capacities of the servers.
 
-\input{parameters.tex}
+This separation between encoding and feasibility evaluation enables the metaheuristics to operate in a continuous or discrete search space while maintaining strict feasibility control through the scheduler.
 
-\clearpage
+\subsection{Initialization from a Greedy Precalculated Solution}
 
-\section{Pseudocodes}
+All of the metaheuristics proposed in this paper require a random initialization. Generating a feasible schedule using complete random vectors $p$ and $q$ is an almost impossible task, even for small instances. For this reason, candidates are initialized from a feasible schedule previously computed using the greedy heuristic described in Section \ref{sec:greedy}.
+
+This initial solution, not only works as metaheuristic methods starting point, but it also significantly improves the convergence behavior of the algorithms. 
+
+The greedy procedure exports a schedule, this is, for each task $\tau_i$, an assigned server $s_i^{G}$, a start time $t_i^{G}$ and a finishing time $f_i^{G}$. The superscript $G$ denotes values obtained from the greedy solution. These values are used to construct initial candidates $c^{(0)}$ for the metaheuristic search. The initialization of the candidate $c^{(0)}$ is performed as follows.
+
+For every task $\tau_i$, the server index is directly inherited from the greedy solution:
+
+\[
+s_i^{(0)} = s_i^{G}.
+\]
+
+This guarantees that the initial candidate encodes a feasible allocation with respect to fixed MIST constraints, resource capacities, and compatibility rules.
+
+Since the candidate encoding requires relative priorities rather than explicit start times, priorities are reconstructed from the greedy schedule.
+
+Let $\pi$ be a permutation of tasks such that, when ordered according to their start times in the greedy solution, they satisfy:
+
+\[
+t_{\pi(1)}^{G} \leq t_{\pi(2)}^{G} \leq \dots \leq t_{\pi(S)}^{G}.
+\]
+
+Define the rank function $r(i)$ as the position of task $\tau_i$ in this ordered list (with $r=0$ for the earliest task). Priorities are then assigned according to:
+
+\[
+q_i^{(0)} = \frac{S - r(i)}{S}.
+\]
+
+This normalization ensures $q_i^{(0)} \in (0,1]$, where earlier tasks receive larger priority values. Consequently, when the scheduler reconstructs the execution order, it reproduces the greedy sequencing unless modified by later perturbations.
+
+\subsection{Search Space Interpretation}
+
+Under the encoding proposed in equation \ref{eq:encoding}, the search space can be interpreted as a discrete combinatorial space induced by server assignments $\mathbf{s}$ and a continuous priority space $\mathbf{q} \in [0,1]^{S}$ controlling intra-processor ordering.
+
+Metaheuristic operators therefore act in two complementary ways. It can be by modifying elements of $\mathbf{s}$ for tasks without fixed assignments or by applying controlled stochastic variations to $\mathbf{q}$, thus altering execution ordering while preserving feasibility verification through the scheduler. This hybrid discrete–continuous structure provides sufficient flexibility to escape local minima while maintaining a compact and structured solution encoding.
+
+\subsection{Rationale for Greedy-Based Initialization}
+
+The greedy heuristic constructs solutions by explicitly enforcing feasibility at every assignment step. Initializing the metaheuristics from such a solution offers several advantages. For instance, it guarantees the existence of a feasible starting point, reduces the search effort required to reach feasible regions, provides a structured baseline reflecting precedence and deadline awareness and accelerates convergence in Simulated Annealing and Genetic Algorithms.
+
+Subsequent metaheuristic exploration refines this initial solution by reallocating non-fixed tasks and adjusting priority values to improve the scalarized objective function defined in Section \ref{sec:model}. This approach effectively combines the strengths of constructive heuristics with the global search capabilities of metaheuristics, leading to high-quality solutions for complex scheduling problems.
+
+\subsection{Algorithms Description}
+
+%\input{parameters.tex}
+
+The metaheuristic strategies proposed in this work navigate the sparse feasible region of the search space. They utilize the indirect encoding defined by \ref{eq:encoding} that separates allocation decisions from task priorities. Feasibility is maintained via a deterministic scheduler that enforces all temporal and structural constraints, effectively decoupling the stochastic search process from feasibility control.
+
+The neighborhood structure is governed by the \texttt{randomizeCandidate} operator, which was implemented using the Algorithm \ref{algo:randomize}. This algorithm perturbs solutions in two dimensions: 
+
+\begin{enumerate}
+    \item \textbf{Allocation:} Reassigning non-MIST tasks to admissible processors within the set of available resources.
+    \item \textbf{Priority:} Modifying execution order through additive Gaussian noise applied to continuous priority variables.
+\end{enumerate}
 
 \input{randomization.tex}
 
+By verifying feasibility only after perturbation, the search is naturally biased toward valid regions; infeasible neighbors are discarded, ensuring that every accepted solution satisfies the system requirements.
+
+The Random Search (RS) procedure serves as both a baseline and a crucial initialization tool. As it can be observed in Algorithm \ref{algo:rs}, starting from a greedy-derived feasible solution, it applies controlled perturbations to explore the search space until a stagnation criterion or timeout is met. This ensures that subsequent metaheuristics begin within a feasible basin, which is essential given the low probability of generating valid schedules through purely random initialization.
+
 \input{rs_pseudocode.tex}
 
-\input{refinement_algos.tex}
+The Simulated Annealing (SA) algorithm introduces a probabilistic acceptance mechanism to escape local minima. Governed by a geometric cooling schedule, the search shifts from exploration to exploitation as the temperature decreases. Pseudocode of this methods is shown in Algorithm \ref{algo:sa}.
 
 \input{sa_pseudocode.tex}
 
+A key enhancement in this implementation is the inclusion of a local refinement phase after each accepted move. Two strategies are utilized: Normal refinement, which performs stochastic adjustments of the priority vector (Algorithm \ref{algo:sa_normal_refinement}), and PSO-based refinement, which treats the priority vector as a particle in a continuous domain (Algorithm \ref{algo:sa_pso_refinement}). Both methods intensify the search within the priority subspace while keeping server assignments fixed.
+
+\input{refinement_algos.tex}
+
+The Genetic Algorithm (GA) detailed in Algorithm \ref{algo:ga} extends the exploration to a population-based paradigm, initialized with feasible individuals from the RS phase. Selection is managed via a tournament mechanism to maintain competitive pressure, while elitism preserves high-quality solutions across generations. The crossover operator combines parent information by mixing server assignments and averaging priority values. Mutation is handled by the $randomizeCandidate$ operator, and feasibility is strictly verified prior to population insertion.
+
 \input{ga_pseudocode.tex}
+
+Overall, the proposed metaheuristic framework combines constructive feasibility, indirect encoding, stochastic exploration, and adaptive refinement within a unified architecture. Random Search provides diversification and initialization capability; Simulated Annealing offers controlled escape from local optima through temperature-guided acceptance; and the Genetic Algorithm introduces population-level recombination and long-range exploration. The integration of these mechanisms enables efficient navigation of a highly constrained, hybrid discrete–continuous search space.
+
 
 \end{document}
