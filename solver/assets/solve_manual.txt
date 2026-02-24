@@ -25,7 +25,7 @@ OPTIONS:
    -c, --config   (Optional) Load optimization parameters from file (see below).
    -h, --help     (optional) Display this help message.  
    -v, --version  (optional) Displays software version.  
-   -s, --solver   (optional) Choose solver. Options are "random", "genetic" or "annealing".
+   -s, --solver   (optional) Choose solver. Options are "random", "genetic" or "annealing". "annealing-normal" and "annealing-pso" are also available for simulated annealing with different refinement methods. Default value is "random".
    -o, --output   (optional) Output format. Must be "json", "text", "csv" or "tab". Default value is "text".  
    --set          (optional) Override configuration parameter.  
    --dbg          (optional) Show debugging messages.  

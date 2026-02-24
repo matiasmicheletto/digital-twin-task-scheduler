@@ -38,6 +38,7 @@ int main(int argc, char **argv) {
     std::string cfg_filename = "default_config.yaml"; // Solver config file (yaml)
     utils::PRINT_FORMAT output_format = utils::PRINT_FORMAT::TXT;
     SolverMethod method = SolverMethod::RANDOM_SEARCH;
+    PriorityRefinementMethod refinement_method = PriorityRefinementMethod::NORMAL_PERTURBATION; // Can be set to PSO or normal directly through method selection (e.g., annealing-normal vs annealing-pso)
     bool solve = false;
     std::vector<std::string> cfg_overrides; // Configuration overrides from command line
 
@@ -57,6 +58,14 @@ int main(int argc, char **argv) {
                 if(strcmp(optarg, "random") == 0) method = SolverMethod::RANDOM_SEARCH;
                 else if(strcmp(optarg, "genetic") == 0) method = SolverMethod::GENETIC_ALGORITHM;
                 else if(strcmp(optarg, "annealing") == 0) method = SolverMethod::SIMULATED_ANNEALING;
+                else if(strcmp(optarg, "annealing-normal") == 0) {
+                    method = SolverMethod::SIMULATED_ANNEALING;
+                    refinement_method = PriorityRefinementMethod::NORMAL_PERTURBATION;
+                }
+                else if(strcmp(optarg, "annealing-pso") == 0) {
+                    method = SolverMethod::SIMULATED_ANNEALING;
+                    refinement_method = PriorityRefinementMethod::PARTICLE_SWARM_OPTIMIZATION;
+                }
                 else {
                     utils::printHelp(MANUAL, "Supported methods: random, genetic, annealing");
                     return 1;
@@ -155,6 +164,7 @@ int main(int argc, char **argv) {
                 utils::dbg << "Using default solver configuration.\n";
             }
             config.solverMethod = method;
+            config.sa_priorityRefinementMethod = refinement_method;
             utils::dbg << config.print();
             Solver solver(sch, config);
             SolverResult result = solver.solve();
