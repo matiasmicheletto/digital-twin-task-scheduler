@@ -34,7 +34,7 @@ public:
     // Parameters for Simulated Annealing
     int sa_maxInitTries = 3000;
     int sa_maxIterations = 3000;
-    int sa_timeout_sec = 3600;
+    int sa_timeout_sec = 600;
     double sa_stagnationThreshold = 1e-6;
     int sa_stagnationLimit = 200; // Number of iterations without improvement before stopping
     double sa_perturbationRate = 0.1; // Probability of perturbation for each task
@@ -55,7 +55,7 @@ public:
 
     // Parameters for Random Search
     int rs_maxIterations = 1000;
-    int rs_timeout_sec = 3600;
+    int rs_timeout_sec = 600;
     double rs_stagnationThreshold = 1e-6;
     int rs_stagnationLimit = 200;
     double rs_perturbationRate = 0.1;
@@ -66,7 +66,7 @@ public:
     int ga_maxInitTries = 3000;
     size_t ga_populationSize = 100;
     int ga_maxGenerations = 500;
-    int ga_timeout_sec = 3600;
+    int ga_timeout_sec = 600;
     size_t ga_eliteCount = 5;
     double ga_stagnationThreshold = 1e-6;
     int ga_stagnationLimit = 50;
