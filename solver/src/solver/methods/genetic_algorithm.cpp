@@ -133,6 +133,9 @@ SolverResult Solver::geneticAlgorithmSolve() {
             if (scheduler.schedule(child) == ScheduleState::SCHEDULED) {
                 int fitness = computeObjective();
                 newPopulation.push_back({child, fitness});
+            } else {
+                // If child is infeasible, keep one of the parents (elitism)
+                newPopulation.push_back(p1);
             }
 
             iterations++;
