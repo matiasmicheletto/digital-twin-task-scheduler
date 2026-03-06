@@ -83,6 +83,8 @@ SolverResult Solver::geneticAlgorithmSolve() {
     // Sort initial population by fitness
     std::sort(population.begin(), population.end(), sortByFitness);
     Individual best = population.front();
+    Scheduler bestScheduler = scheduler; // Snapshot when best was last confirmed feasible
+    bool foundFeasible = true; // Population was just initialized with feasible individuals
 
     // Tournament
     auto tournamentSelect = [&](int k = 3) -> const Individual& {
@@ -145,8 +147,12 @@ SolverResult Solver::geneticAlgorithmSolve() {
         std::sort(population.begin(), population.end(), sortByFitness);
 
         if(population.front().fitness < best.fitness) {
+            improvement = best.fitness - population.front().fitness; // compute before updating best
             best = population.front();
-            improvement = best.fitness - population.front().fitness;
+            // Save scheduler snapshot when best is updated (re-schedule to capture the state)
+            if (scheduler.schedule(best.candidate) == ScheduleState::SCHEDULED) {
+                bestScheduler = scheduler;
+            }
             nonImprovingGenerations = 0;
         } else {
             improvement = 0.0;
@@ -164,24 +170,27 @@ SolverResult Solver::geneticAlgorithmSolve() {
         }
     }
 
-    scheduler.schedule(best.candidate);
-    results.scheduleState = scheduler.getScheduleState();
-    if(results.scheduleState == ScheduleState::SCHEDULED) {
-        results.bestCandidate = best.candidate;
-        results.runtime_ms = utils::getElapsedMs(startTime);
-        results.iterations = iterations;
-        results.scheduleSpan = scheduler.getScheduleSpan();
-        results.finishTimeSum = scheduler.getFinishTimeSum();
-        results.processorsCost = scheduler.getProcessorsCost();
-        results.delayCost = scheduler.getDelayCost();
-        results.memoryUsageKB = utils::getPeakMemoryUsageKB();
-        utils::dbg << results.observations << "\n";
-        return results;
-    }else{
-        results.observations = "GA: Best candidate infeasible at the end.";
-        utils::dbg << results.observations << "\n";
-        return results;
+    if (scheduler.schedule(best.candidate) != ScheduleState::SCHEDULED) {
+        // Re-scheduling the best candidate failed. If we saved a valid snapshot, restore it.
+        if (foundFeasible) {
+            scheduler = bestScheduler;
+            results.observations = "GA: Best candidate could not be re-scheduled; returning best known state.";
+            utils::dbg << results.observations << "\n";
+        } else {
+            results.observations = "GA: Best candidate infeasible at the end.";
+            utils::dbg << results.observations << "\n";
+            return results;
+        }
     }
+    results.scheduleState = scheduler.getScheduleState();
+    results.bestCandidate = best.candidate;
+    results.runtime_ms = utils::getElapsedMs(startTime);
+    results.iterations = iterations;
+    results.scheduleSpan = scheduler.getScheduleSpan();
+    results.finishTimeSum = scheduler.getFinishTimeSum();
+    results.processorsCost = scheduler.getProcessorsCost();
+    results.delayCost = scheduler.getDelayCost();
+    results.memoryUsageKB = utils::getPeakMemoryUsageKB();
 
     return results;
 }

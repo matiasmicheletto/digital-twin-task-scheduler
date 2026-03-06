@@ -51,6 +51,8 @@ SolverResult Solver::simulatedAnnealingSolve() {
     Candidate curr = rsResult.bestCandidate;
     Candidate next(scheduler.getTaskCount());
     int bestFitness = currFitness;
+    Scheduler bestScheduler = scheduler; // Snapshot when best was last confirmed feasible
+    bool foundFeasible = true; // RS found an initial feasible solution
     double T = initialTemperature;
 
     double improvement = 0.0;
@@ -128,9 +130,13 @@ SolverResult Solver::simulatedAnnealingSolve() {
             refinePriorities(config.sa_priorityRefinementMethod, curr, currFitness, T);
 
             if (currFitness < bestFitness) {
+                improvement = bestFitness - currFitness; // compute before updating bestFitness
                 bestFitness = currFitness;
                 best     = curr;
-                improvement = bestFitness - currFitness;
+                // Save scheduler snapshot when best is updated (re-schedule to capture the state)
+                if (scheduler.schedule(best) == ScheduleState::SCHEDULED) {
+                    bestScheduler = scheduler;
+                }
                 nonImprovingIterations = 0;
             }else{
                 improvement = 0.0;
@@ -152,7 +158,19 @@ SolverResult Solver::simulatedAnnealingSolve() {
     }
 
     if (bestFitness < INT_MAX){
-        scheduler.schedule(best);
+        if (scheduler.schedule(best) != ScheduleState::SCHEDULED) {
+            // Re-scheduling the best candidate failed. Restore from saved snapshot.
+            if (foundFeasible) {
+                scheduler = bestScheduler;
+                results.observations = "SA: Best candidate could not be re-scheduled; returning best known state.";
+                utils::dbg << results.observations << "\n";
+            } else {
+                results.status = SolverResult::SolverStatus::ERROR;
+                results.observations = "SA: No feasible solution found.";
+                utils::dbg << results.observations << "\n";
+                return results;
+            }
+        }
         results.scheduleState = scheduler.getScheduleState();
         results.bestCandidate = best;
         results.runtime_ms = utils::getElapsedMs(startTime);
@@ -161,7 +179,7 @@ SolverResult Solver::simulatedAnnealingSolve() {
         results.finishTimeSum = scheduler.getFinishTimeSum();
         results.processorsCost = scheduler.getProcessorsCost();
         results.delayCost = scheduler.getDelayCost();
-        results.memoryUsageKB = utils::getPeakMemoryUsageKB();        
+        results.memoryUsageKB = utils::getPeakMemoryUsageKB();
     }else{
         results.status = SolverResult::SolverStatus::ERROR;
         results.observations = "SA: No feasible solution found.";

@@ -35,7 +35,9 @@ SolverResult Solver::randomSearchSolve() {
     int bestFitness = INT_MAX;
     Candidate curr = scheduler.getCandidateFromCurrentSchedule();
     Candidate best(scheduler.getTaskCount());
-    
+    Scheduler bestScheduler;  // Snapshot of the scheduler when the best solution was found
+    bool foundFeasible = false;
+
     if(scheduler.getNonMISTServerCount() == 0) {
         results.status = SolverResult::SolverStatus::ERROR;
         results.observations = "No allocable servers available.";
@@ -81,9 +83,11 @@ SolverResult Solver::randomSearchSolve() {
             //int fitness = scheduler.getScheduleSpan();
             int fitness = computeObjective();
             if (fitness < bestFitness) {
+                improvement = bestFitness - fitness;  // compute before updating bestFitness
                 bestFitness = fitness;
                 best = curr;
-                improvement = bestFitness - fitness;
+                bestScheduler = scheduler;  // save scheduler state at this point
+                foundFeasible = true;
                 nonImprovingGenerations = 0;
             } else {
                 improvement = 0.0;
@@ -108,9 +112,28 @@ SolverResult Solver::randomSearchSolve() {
 
     // Final scheduling with the best candidate found
     if (scheduler.schedule(best) != ScheduleState::SCHEDULED) {
-        results.status = SolverResult::SolverStatus::SOLUTION_NOT_FOUND;
-        results.observations = "No feasible solution found after " + std::to_string(iteration) + " iterations.";
-        utils::dbg << results.observations << "\n";
+        if (foundFeasible) {
+            // Re-scheduling the best candidate failed (e.g. the imported solution uses multi-hop
+            // routing not modelled by the direct-connection delay matrix), but we did find a
+            // feasible solution during the search.  Restore the saved scheduler snapshot so the
+            // caller sees a SCHEDULED state with the best-known results.
+            scheduler = bestScheduler;
+            results.runtime_ms = utils::getElapsedMs(startTime);
+            results.iterations = iteration;
+            results.scheduleSpan = scheduler.getScheduleSpan();
+            results.finishTimeSum = scheduler.getFinishTimeSum();
+            results.processorsCost = scheduler.getProcessorsCost();
+            results.delayCost = scheduler.getDelayCost();
+            results.memoryUsageKB = utils::getPeakMemoryUsageKB();
+            results.scheduleState = scheduler.getScheduleState();
+            results.bestCandidate = best;
+            results.observations = "Feasible solution found (best candidate could not be re-scheduled; returning best known state).";
+            utils::dbg << results.observations << "\n";
+        } else {
+            results.status = SolverResult::SolverStatus::SOLUTION_NOT_FOUND;
+            results.observations = "No feasible solution found after " + std::to_string(iteration) + " iterations.";
+            utils::dbg << results.observations << "\n";
+        }
     }else{
         results.runtime_ms = utils::getElapsedMs(startTime);
         results.iterations = iteration;
