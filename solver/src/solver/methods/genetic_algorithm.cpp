@@ -70,6 +70,13 @@ SolverResult Solver::geneticAlgorithmSolve() {
             utils::dbg << results.observations << "\n";
             return results;
         }
+        // Initializaciont timeoutMs check (may take a long time if maxInitTries is large and many infeasible individuals are generated)
+        if(utils::getElapsedMs(startTime) >= timeoutMs) {
+            results.status = SolverResult::SolverStatus::TIMEOUT;
+            results.observations = "GA: Timeout reached after " + std::to_string(timeoutMs) + " seconds.";
+            utils::dbg << results.observations << "\n";
+            break;
+        }
     }
 
     // Check if all individuals are feasible
